@@ -347,6 +347,21 @@ input.txt{font:inherit;color:inherit;background:var(--surface);border:1px solid 
 .person .steps i{width:14px;height:5px;border-radius:999px;background:var(--surface-3)}
 .person .steps i.on{background:var(--good)}
 
+/* ---------- selection ---------- */
+.person .ck{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface);display:none;place-items:center;color:transparent}
+.person .ck svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.selecting .person{position:relative}
+.selecting .person .ck{display:grid}
+.person.sel{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.person.sel .ck{background:var(--gold);border-color:var(--gold);color:#1B1A14}
+.selbar{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:8px 10px 8px 16px;background:var(--navy);color:var(--on-navy);border-radius:999px;box-shadow:var(--shadow-lg);z-index:35;max-width:calc(100% - 24px);flex-wrap:wrap;justify-content:center}
+.selbar .n{font-size:14px;margin-right:4px;white-space:nowrap}
+.selbar .btn{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--on-navy)}
+.selbar .btn.primary{background:var(--gold);border-color:var(--gold);color:#1B1A14}
+.selbar .btn.ghost{border-color:transparent;background:transparent;color:var(--on-navy-muted)}
+.selbar .btn.ghost:hover{background:rgba(255,255,255,.08);color:var(--on-navy)}
+@media (max-width:820px){.selbar{bottom:calc(70px + env(safe-area-inset-bottom,0px))}}
+
 /* ---------- tasks ---------- */
 .tasks{display:flex;flex-direction:column}
 .task{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 4px;border-top:1px solid var(--border)}
@@ -479,7 +494,7 @@ td b{font-weight:600}
 .drawer .hero.faculty .av{background:var(--gold-ink);color:#fff}.drawer .hero.staff .av{background:#617073;color:#fff}.drawer .hero.music .av{background:#003D52;color:#fff}
 .drawer h3{font-size:21px}
 .drawer .sub{font-size:14px;color:var(--muted);margin-top:2px}
-.drawer .ct{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);font-size:14px}
+.drawer .ct{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:8px;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);font-size:14px}
 .drawer .ct .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block}
 .drawer .ct span.v{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
 .drawer .ct.missing{color:var(--faint);font-style:italic;border-style:dashed}
@@ -655,7 +670,7 @@ td b{font-weight:600}
             </div>
             <div class="card" id="copyRowCard">
               <div class="card-head"><div class="eyebrow">Reach a group</div></div>
-              <p class="muted" style="font-size:13.5px;margin-bottom:10px">Opens your mail app with the group in BCC so addresses stay private. Hold Alt to copy the addresses instead.</p>
+              <p class="muted" style="font-size:13.5px;margin-bottom:10px">Email or text a whole group. To hand-pick people, use Select in the Directory.</p>
               <div class="copyrow" id="copyRow"></div>
             </div>
           </div>
@@ -695,6 +710,7 @@ td b{font-weight:600}
           <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="dirSearch" type="search" placeholder="Search name, church, course…" aria-label="Search directory"></div>
           <select class="sel" id="dirSort" aria-label="Sort"><option value="order">Playbook order</option><option value="name">A to Z</option><option value="status">By status</option></select>
           <button class="chip" id="dirMissing" type="button" aria-pressed="false">Missing contact info</button>
+          <button class="btn sm" id="selMode" type="button" aria-pressed="false" title="Pick people to email or text"><svg viewBox="0 0 24 24"><path d="m4 12 4 4L20 4"/><path d="M20 12v7H4V5h9"/></svg>Select</button>
           <button class="btn sm" id="dirExport" type="button" title="Download the people shown as a CSV"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/></svg>Export</button>
         </div>
         <div id="dirBody"></div>
@@ -955,6 +971,7 @@ td b{font-weight:600}
         <tr><td><kbd>N</kbd></td><td>Draft a new announcement</td></tr>
         <tr><td><kbd>S</kbd></td><td>Weekly summary</td></tr>
         <tr><td><kbd>E</kbd></td><td>Email a group</td></tr>
+        <tr><td><kbd>X</kbd></td><td>Text a group</td></tr>
         <tr><td><kbd>R</kbd></td><td>Refresh from Google Sheets</td></tr>
         <tr><td><kbd>T</kbd></td><td>Switch theme</td></tr>
         <tr><td><kbd>?</kbd></td><td>This list</td></tr>
@@ -993,17 +1010,32 @@ td b{font-weight:600}
     <div class="acts"><button class="btn" id="digestCopy" type="button">Copy</button><a class="btn primary" id="digestMail" href="#">Email to the board</a></div>
   </div>
 </div>
-<!-- email composer -->
+<!-- compose: email or text a group ---->
 <div class="scrim" id="mailScrim" hidden>
-  <div class="panel mail" role="dialog" aria-modal="true" aria-label="Email a group">
-    <header><h3 style="font-size:19px">Email a group</h3><button class="x" data-close="mailScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+  <div class="panel mail" role="dialog" aria-modal="true" aria-label="Email or text a group">
+    <header><div class="chips" role="tablist" aria-label="Channel"><button class="chip" id="chEmail" role="tab" aria-pressed="true" type="button">Email</button><button class="chip" id="chText" role="tab" aria-pressed="false" type="button">Text</button></div><button class="x" data-close="mailScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
     <div class="body">
-      <div><label>To</label><div class="chips" id="mailGroups"></div></div>
-      <div><label for="mailSubject">Subject</label><input class="txt" id="mailSubject" type="text" value="[Praxis] "></div>
+      <div><label>Who</label><div class="chips" id="mailGroups"></div></div>
+      <div><label>Status</label><div class="chips" id="mailStatus"><button class="chip" data-ms="" aria-pressed="true" type="button">Any</button><button class="chip" data-ms="confirmed" aria-pressed="false" type="button">Confirmed</button><button class="chip" data-ms="tentative" aria-pressed="false" type="button">Tentative</button><button class="chip" data-ms="prospect" aria-pressed="false" type="button">In conversation</button></div></div>
+      <div id="emailFields">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end"><div><label for="mailSubject">Subject</label><input class="txt" id="mailSubject" type="text" value="[Praxis] "></div><div><label>Addresses</label><div class="chips"><button class="chip" data-mode="bcc" aria-pressed="true" type="button">BCC</button><button class="chip" data-mode="to" aria-pressed="false" type="button">To</button></div></div></div>
+      </div>
+      <div id="textFields" hidden>
+        <label for="smsBody">Message (optional)</label><textarea class="txt" id="smsBody" style="min-height:70px;resize:vertical" placeholder="Short and clear. Everyone in the group receives the same text."></textarea>
+        <div id="smsDesk" class="muted" style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;align-items:center;margin-top:12px;font-size:13.5px;line-height:1.5" hidden><div id="smsQr" style="width:120px;height:120px;background:#fff;border-radius:var(--r);padding:6px;display:grid;place-items:center"></div><div>Group texts send from a phone. Scan this with your phone’s camera and Messages opens with everyone filled in. Or copy the numbers.</div></div>
+      </div>
       <div><label>Recipients <span id="mailCount" style="text-transform:none;letter-spacing:0;font-weight:500"></span></label><div class="rcpt" id="mailRcpt"></div></div>
     </div>
-    <div class="acts"><button class="btn" id="mailCopy" type="button">Copy addresses</button><a class="btn primary" id="mailOpen" href="#">Open in mail app (BCC)</a></div>
+    <div class="acts"><button class="btn" id="mailCopy" type="button">Copy addresses</button><a class="btn primary" id="mailOpen" href="#">Open in mail app</a></div>
   </div>
+</div>
+<div class="selbar" id="selbar" hidden>
+  <span class="n"><b id="selCount">0</b> selected</span>
+  <button class="btn sm primary" id="selEmail" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>Email</button>
+  <button class="btn sm" id="selText" type="button"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.3A8 8 0 1 1 21 12z"/></svg>Text</button>
+  <button class="btn sm ghost" id="selAll" type="button">Select all shown</button>
+  <button class="btn sm ghost" id="selNone" type="button">Clear</button>
+  <button class="btn sm ghost" id="selDone" type="button">Done</button>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -1034,7 +1066,7 @@ const S={people:[],ann:[],tasks:[],events:[],resources:[],metrics:[]};
 const RAW={};
 const loaded={people:false,ann:false,tasks:false,events:false,resources:false,metrics:false};
 const missing={};
-let view='overview',annAud='all',annType='',annQ='',dirGroup='all',dirQ='',dirSort='order',dirMissing=false,taskSt='open',taskOwner='',taskGroup='due',calType='all',calView='list',mgY=0,mgM=0,lastLoad=0,loadErr=null,lastVisit=0;
+let view='overview',annAud='all',annType='',annQ='',selMode=false,selected=new Set(),dirGroup='all',dirQ='',dirSort='order',dirMissing=false,taskSt='open',taskOwner='',taskGroup='due',calType='all',calView='list',mgY=0,mgM=0,lastLoad=0,loadErr=null,lastVisit=0;
 
 /* ---------- helpers ---------- */
 const toast=(m)=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),2400);};
@@ -1174,6 +1206,7 @@ function showView(v,opts={}){
   remember('view',v);
   if(!opts.silent){try{history.replaceState(null,'','#'+v);}catch(_){}}
   if(!opts.keepScroll)window.scrollTo({top:0});
+  if(typeof renderSelbar==='function')renderSelbar();
 }
 document.addEventListener('click',e=>{
   const nb=e.target.closest('#nav button[data-view],#mobilebar button[data-view]');if(nb){showView(nb.dataset.view);return;}
@@ -1274,7 +1307,8 @@ function renderOnboarding(){
 
 function personHTML(p){
   const courses=String(p.courses||'').split(',').map(s=>s.trim()).filter(Boolean);
-  return `<button class="person ${esc(p.group)}" data-person="${esc(p.id)}" type="button">
+  return `<button class="person ${esc(p.group)}${selected.has(p.id)?' sel':''}" data-person="${esc(p.id)}" type="button" aria-pressed="${selMode?String(selected.has(p.id)):'undefined'}">
+    <span class="ck" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 7"/></svg></span>
     ${avatar(p,'av')}
     <div style="min-width:0">
       <h4>${esc(p.name)}</h4>
@@ -1308,7 +1342,7 @@ $('#dirFilter').addEventListener('click',e=>{const b=e.target.closest('[data-gro
 $('#dirSearch').addEventListener('input',e=>{dirQ=e.target.value.trim();renderDir();});
 $('#dirSort').addEventListener('change',e=>{dirSort=e.target.value;renderDir();});
 $('#dirMissing').addEventListener('click',e=>{dirMissing=!dirMissing;e.currentTarget.setAttribute('aria-pressed',dirMissing);renderDir();});
-document.addEventListener('click',e=>{const b=e.target.closest('[data-person]');if(b){const p=S.people.find(x=>x.id===b.dataset.person);if(p)openDrawer(p);}const mg=e.target.closest('[data-mail-group]');if(mg)openMail(mg.dataset.mailGroup);});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-person]');if(b){const p=S.people.find(x=>x.id===b.dataset.person);if(!p)return;if(selMode&&b.classList.contains('person')){if(selected.has(p.id))selected.delete(p.id);else selected.add(p.id);b.classList.toggle('sel',selected.has(p.id));b.setAttribute('aria-pressed',String(selected.has(p.id)));renderSelbar();return;}openDrawer(p);}const mg=e.target.closest('[data-mail-group]');if(mg)openMail(mg.dataset.mailGroup);});
 
 function taskHTML(t){
   const d=t.due?daysUntil(t.due):null;const done=t.status==='done';
@@ -1558,9 +1592,9 @@ function renderOverview(){
   $('#copyRowCard').hidden=loaded.people&&!emailsOf(S.people).length&&!S.people.length;
   const ot=$('#ovTasks');
   if(!loaded.tasks)ot.innerHTML=loadingBox();else{const l=sortTasks(openTasks).slice(0,5);ot.innerHTML=l.length?l.map(taskHTML).join(''):emptyBox('All clear','No open action items right now.');}
-  $('#copyRow').innerHTML=[['all','Everyone'],['board','Board'],['faculty','Professors'],['staff','Staff'],['music','School of Music']].map(([g,l])=>{const cnt=emailsOf(groupList(g)).length;return `<button class="btn sm" type="button" data-email-group="${g}" ${cnt?'':'disabled'}><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>${esc(l)} <span class="muted num">(${cnt})</span></button>`;}).join('');
+  $('#copyRow').innerHTML=[['all','Everyone'],['board','Board'],['faculty','Professors'],['staff','Staff'],['music','School of Music']].map(([g,l])=>{const em=emailsOf(groupList(g)).length,ph=phonesOf(groupList(g)).length;return `<span style="display:inline-flex"><button class="btn sm" type="button" data-email-group="${g}" style="border-radius:var(--r) 0 0 var(--r)" ${em?'':'disabled'} title="Email ${esc(l)}"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>${esc(l)} <span class="muted num">${em}</span></button><button class="btn sm" type="button" data-email-group="${g}" data-text style="border-radius:0 var(--r) var(--r) 0;margin-left:-1px" ${ph?'':'disabled'} title="Text ${esc(l)}"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.3A8 8 0 1 1 21 12z"/></svg><span class="muted num">${ph}</span></button></span>`;}).join('');
 }
-$('#copyRow').addEventListener('click',e=>{const b=e.target.closest('[data-email-group]');if(!b)return;const g=b.dataset.emailGroup;const em=emailsOf(groupList(g));if(!em.length){toast('No addresses on file yet');return;}if(e.altKey){copyText(em.join(', '),'Copied '+em.length+' addresses');return;}location.href='mailto:?bcc='+encodeURIComponent(em.join(','))+'&subject='+encodeURIComponent('[Praxis] ');});
+$('#copyRow').addEventListener('click',e=>{const b=e.target.closest('[data-email-group]');if(!b)return;openMail(b.dataset.emailGroup,e.target.closest('[data-text]')?'text':'email');});
 
 function renderCounts(){
   const nn=newAnn().length;
@@ -1579,7 +1613,7 @@ function renderAll(){renderStatus();renderHealth();renderOverview();renderAnn();
 function openDrawer(p){
   const d=$('#drawer');
   const courses=String(p.courses||'').split(',').map(s=>s.trim()).filter(Boolean);
-  const ct=(k,v,href)=>v?`<div class="ct"><div style="min-width:0"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>${href?`<a class="btn sm" href="${esc(href)}">${k==='Email'?'Write':'Call'}</a>`:''}<button class="btn sm" type="button" data-copy="${esc(v)}">Copy</button></div>`:`<div class="ct missing"><div><span class="k">${k}</span><span class="v">Not on file</span></div></div>`;
+  const ct=(k,v,href)=>v?`<div class="ct"><div style="min-width:0"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>${href?`<a class="btn sm" href="${esc(href)}">${k==='Email'?'Write':'Call'}</a>`:''}${k==='Phone'?`<a class="btn sm" href="sms:${esc(v.replace(/[^+\\d]/g,''))}">Text</a>`:''}<button class="btn sm" type="button" data-copy="${esc(v)}">Copy</button></div>`:`<div class="ct missing"><div><span class="k">${k}</span><span class="v">Not on file</span></div></div>`;
   d.innerHTML=`<header><div class="eyebrow">${esc(GROUPS[p.group])}</div><button class="x" data-close="drawerScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
   <div class="body">
     <div class="hero ${esc(p.group)}">${avatar(p,'av')}<div style="min-width:0"><h3 id="drName">${esc(p.name)}</h3><div class="sub">${esc([p.title,p.affiliation].filter(Boolean).join(' · '))||'Role to be added'}</div><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><span class="pill ${esc(p.group)}">${esc(GSHORT[p.group])}</span><span class="pill ${esc(p.status)}">${esc(STATUS[p.status])}</span></div></div></div>
@@ -1603,140 +1637,60 @@ function closeOverlay(s){s.hidden=true;if(lastFocus&&document.contains(lastFocus
 new MutationObserver(ms=>ms.forEach(m=>{const el=m.target;if(el.classList.contains('scrim')&&!el.hidden){lastFocus=document.activeElement;}})).observe(document.body,{attributes:true,subtree:true,attributeFilter:['hidden']});
 document.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const open=$$('.scrim').find(x=>!x.hidden);if(!open)return;const f=$$(FOCUSABLE,open).filter(x=>x.offsetParent!==null);if(!f.length)return;const first=f[0],last=f[f.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}});
 
-/* ---------- email composer ---------- */
-let mailGroup='all';
-function openMail(g){mailGroup=g||'all';renderMail();$('#mailScrim').hidden=false;setTimeout(()=>$('#mailSubject').focus(),20);}
-function renderMail(){
-  const groups=[['all','Everyone'],['board','Board'],['faculty','Professors'],['staff','Staff'],['music','School of Music']];
-  $('#mailGroups').innerHTML=groups.map(([g,l])=>{const c=emailsOf(groupList(g)).length;return `<button class="chip" type="button" data-mg="${g}" aria-pressed="${g===mailGroup}" ${c?'':'disabled'}>${esc(l)} <span class="n">${c}</span></button>`;}).join('');
-  const em=emailsOf(groupList(mailGroup));const total=groupList(mailGroup).length;
-  $('#mailCount').textContent='· '+em.length+' of '+total+(em.length<total?' (others have no email on file)':'');
-  $('#mailRcpt').textContent=em.length?em.join(', '):'No addresses on file for this group yet.';
-  const subj=$('#mailSubject').value;
-  $('#mailOpen').href='mailto:?bcc='+encodeURIComponent(em.join(','))+'&subject='+encodeURIComponent(subj);
+/* ---------- selection mode ---------- */
+function renderSelbar(){const n=selected.size;$('#selCount').textContent=n;$('#selbar').hidden=!(selMode&&view==='directory');$('#dirBody').classList.toggle('selecting',selMode);$('#selMode').setAttribute('aria-pressed',String(selMode));$('#selMode').textContent='';$('#selMode').insertAdjacentHTML('beforeend','<svg viewBox="0 0 24 24"><path d="m4 12 4 4L20 4"/><path d="M20 12v7H4V5h9"/></svg>'+(selMode?'Selecting'+(n?' · '+n:''):'Select'));}
+$('#selMode').addEventListener('click',()=>{selMode=!selMode;if(!selMode)selected.clear();renderDir();renderSelbar();if(selMode)toast('Tap people to pick them, then Email or Text');});
+$('#selAll').addEventListener('click',()=>{visiblePeople().forEach(p=>selected.add(p.id));renderDir();renderSelbar();});
+$('#selNone').addEventListener('click',()=>{selected.clear();renderDir();renderSelbar();});
+$('#selDone').addEventListener('click',()=>{selMode=false;selected.clear();renderDir();renderSelbar();});
+$('#selEmail').addEventListener('click',()=>openMail('sel','email'));
+$('#selText').addEventListener('click',()=>openMail('sel','text'));
+const _showView=showView;
+
+/* ---------- compose: email or text ---------- */
+let mailGroup='all',mailStatus='',mailMode='bcc',channel='email';
+const isIOS=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const isPhone=()=>/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+const phonesOf=list=>[...new Set(list.map(p=>String(p.phone||'').replace(/[^+\d]/g,'')).filter(x=>x.length>=7))];
+function audience(){let l=mailGroup==='sel'?S.people.filter(p=>selected.has(p.id)):groupList(mailGroup);if(mailStatus)l=l.filter(p=>p.status===mailStatus);return l;}
+function smsLink(nums,body){return 'sms:'+nums.join(',')+(body?(isIOS()?'&':'?')+'body='+encodeURIComponent(body):'');}
+function openMail(g,ch){mailGroup=g||(selected.size?'sel':'all');channel=ch||'email';renderMail();$('#mailScrim').hidden=false;setTimeout(()=>$(channel==='email'?'#mailSubject':'#smsBody').focus(),20);}
+async function renderMail(){
+  const groups=[...(selected.size?[['sel','Selected']]:[]),['all','Everyone'],['board','Board'],['faculty','Professors'],['staff','Staff'],['music','School of Music']];
+  const countFor=g=>{let l=g==='sel'?S.people.filter(p=>selected.has(p.id)):groupList(g);if(mailStatus)l=l.filter(p=>p.status===mailStatus);return channel==='email'?emailsOf(l).length:phonesOf(l).length;};
+  $('#mailGroups').innerHTML=groups.map(([g,l])=>`<button class="chip" type="button" data-mg="${g}" aria-pressed="${g===mailGroup}">${esc(l)} <span class="n">${countFor(g)}</span></button>`).join('');
+  $$('#mailStatus .chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.ms===mailStatus)));
+  $$('[data-mode]').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.mode===mailMode)));
+  $('#chEmail').setAttribute('aria-pressed',String(channel==='email'));$('#chText').setAttribute('aria-pressed',String(channel==='text'));
+  $('#emailFields').hidden=channel!=='email';$('#textFields').hidden=channel!=='text';
+  const list=audience();const total=list.length;
+  if(channel==='email'){
+    const em=emailsOf(list);
+    $('#mailCount').textContent='· '+em.length+' of '+total+(em.length<total?' (others have no email on file)':'');
+    $('#mailRcpt').textContent=em.length?em.join(', '):'No addresses on file for this choice.';
+    const subj=$('#mailSubject').value;
+    $('#mailOpen').href='mailto:'+(mailMode==='to'?encodeURIComponent(em.join(',')):'')+'?'+(mailMode==='bcc'?'bcc='+encodeURIComponent(em.join(','))+'&':'')+'subject='+encodeURIComponent(subj);
+    $('#mailOpen').textContent='Open in mail app';$('#mailCopy').textContent='Copy addresses';
+  }else{
+    const ph=phonesOf(list);
+    $('#mailCount').textContent='· '+ph.length+' of '+total+(ph.length<total?' (others have no phone on file)':'');
+    $('#mailRcpt').textContent=ph.length?ph.join(', '):'No phone numbers on file for this choice.';
+    const link=smsLink(ph,$('#smsBody').value.trim());
+    $('#mailOpen').href=link;$('#mailOpen').textContent=isPhone()?'Open in Messages':'Open in Messages (on a phone)';$('#mailCopy').textContent='Copy numbers';
+    const desk=$('#smsDesk');desk.hidden=isPhone()||!ph.length;
+    if(!desk.hidden){const q=$('#smsQr');if(q.dataset.link!==link){q.innerHTML='';try{await loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');new QRCode(q,{text:link,width:108,height:108,colorDark:'#171A21',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.L});q.dataset.link=link;}catch(_){q.textContent='QR unavailable';}}}
+  }
 }
-$('#emailBtn').addEventListener('click',()=>openMail('all'));
+$('#emailBtn').addEventListener('click',()=>openMail(null,'email'));
+$('#chEmail').addEventListener('click',()=>{channel='email';renderMail();});
+$('#chText').addEventListener('click',()=>{channel='text';renderMail();});
 $('#mailGroups').addEventListener('click',e=>{const b=e.target.closest('[data-mg]');if(b){mailGroup=b.dataset.mg;renderMail();}});
+$('#mailStatus').addEventListener('click',e=>{const b=e.target.closest('[data-ms]');if(b){mailStatus=b.dataset.ms;renderMail();}});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b){mailMode=b.dataset.mode;renderMail();}});
 $('#mailSubject').addEventListener('input',renderMail);
-$('#mailCopy').addEventListener('click',()=>{const em=emailsOf(groupList(mailGroup));if(!em.length){toast('No addresses to copy');return;}copyText(em.join(', '),'Copied '+em.length+' addresses');});
-$('#mailOpen').addEventListener('click',e=>{if(!emailsOf(groupList(mailGroup)).length){e.preventDefault();toast('No addresses on file for this group yet');}else toast('Opening your mail app');});
-
-
-/* ---------- weekly summary & print ---------- */
-function buildDigest(){
-  const L=[];const t=todayISO();
-  L.push('PRAXIS HUB BRIEFING · '+fmtDate(t));
-  const le=launchEvent();if(le)L.push((Math.max(0,daysUntil(le.date)))+' days to '+le.title+(le.tbd?' (date TBD)':'')+' · '+fmtDate(le.date));
-  L.push('');
-  const items=attention().filter(i=>!i.missing&&i.ic!=='bell');
-  L.push('NEEDS ATTENTION'+(items.length?'':' · all clear'));items.forEach(i=>L.push('• '+i.t+(i.m?' — '+i.m:'')));
-  L.push('');
-  const up=upcomingEvents().slice(0,6);L.push('COMING UP');if(!up.length)L.push('• No dates on the calendar');up.forEach(e=>L.push('• '+(e.tbd?MONL[parseISO(e.date).getMonth()]+' '+parseISO(e.date).getFullYear()+' (date TBD)':fmtDate(e.date))+' — '+e.title+(e.location?' · '+e.location:'')));
-  L.push('');
-  const open=sortTasks(S.tasks.filter(x=>x.status!=='done'));L.push('OPEN ACTION ITEMS ('+open.length+')');open.slice(0,10).forEach(x=>L.push('• '+x.title+' — '+(x.owner||'unassigned')+(x.due?' · due '+fmtDate(x.due)+(daysUntil(x.due)<0?' (overdue)':''):'')));if(open.length>10)L.push('• …and '+(open.length-10)+' more');
-  L.push('');
-  const ann=sortAnn(S.ann).slice(0,4);L.push('RECENT ANNOUNCEMENTS');if(!ann.length)L.push('• None yet');ann.forEach(a=>L.push('• '+a.title+' — '+(a.author||'Praxis Hub')+(a.date?', '+fmtDate(a.date):'')+(a.respond?' · response needed':'')));
-  L.push('');
-  const fac=S.people.filter(p=>p.group==='faculty');
-  L.push('TEAM · '+S.people.filter(p=>p.group==='board').length+' board · '+fac.length+' professors ('+fac.filter(p=>p.status==='confirmed').length+' confirmed) · '+S.people.filter(p=>p.group==='staff'||p.group==='music').length+' staff & music'+(S.people.filter(p=>p.status==='open').length?' · '+S.people.filter(p=>p.status==='open').length+' open roles':''));
-  {const pr=sortAnn(S.ann.filter(a=>a.type==='prayer')).slice(0,3);if(pr.length){L.push('');L.push('PRAYER');pr.forEach(a=>L.push('• '+a.title+' — '+(a.author||'Praxis Hub')));}}
-  {const ob=onboarding();if(ob.steps.length)L.push('ONBOARDING · '+ob.complete+' of '+ob.rows.length+' professors complete');}
-  if(S.metrics.length){L.push('');L.push('LAUNCH NUMBERS');S.metrics.forEach(m=>L.push('• '+m.label+': '+(m.value!==null?fmtNum(m.value,m.unit):'—')+(m.target!==null?' of '+fmtNum(m.target,m.unit):'')));}
-  L.push('');L.push('Hub: '+location.origin+location.pathname+' · Data: '+SHEET_URL);
-  return L.join('\n');
-}
-function openDigest(){const txt=buildDigest();$('#digestText').value=txt;const em=emailsOf(groupList('board'));$('#digestMail').href='mailto:?bcc='+encodeURIComponent(em.join(','))+'&subject='+encodeURIComponent('[Praxis] Briefing · '+fmtDate(todayISO()))+'&body='+encodeURIComponent(txt);$('#digestScrim').hidden=false;setTimeout(()=>$('#digestText').focus(),20);}
-$('#digestBtn').addEventListener('click',openDigest);
-$('#digestCopy').addEventListener('click',()=>copyText($('#digestText').value,'Summary copied'));
-$('#digestMail').addEventListener('click',e=>{if(!emailsOf(groupList('board')).length){e.preventDefault();toast('No board addresses on file yet');}});
-$('#printBtn').addEventListener('click',()=>{if(view!=='overview')showView('overview');setTimeout(()=>window.print(),80);});
-
-
-/* ---------- draft announcement (copy a row for the sheet) ---------- */
-const tsvCell=v=>{v=String(v??'');return /[\t\n"]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
-function openDraft(){$('#draftOpen').href=tabUrl('Announcements');const me=recall('draft.by');if(me&&!$('#dBy').value)$('#dBy').value=me;closeOverlay($('#palScrim'));$('#draftScrim').hidden=false;setTimeout(()=>$('#dTitle').focus(),20);}
-$('#draftBtn').addEventListener('click',openDraft);
-$('#draftCopy').addEventListener('click',()=>{
-  const title=$('#dTitle').value.trim(),body=$('#dBody').value.trim();
-  if(!title&&!body){toast('Add a title or a message first');$('#dTitle').focus();return;}
-  const by=$('#dBy').value.trim();if(by)remember('draft.by',by);
-  // Column order of the Announcements tab: Date, Title, Message, Audience, Pinned, Posted by, Type, Response needed, Respond by
-  const row=[todayISO(),title,body,$('#dAud').value,$('#dPin').checked?'TRUE':'FALSE',by,$('#dType').value,$('#dRespond').value?'TRUE':'',$('#dRespond').value].map(tsvCell).join('\t');
-  copyText(row,'Row copied. Paste it into the first empty row of the Announcements tab.');
-});
-
-
-
-/* ---------- directory export & vCards ---------- */
-const csvCell=v=>{v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
-function visiblePeople(){const groups=dirGroup==='all'||dirGroup==='courses'||dirGroup==='onboarding'?Object.keys(GROUPS):[dirGroup];return groups.flatMap(g=>sortPeople(S.people.filter(p=>p.group===g&&dirMatch(p))));}
-$('#dirExport').addEventListener('click',()=>{const l=visiblePeople();if(!l.length){toast('Nothing to export');return;}const head=['Name','Group','Title','Status','Church or Institution','Courses','Email','Phone','City','Notes'];const rows=l.map(p=>[p.name,GSHORT[p.group],p.title,STATUS[p.status],p.affiliation,p.courses,p.email,p.phone,p.city,p.notes].map(csvCell).join(','));download('praxis-directory-'+todayISO()+'.csv','\ufeff'+[head.join(','),...rows].join('\r\n'),'text/csv');toast('Exported '+l.length+' '+(l.length===1?'person':'people'));});
-function vcard(p){const nm=p.name.trim().split(/\s+/);const last=nm.length>1?nm.pop():'';const first=nm.join(' ');const esc2=v=>String(v||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/[,;]/g,m=>'\\'+m);return ['BEGIN:VCARD','VERSION:3.0','N:'+esc2(last)+';'+esc2(first)+';;;','FN:'+esc2(p.name),p.title?'TITLE:'+esc2(p.title):'',p.affiliation?'ORG:'+esc2(p.affiliation):'',p.email?'EMAIL;TYPE=INTERNET:'+p.email:'',p.phone?'TEL;TYPE=CELL:'+p.phone:'',p.city?'ADR;TYPE=WORK:;;;'+esc2(p.city)+';;;':'','NOTE:'+esc2(['Praxis Theological Seminary · '+GROUPS[p.group],p.courses?'Courses: '+p.courses:'',p.notes].filter(Boolean).join('\n')),'END:VCARD'].filter(Boolean).join('\r\n');}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-vcard]');if(!b)return;const p=S.people.find(x=>x.id===b.dataset.vcard);if(p){download(p.name.replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'.vcf',vcard(p),'text/vcard');toast('Contact card downloaded');}});
-
-
-
-/* ---------- sheet health check ---------- */
-const KNOWN={group:/board|music|staff|ops|operation|prof|faculty/,status:/confirm|tentative|maybe|conversation|prospect|pending|invited|open|vacant|hiring/,aud:/everyone|all|board|fac|prof|staff/,atype:/update|decision|request|ask|action|pray|celebr|praise|win/,etype:/intens|board|meeting|mile|dead|due|other/,tstatus:/open|done|complete|closed|true|false|yes|no|x|todo|progress|blocked|waiting/};
-function audit(){
-  const w=[];const add=(tab,row,msg)=>w.push({tab,row,msg});
-  (RAW.people||[]).forEach((o,i)=>{const r=i+2;if(!pick(o,['Name','Full name','Person']))return add('People',r,'No name, so the row is skipped');const g=pick(o,['Group','Team','Category','Role group']);if(g&&!KNOWN.group.test(norm(g)))add('People',r,'Group “'+g+'” isn’t recognized (use Board, Professor, Staff or School of Music); shown under Professors');const st=pick(o,['Status']);if(st&&!KNOWN.status.test(norm(st)))add('People',r,'Status “'+st+'” isn’t recognized; shown as Confirmed');const em=pick(o,['Email','E-mail','Email address']);if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))add('People',r,'Email “'+em+'” doesn’t look like an address');});
-  (RAW.ann||[]).forEach((o,i)=>{const r=i+2;const d=pick(o,['Date','Posted','Posted on']);if(d&&!toISO(d))add('Announcements',r,'Date “'+d+'” couldn’t be read');const a=pick(o,['Audience','For','To']);if(a&&!KNOWN.aud.test(norm(a)))add('Announcements',r,'Audience “'+a+'” isn’t recognized; shown to Everyone');const t=pick(o,['Type','Kind','Category']);if(t&&!KNOWN.atype.test(norm(t)))add('Announcements',r,'Type “'+t+'” isn’t recognized; shown as Update');const rb=pick(o,['Respond by','Response by','Reply by','Due']);if(rb&&!toISO(rb))add('Announcements',r,'Respond-by “'+rb+'” couldn’t be read');});
-  (RAW.tasks||[]).forEach((o,i)=>{const r=i+2;const d=pick(o,['Due date','Due','Deadline']);if(d&&!toISO(d))add('Action Items',r,'Due date “'+d+'” couldn’t be read');const st=pick(o,['Status','Done','Complete']);if(st&&!KNOWN.tstatus.test(norm(st)))add('Action Items',r,'Status “'+st+'” isn’t recognized; treated as Open');});
-  (RAW.events||[]).forEach((o,i)=>{const r=i+2;const d=pick(o,['Date','Start','Start date']);if(!d)add('Calendar',r,'No date, so the row is skipped');else if(!toISO(d))add('Calendar',r,'Date “'+d+'” couldn’t be read, so the row is skipped');const e=pick(o,['End date','End','Through']);if(e&&!toISO(e))add('Calendar',r,'End date “'+e+'” couldn’t be read');const t=pick(o,['Type','Kind','Category']);if(t&&!KNOWN.etype.test(norm(t)))add('Calendar',r,'Type “'+t+'” isn’t recognized; shown as Other');});
-  (RAW.resources||[]).forEach((o,i)=>{const r=i+2;const u=pick(o,['URL','Link','Address','Href']);if(u&&!/^https?:\/\//i.test(u))add('Links',r,'URL “'+u+'” must start with https://, so the row is skipped');});
-  return w;
-}
-function renderHealth(){
-  const w=audit();const el=$('#health');
-  if(!w.length){el.hidden=true;return;}
-  el.hidden=false;el.textContent='· '+w.length+' sheet '+(w.length===1?'row needs':'rows need')+' a look';
-}
-function openHealth(){
-  const w=audit();const host=$('#healthList');
-  host.innerHTML=w.length?w.map(x=>`<div class="link"><div style="min-width:0"><a href="${esc(tabUrl(x.tab))}" target="_blank" rel="noopener">${esc(x.tab)} · row ${x.row}</a><div class="desc">${esc(x.msg)}</div></div></div>`).join(''):'<div class="allclear"><span class="ic"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 7"/></svg></span>Every row reads cleanly.</div>';
-  $('#healthScrim').hidden=false;
-}
-$('#health').addEventListener('click',openHealth);
-
-/* ---------- collapsible playbook ---------- */
-(()=>{let state={};try{state=JSON.parse(recall('pb.collapsed')||'{}');}catch(_){}
-$$('.pb-body .card').forEach(c=>{if(state[c.id])c.classList.add('collapsed');});
-document.addEventListener('click',e=>{const eb=e.target.closest('.pb-body .card>.eyebrow');if(!eb||e.target.closest('a,button'))return;const c=eb.parentElement;const col=c.classList.toggle('collapsed');state[c.id]=col;remember('pb.collapsed',JSON.stringify(state));});
-document.addEventListener('click',e=>{const pb=e.target.closest('[data-pb]');if(!pb)return;const c=document.getElementById(pb.dataset.pb);if(c&&c.classList.contains('collapsed')){c.classList.remove('collapsed');state[c.id]=false;remember('pb.collapsed',JSON.stringify(state));}});})();
-
-/* ---------- first-run tour ---------- */
-const TOUR=[
-  ['One sheet, one hub','Everything on this page comes from the Praxis Hub Data sheet in Google Drive. Change a cell there and the hub updates on its next refresh. Nothing is edited here, so there is nothing to break.'],
-  ['Start with the briefing','Needs attention lists what is overdue, waiting on a response or still undated. More → Weekly summary turns the whole page into a short email for the board.'],
-  ['Find anything fast','Press ⌘K or / to search people, posts, dates and the playbook. Press ? for every shortcut. Share the hub with More → Share the hub, which includes a QR code for slides.']
-];
-let tourI=0;
-function tourShow(){const [t,b]=TOUR[tourI];$('#tourStep').textContent='Welcome · '+(tourI+1)+' of '+TOUR.length;$('#tourTitle').textContent=t;$('#tourBody').textContent=b;$('#tourNext').textContent=tourI===TOUR.length-1?'Done':'Next';}
-function openTour(){tourI=0;tourShow();$('#tourScrim').hidden=false;setTimeout(()=>$('#tourNext').focus(),20);}
-function endTour(){remember('tour.done','1');closeOverlay($('#tourScrim'));}
-$('#tourNext').addEventListener('click',()=>{if(tourI>=TOUR.length-1)endTour();else{tourI++;tourShow();}});
-$('#tourSkip').addEventListener('click',endTour);
-$('#tourScrim').addEventListener('click',e=>{if(e.target===e.currentTarget)endTour();});
-if(!recall('tour.done')&&!location.hash)setTimeout(()=>{if(!$$('.scrim').some(x=>!x.hidden))openTour();},1200);
-
-/* ---------- share panel + QR ---------- */
-function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector('script[src="'+src+'"]'))return res();const sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
-async function openShare(){
-  $('#shareUrl').textContent=HUB_URL;$('#shareScrim').hidden=false;
-  const q=$('#qr');if(!q.dataset.done){q.innerHTML='<span class="muted" style="font-size:12px">Drawing…</span>';try{await loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');q.innerHTML='';new QRCode(q,{text:HUB_URL,width:134,height:134,colorDark:'#171A21',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});q.dataset.done='1';}catch(_){q.innerHTML='<span class="muted" style="font-size:12px;text-align:center">QR unavailable offline</span>';}}
-}
-$('#shareBtn').addEventListener('click',openShare);
-$('#shareCopy').addEventListener('click',()=>copyText(HUB_URL,'Link copied'));
-$('#qrSave').addEventListener('click',()=>{const c=$('#qr canvas'),img=$('#qr img');const src=c?c.toDataURL('image/png'):img?img.src:'';if(!src){toast('QR not ready yet');return;}const a=document.createElement('a');a.href=src;a.download='praxis-hub-qr.png';document.body.appendChild(a);a.click();a.remove();toast('QR saved');});
-
-/* ---------- overflow menu ---------- */
-(()=>{const m=$('#moreMenu'),b=$('#moreBtn'),pop=$('.pop',m);
-b.addEventListener('click',()=>{const open=pop.hidden;pop.hidden=!open;b.setAttribute('aria-expanded',String(open));});
-document.addEventListener('click',e=>{if(!m.contains(e.target)){pop.hidden=true;b.setAttribute('aria-expanded','false');}});
-pop.addEventListener('click',e=>{if(e.target.closest('.btn')){pop.hidden=true;b.setAttribute('aria-expanded','false');}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!pop.hidden){pop.hidden=true;b.setAttribute('aria-expanded','false');}});
-$('#icsMenu').addEventListener('click',()=>$('#icsAll').click());})();
+$('#smsBody').addEventListener('input',()=>{clearTimeout(renderMail._t);renderMail._t=setTimeout(renderMail,250);});
+$('#mailCopy').addEventListener('click',()=>{const l=audience();const v=channel==='email'?emailsOf(l):phonesOf(l);if(!v.length){toast('Nothing to copy');return;}copyText(v.join(', '),'Copied '+v.length+(channel==='email'?' addresses':' numbers'));});
+$('#mailOpen').addEventListener('click',e=>{const l=audience();const v=channel==='email'?emailsOf(l):phonesOf(l);if(!v.length){e.preventDefault();toast(channel==='email'?'No addresses on file for this choice':'No phone numbers on file for this choice');return;}if(channel==='text'&&!isPhone()){e.preventDefault();toast('Group texts send from a phone. Scan the QR code or copy the numbers.');return;}toast(channel==='email'?'Opening your mail app':'Opening Messages');});
 
 /* ---------- command palette ---------- */
 let palSel=0,palItems=[];
@@ -1756,7 +1710,7 @@ function palSearch(q){
   add('Playbook',PB.filter(([id,l])=>hit(l)||(q&&(document.getElementById(id).textContent||'').toLowerCase().includes(q))).map(([id,l])=>({ic:'P',t:l,s:'Playbook section',run:()=>{showView('playbook',{keepScroll:true});setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}),30);}})));
   if(q&&('course coverage professors assigned'.includes(q)||CATALOG.some(([,l])=>l.some(c=>c.toLowerCase().includes(q)))))add('Courses',[{ic:'C',t:'Course coverage',s:'Which courses have a professor assigned',run:()=>{dirGroup='courses';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='courses'));renderDir();showView('directory');}}]);
   add('Links',S.resources.filter(r=>hit(r.title+' '+r.category)).slice(0,5).map(r=>({ic:'↗',t:r.title,s:r.url.replace(/^https?:\/\//,''),k:r.category,run:()=>window.open(r.url,'_blank','noopener')})));
-  const cmds=[{ic:'★',t:'Take the tour',s:'Three quick steps',run:openTour},{ic:'✓',t:'Sheet health',s:'Rows the hub could not fully read',run:openHealth},{ic:'⇗',t:'Share the hub',s:'Link and QR code',run:openShare},{ic:'?',t:'Keyboard shortcuts',s:'Everything you can do without the mouse',run:()=>{$('#helpScrim').hidden=false;}},{ic:'+',t:'New announcement',s:'Draft a post and copy the row for the sheet',run:openDraft},{ic:'≡',t:'Weekly summary',s:'Copy or email a plain-text briefing',run:openDigest},{ic:'⎙',t:'Print one-page brief',s:'Briefing, print-ready',run:()=>$('#printBtn').click()},{ic:'✉',t:'Email a group',s:'Opens your mail app with BCC',run:()=>openMail('all')},{ic:'◐',t:'Switch theme',s:'System · Light · Dark',run:()=>$('#themeBtn').click()}].filter(c=>hit(c.t+' '+c.s));if(q)add('Actions',cmds);
+  const cmds=[{ic:'★',t:'Take the tour',s:'Three quick steps',run:openTour},{ic:'✓',t:'Sheet health',s:'Rows the hub could not fully read',run:openHealth},{ic:'⇗',t:'Share the hub',s:'Link and QR code',run:openShare},{ic:'?',t:'Keyboard shortcuts',s:'Everything you can do without the mouse',run:()=>{$('#helpScrim').hidden=false;}},{ic:'+',t:'New announcement',s:'Draft a post and copy the row for the sheet',run:openDraft},{ic:'≡',t:'Weekly summary',s:'Copy or email a plain-text briefing',run:openDigest},{ic:'⎙',t:'Print one-page brief',s:'Briefing, print-ready',run:()=>$('#printBtn').click()},{ic:'✉',t:'Email a group',s:'Opens your mail app with BCC',run:()=>openMail(null,'email')},{ic:'✆',t:'Text a group',s:'Group text from your phone, or a QR to scan',run:()=>openMail(null,'text')},{ic:'◐',t:'Switch theme',s:'System · Light · Dark',run:()=>$('#themeBtn').click()}].filter(c=>hit(c.t+' '+c.s));if(q)add('Actions',cmds);
   palItems=groups.flatMap(([,items])=>items);palSel=0;
   const res=$('#palRes');
   if(!palItems.length){res.innerHTML='<div class="none">Nothing matches “'+esc(q)+'”.</div>';return;}
@@ -1779,7 +1733,7 @@ document.addEventListener('keydown',e=>{
   const anyOpen=$$('.scrim').some(x=>!x.hidden);if(anyOpen)return;
   const k=e.key.toLowerCase();
   if(e.key==='?'){e.preventDefault();$('#helpScrim').hidden=false;}
-  else if(k==='n')openDraft();else if(k==='s')openDigest();else if(k==='e')openMail('all');else if(k==='r')loadAll(true);else if(k==='t')$('#themeBtn').click();
+  else if(k==='n')openDraft();else if(k==='s')openDigest();else if(k==='e')openMail(null,'email');else if(k==='x')openMail(null,'text');else if(k==='r')loadAll(true);else if(k==='t')$('#themeBtn').click();
 });
 
 /* ---------- boot ---------- */
