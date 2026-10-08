@@ -579,7 +579,7 @@ td b{font-weight:600}
       <!-- ===== ANNOUNCEMENTS ===== -->
       <section class="view" id="view-announcements" hidden>
         <div class="toolbar">
-          <div class="chips" id="annFilter">
+          <div class="chips" id="annFilter" role="group" aria-label="Audience">
             <button class="chip" data-aud="all" aria-pressed="true">All <span class="n" data-n="all"></span></button>
             <button class="chip" data-aud="board">Board <span class="n" data-n="board"></span></button>
             <button class="chip" data-aud="faculty">Faculty <span class="n" data-n="faculty"></span></button>
@@ -594,7 +594,7 @@ td b{font-weight:600}
       <!-- ===== DIRECTORY ===== -->
       <section class="view" id="view-directory" hidden>
         <div class="toolbar">
-          <div class="chips" id="dirFilter">
+          <div class="chips" id="dirFilter" role="group" aria-label="Group">
             <button class="chip" data-group="all" aria-pressed="true">Everyone <span class="n" data-n="all"></span></button>
             <button class="chip" data-group="board">Board <span class="n" data-n="board"></span></button>
             <button class="chip" data-group="faculty">Professors <span class="n" data-n="faculty"></span></button>
@@ -613,13 +613,14 @@ td b{font-weight:600}
       <!-- ===== TASKS ===== -->
       <section class="view" id="view-tasks" hidden>
         <div class="toolbar">
-          <div class="chips" id="taskFilter">
+          <div class="chips" id="taskFilter" role="group" aria-label="Status">
             <button class="chip" data-st="open" aria-pressed="true">Open</button>
             <button class="chip" data-st="done">Completed</button>
             <button class="chip" data-st="all">All</button>
           </div>
           <div class="spacer"></div>
           <select class="sel" id="taskOwner" aria-label="Filter by owner"><option value="">All owners</option></select>
+          <select class="sel" id="taskGroup" aria-label="Group by"><option value="due">Group by due date</option><option value="owner">Group by owner</option></select>
         </div>
         <div class="card"><div class="tasks" id="taskList"></div></div>
       </section>
@@ -627,7 +628,7 @@ td b{font-weight:600}
       <!-- ===== CALENDAR ===== -->
       <section class="view" id="view-calendar" hidden>
         <div class="toolbar">
-          <div class="chips" id="calFilter">
+          <div class="chips" id="calFilter" role="group" aria-label="Type">
             <button class="chip" data-type="all" aria-pressed="true">All</button>
             <button class="chip" data-type="board">Board meetings</button>
             <button class="chip" data-type="intensive">Intensives</button>
@@ -808,8 +809,8 @@ td b{font-weight:600}
 <!-- command palette -->
 <div class="scrim" id="palScrim" hidden>
   <div class="panel pal" role="dialog" aria-modal="true" aria-label="Search">
-    <div class="in"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="palInput" type="text" placeholder="Search people, announcements, dates, action items, playbook…" autocomplete="off" spellcheck="false"></div>
-    <div class="res" id="palRes"></div>
+    <div class="in"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="palInput" type="text" role="combobox" aria-expanded="true" aria-controls="palRes" aria-autocomplete="list" placeholder="Search people, announcements, dates, action items, playbook…" autocomplete="off" spellcheck="false"></div>
+    <div class="res" id="palRes" role="listbox" aria-label="Results"></div>
     <div class="foot"><span><kbd>↑</kbd> <kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span><span><kbd>1</kbd>–<kbd>6</kbd> jump to a section</span></div>
   </div>
 </div>
@@ -867,7 +868,7 @@ const VIEW_KEYS=Object.keys(VIEWS);
 const S={people:[],ann:[],tasks:[],events:[],resources:[],metrics:[]};
 const loaded={people:false,ann:false,tasks:false,events:false,resources:false,metrics:false};
 const missing={};
-let view='overview',annAud='all',annType='',dirGroup='all',dirQ='',dirSort='order',dirMissing=false,taskSt='open',taskOwner='',calType='all',lastLoad=0,loadErr=null,lastVisit=0;
+let view='overview',annAud='all',annType='',dirGroup='all',dirQ='',dirSort='order',dirMissing=false,taskSt='open',taskOwner='',taskGroup='due',calType='all',lastLoad=0,loadErr=null,lastVisit=0;
 
 /* ---------- helpers ---------- */
 const toast=(m)=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),2400);};
@@ -1119,6 +1120,7 @@ function renderTasks(){
   if(!loaded.tasks){host.innerHTML=loadingBox();return;}
   const l=sortTasks(S.tasks.filter(t=>(taskSt==='all'||(taskSt==='done'?t.status==='done':t.status!=='done'))&&(!taskOwner||(taskOwner==='__none'?!t.owner:t.owner===taskOwner))));
   if(!l.length){host.innerHTML=emptyBox(taskSt==='done'?'Nothing completed yet':'No open action items',sheetHint('Action Items'));return;}
+  if(taskGroup==='owner'){const by={};l.forEach(t=>{const k=t.owner||'Unassigned';(by[k]=by[k]||[]).push(t);});const keys=Object.keys(by).sort((a,b)=>a==='Unassigned'?1:b==='Unassigned'?-1:a.localeCompare(b));host.innerHTML=keys.map(k=>`<div class="sec-h">${esc(k)} · ${by[k].length}</div>${by[k].map(taskHTML).join('')}`).join('');return;}
   if(taskSt!=='open'){host.innerHTML=l.map(taskHTML).join('');return;}
   const g={over:[],week:[],later:[],none:[]};
   l.forEach(t=>{const d=t.due?daysUntil(t.due):null;if(d===null)g.none.push(t);else if(d<0)g.over.push(t);else if(d<=7)g.week.push(t);else g.later.push(t);});
@@ -1127,6 +1129,7 @@ function renderTasks(){
 }
 $('#taskFilter').addEventListener('click',e=>{const b=e.target.closest('[data-st]');if(!b)return;taskSt=b.dataset.st;$$('#taskFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c===b));renderTasks();});
 $('#taskOwner').addEventListener('change',e=>{taskOwner=e.target.value;renderTasks();});
+$('#taskGroup').addEventListener('change',e=>{taskGroup=e.target.value;renderTasks();});
 
 function evHTML(ev,past,opts={}){
   const d=parseISO(ev.date);const n=daysUntil(ev.date);
@@ -1319,8 +1322,14 @@ function openDrawer(p){
   $('#drawerScrim').hidden=false;
   setTimeout(()=>{const f=d.querySelector('.x');if(f)f.focus();},20);
 }
-document.addEventListener('click',e=>{const c=e.target.closest('[data-copy]');if(c)copyText(c.dataset.copy,'Copied '+c.dataset.copy);const x=e.target.closest('[data-close]');if(x)document.getElementById(x.dataset.close).hidden=true;});
-$$('.scrim').forEach(s=>s.addEventListener('click',e=>{if(e.target===s)s.hidden=true;}));
+document.addEventListener('click',e=>{const c=e.target.closest('[data-copy]');if(c)copyText(c.dataset.copy,'Copied '+c.dataset.copy);const x=e.target.closest('[data-close]');if(x)closeOverlay(document.getElementById(x.dataset.close));});
+$$('.scrim').forEach(s=>s.addEventListener('click',e=>{if(e.target===s)closeOverlay(s);}));
+/* focus management: remember the opener, trap Tab inside an open overlay, restore focus on close */
+let lastFocus=null;
+const FOCUSABLE='a[href],button:not([disabled]),input,select,textarea,[tabindex]:not([tabindex="-1"])';
+function closeOverlay(s){s.hidden=true;if(lastFocus&&document.contains(lastFocus)){try{lastFocus.focus();}catch(_){}}}
+new MutationObserver(ms=>ms.forEach(m=>{const el=m.target;if(el.classList.contains('scrim')&&!el.hidden){lastFocus=document.activeElement;}})).observe(document.body,{attributes:true,subtree:true,attributeFilter:['hidden']});
+document.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const open=$$('.scrim').find(x=>!x.hidden);if(!open)return;const f=$$(FOCUSABLE,open).filter(x=>x.offsetParent!==null);if(!f.length)return;const first=f[0],last=f[f.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}});
 
 /* ---------- email composer ---------- */
 let mailGroup='all';
@@ -1371,7 +1380,7 @@ $('#printBtn').addEventListener('click',()=>{if(view!=='overview')showView('over
 /* ---------- command palette ---------- */
 let palSel=0,palItems=[];
 function openPal(){$('#palScrim').hidden=false;const i=$('#palInput');i.value='';palSearch('');setTimeout(()=>i.focus(),20);}
-function closePal(){$('#palScrim').hidden=true;}
+function closePal(){closeOverlay($('#palScrim'));}
 $('#openPal').addEventListener('click',openPal);
 const PB=[['pb-mission','Mission & values'],['pb-doctrine','Doctrine'],['pb-degrees','Degrees & tracks'],['pb-courses','Courses & requirements'],['pb-faculty','Faculty expectations'],['pb-money','Tuition & compensation'],['pb-faq','FAQ'],['pb-links','Links & resources']];
 function palSearch(q){
@@ -1391,7 +1400,7 @@ function palSearch(q){
   const res=$('#palRes');
   if(!palItems.length){res.innerHTML='<div class="none">Nothing matches “'+esc(q)+'”.</div>';return;}
   let i=0;
-  res.innerHTML=groups.map(([name,items])=>`<div class="grp">${esc(name)}</div>`+items.map(it=>`<button class="it" type="button" data-pi="${i++}" aria-selected="${i===1}"><span class="ic">${esc(it.ic)}</span><span style="min-width:0"><span class="t" style="display:block">${esc(it.t)}</span><span class="s" style="display:block">${esc(it.s||'')}</span></span><span class="k">${esc(it.k||'')}</span></button>`).join('')).join('');
+  res.innerHTML=groups.map(([name,items])=>`<div class="grp">${esc(name)}</div>`+items.map(it=>`<button class="it" type="button" role="option" data-pi="${i++}" aria-selected="${i===1}"><span class="ic">${esc(it.ic)}</span><span style="min-width:0"><span class="t" style="display:block">${esc(it.t)}</span><span class="s" style="display:block">${esc(it.s||'')}</span></span><span class="k">${esc(it.k||'')}</span></button>`).join('')).join('');
 }
 function palMove(d){if(!palItems.length)return;palSel=(palSel+d+palItems.length)%palItems.length;$$('#palRes .it').forEach((el,i)=>el.setAttribute('aria-selected',i===palSel));const el=$(`#palRes [data-pi="${palSel}"]`);if(el)el.scrollIntoView({block:'nearest'});}
 function palRun(i){const it=palItems[i];if(!it)return;closePal();it.run();}
@@ -1401,7 +1410,7 @@ $('#palRes').addEventListener('click',e=>{const b=e.target.closest('[data-pi]');
 document.addEventListener('keydown',e=>{
   const typing=/^(input|textarea|select)$/i.test(e.target.tagName)||e.target.isContentEditable;
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();if($('#palScrim').hidden)openPal();else closePal();return;}
-  if(e.key==='Escape'){$$('.scrim').forEach(s=>s.hidden=true);return;}
+  if(e.key==='Escape'){$$('.scrim').forEach(s=>{if(!s.hidden)closeOverlay(s);});return;}
   if(typing)return;
   if(e.key==='/'){e.preventDefault();openPal();return;}
   if(/^[1-6]$/.test(e.key)&&!e.metaKey&&!e.ctrlKey&&!e.altKey){showView(VIEW_KEYS[+e.key-1]);}

@@ -1,23 +1,35 @@
 # Praxis Hub
 
-Internal leadership hub for Praxis Theological Seminary: announcements, directory, action items, calendar and playbook.
+Leadership hub for Praxis Theological Seminary: a briefing for the president and board, announcements, directory, action items, calendar and playbook.
 
 - **Site:** https://lssouthreno.github.io/praxis-hub/
 - **Data:** the [Praxis Hub Data](https://docs.google.com/spreadsheets/d/1tkiJcJP1Eux57y4qkI2DUynBpc6teKtAWdNNY-M8MXE/edit) Google Sheet. The page reads every tab live on load, so edits in the sheet appear on the next refresh. No build step and nothing to push.
 
 ## How it works
 
-`index.html` is a single static page. On load it fetches each tab of the sheet as CSV through Google's `gviz` endpoint and renders it. The sheet must be shared as **Anyone with the link · Viewer** for the page to read it; editing rights stay with whoever you invite as an editor.
+`index.html` is a single static page. On load it fetches each tab of the sheet as CSV through Google's `gviz` endpoint and renders it. The sheet must be shared as **Anyone with the link · Viewer** for the page to read it; editing rights stay with whoever you invite as an editor. Columns are matched by header name, so column order does not matter. Keep the header row intact.
 
-| Tab | Drives |
-|---|---|
-| People | Directory, counts, email copy buttons |
-| Announcements | Announcements feed and the overview |
-| Action Items | Open and completed items |
-| Calendar | Upcoming and past dates |
-| Links | The links list on the Playbook page |
+| Tab | Required columns | Optional columns |
+|---|---|---|
+| People | Name, Group, Title, Status | Church or Institution, Courses (comma-separated), Email, Phone, City, Notes, Sort order |
+| Announcements | Date, Title, Message, Audience | Pinned, Posted by, Type (Update · Decision · Request · Prayer · Celebration), Response needed, Respond by, Link |
+| Action Items | Item, Status | Owner, Due date, Priority (High · Normal · Low), Link, Notes |
+| Calendar | Date, Title, Type | End date, Time, Location, Link, Agenda (one item per line or `;`), Minutes, Date TBD, Notes |
+| Links | Title, URL | Category, Description |
+| Metrics (optional tab) | Metric, Value | Target, Unit (`$`, `%`), As of, Note |
 
-Column order doesn't matter; the page matches columns by header name. Keep the header row intact.
+Values that drive behaviour:
+
+- **Group:** Board, Professor, Staff, School of Music.
+- **Status (People):** Confirmed, Tentative, In conversation, Open role.
+- **Audience:** Everyone, Board, Faculty, Staff.
+- **Type (Calendar):** Intensive, Board meeting, Milestone, Deadline, Other. The next *Board meeting* row powers the meeting card on the briefing.
+- **Posted by** matching the person whose Title contains "President" turns that announcement into the *From the President* card.
+- **Courses** on the People tab feed the *By course* coverage board in the directory.
+
+## Features
+
+Briefing with launch countdown and milestone timeline · needs-attention panel · president's note · next board meeting · launch numbers · weekly summary (copy or email) · one-page print brief · group email with BCC · command palette (⌘K, `/`, keys 1–6) · person drawer · calendar export (.ics) · light/dark/system theme · "new since your last visit" badges · phone layout with bottom tabs.
 
 ## Branding
 
