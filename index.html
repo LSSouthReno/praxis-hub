@@ -565,7 +565,7 @@ td b{font-weight:600}
 
   <main>
     <div class="top">
-      <div><h1 id="title">Briefing</h1><div class="sub"><span class="dot wait" id="dot"></span><span id="status">Connecting to the data sheet…</span><span id="newline"></span></div></div>
+      <div><h1 id="title">Briefing</h1><div class="sub"><span class="dot wait" id="dot"></span><span id="status">Connecting to the data sheet…</span><span id="newline"></span><button class="btn ghost xs" id="health" type="button" hidden style="color:var(--warn)"></button></div></div>
       <div class="topActions">
         <button class="btn ghost" id="refresh" type="button" title="Reload from Google Sheets"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg><span>Refresh</span></button>
         <div class="menu" id="moreMenu">
@@ -644,6 +644,7 @@ td b{font-weight:600}
             <button class="chip" data-aud="staff">Staff <span class="n" data-n="staff"></span></button>
           </div>
           <div class="spacer"></div>
+          <button class="btn ghost sm" id="markRead" type="button" hidden>Mark all read</button>
           <select class="sel" id="annType" aria-label="Filter by type"><option value="">All types</option><option value="update">Updates</option><option value="decision">Decisions</option><option value="request">Requests</option><option value="prayer">Prayer</option><option value="celebration">Celebrations</option></select>
         </div>
         <div class="card"><div id="annList"></div></div>
@@ -884,6 +885,13 @@ td b{font-weight:600}
 <div class="scrim right" id="drawerScrim" hidden>
   <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="drName" id="drawer"></div>
 </div>
+<!-- sheet health -->
+<div class="scrim" id="healthScrim" hidden>
+  <div class="panel mail" role="dialog" aria-modal="true" aria-label="Sheet health">
+    <header><h3 style="font-size:19px">Sheet health</h3><button class="x" data-close="healthScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+    <div class="body"><p class="muted" style="font-size:13.5px">Rows the hub couldn’t fully read. Fix them in the sheet and press Refresh.</p><div class="links" id="healthList"></div></div>
+  </div>
+</div>
 <!-- share -->
 <div class="scrim" id="shareScrim" hidden>
   <div class="panel mail" role="dialog" aria-modal="true" aria-label="Share the hub">
@@ -986,6 +994,7 @@ const ETYPES={intensive:'Intensive',board:'Board meeting',milestone:'Milestone',
 const VIEWS={overview:'Briefing',announcements:'Announcements',directory:'Directory',tasks:'Action Items',calendar:'Calendar',playbook:'Playbook'};
 const VIEW_KEYS=Object.keys(VIEWS);
 const S={people:[],ann:[],tasks:[],events:[],resources:[],metrics:[]};
+const RAW={};
 const loaded={people:false,ann:false,tasks:false,events:false,resources:false,metrics:false};
 const missing={};
 let view='overview',annAud='all',annType='',dirGroup='all',dirQ='',dirSort='order',dirMissing=false,taskSt='open',taskOwner='',taskGroup='due',calType='all',calView='list',mgY=0,mgM=0,lastLoad=0,loadErr=null,lastVisit=0;
@@ -1070,10 +1079,11 @@ async function fetchTab(key,tab){
   const heads=(rows[0]||[]).map(norm);
   if(!REQUIRED[key].some(h=>heads.includes(h)))throw new Error('no-tab');
   remember('csv.'+key,t);
-  return rowsToObjects(rows);
+  const objs=rowsToObjects(rows);RAW[key]=objs;
+  return objs;
 }
 /* paint from the last good copy immediately; the live fetch replaces it */
-function paintCached(){let any=false;Object.keys(TABS).forEach(key=>{const t=recall('csv.'+key);if(!t)return;try{const rows=parseCSV(t);S[key]=rowsToObjects(rows).map(MAP[key]).filter(Boolean);loaded[key]=true;any=true;}catch(_){}});return any;}
+function paintCached(){let any=false;Object.keys(TABS).forEach(key=>{const t=recall('csv.'+key);if(!t)return;try{const rows=parseCSV(t);const objs=rowsToObjects(rows);RAW[key]=objs;S[key]=objs.map(MAP[key]).filter(Boolean);loaded[key]=true;any=true;}catch(_){}});return any;}
 let loading=false;
 async function loadAll(manual){
   if(loading)return;loading=true;
@@ -1093,8 +1103,11 @@ function setStatus(state,text){$('#dot').className='dot '+(state==='ok'?'':state
 function renderStatus(){
   const n=$('#notice');
   if(loadErr){
+    const haveCache=Object.keys(TABS).some(k=>recall('csv.'+k));
+    const unreachable=navigator.onLine===false||/TypeError|Failed to fetch|NetworkError/.test(String(loadErr));
+    if(unreachable&&haveCache){setStatus('off','Offline · showing the last copy');n.hidden=false;n.innerHTML='Google Sheets couldn’t be reached, so this is the last copy the hub saved on this device. It will refresh when the connection returns.';return;}
     setStatus('off','Could not read the data sheet');n.hidden=false;
-    n.innerHTML=(loadErr.message==='not-shared'||/TypeError|Failed to fetch|HTTP 4/.test(String(loadErr)))?
+    n.innerHTML=(loadErr.message==='not-shared'||/HTTP 4/.test(String(loadErr))||(unreachable&&!haveCache))?
       'The hub can’t read its Google Sheet yet. Open <a href="'+esc(SHEET_URL)+'" target="_blank" rel="noopener">Praxis Hub Data</a>, choose Share, and set general access to <b>Anyone with the link · Viewer</b>. Then press Refresh.':
       'The data sheet didn’t load ('+esc(loadErr.message)+'). Check your connection and press Refresh.';
   }else{n.hidden=true;setStatus('ok',lastLoad?'Live from Google Sheets · updated '+fmtWhen(lastLoad):'Connecting to the data sheet…');}
@@ -1104,7 +1117,7 @@ function renderStatus(){
 setInterval(()=>{if(!loadErr&&lastLoad)setStatus('ok','Live from Google Sheets · updated '+fmtWhen(lastLoad));},30000);
 const newAnn=()=>lastVisit?S.ann.filter(a=>a.createdAt>lastVisit):[];
 /* snapshot of titles/names from the previous visit, to spot new rows that carry no date */
-let snap=null;try{snap=JSON.parse(recall('snapshot')||'null');}catch(_){snap=null;}
+var snap=null;try{snap=JSON.parse(recall('snapshot')||'null');}catch(_){snap=null;}
 const sigE=e=>e.title+'|'+e.date,sigP=p=>p.name+'|'+p.group,sigT=t=>t.title;
 const newEvents=()=>snap&&snap.events?S.events.filter(e=>!snap.events.includes(sigE(e))):[];
 const newPeople=()=>snap&&snap.people?S.people.filter(p=>!snap.people.includes(sigP(p))):[];
@@ -1163,12 +1176,14 @@ const sortAnn=l=>[...l].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.createdAt|
 function renderAnn(){
   const list=$('#annList');
   $$('#annFilter [data-n]').forEach(n=>{const k=n.dataset.n;const c=S.ann.filter(a=>k==='all'||a.audience===k||a.audience==='all').length;n.textContent=loaded.ann&&c?c:'';});
+  $('#markRead').hidden=!(newAnn().length||newEvents().length||newPeople().length||newTasks().length);
   if(!loaded.ann){list.innerHTML=loadingBox();return;}
   const l=sortAnn(S.ann.filter(a=>(annAud==='all'||a.audience===annAud||a.audience==='all')&&(!annType||a.type===annType)));
   list.innerHTML=l.length?l.map(a=>annHTML(a,false)).join(''):emptyBox(S.ann.length?'Nothing matches':'Nothing posted yet',S.ann.length?'Try another audience or type.':sheetHint('Announcements'));
 }
 $('#annFilter').addEventListener('click',e=>{const b=e.target.closest('[data-aud]');if(!b)return;annAud=b.dataset.aud;$$('#annFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c===b));renderAnn();});
 $('#annType').addEventListener('change',e=>{annType=e.target.value;renderAnn();});
+$('#markRead').addEventListener('click',()=>{lastVisit=Date.now();snap=null;markVisit();try{snap=JSON.parse(recall('snapshot'));}catch(_){}renderAll();toast('Marked everything as read');});
 document.addEventListener('click',e=>{const pl=e.target.closest('[data-permalink]');if(pl){copyText(location.origin+location.pathname+'#post-'+pl.dataset.permalink,'Link copied');return;}const m=e.target.closest('[data-more]');if(!m)return;const body=m.previousElementSibling;const open=body.classList.toggle('clamp');m.textContent=open?'Read more':'Show less';});
 
 
@@ -1502,7 +1517,7 @@ function renderCounts(){
   const nx=upcomingEvents()[0];const dn=nx?daysUntil(nx.date):null;
   $('#c-cal').textContent=nx&&dn<=14?(dn===0?'today':dn+'d'):'';
 }
-function renderAll(){renderStatus();renderOverview();renderAnn();renderDir();renderTasks();renderCal();renderLinks();renderCounts();}
+function renderAll(){renderStatus();renderHealth();renderOverview();renderAnn();renderDir();renderTasks();renderCal();renderLinks();renderCounts();}
 
 /* ---------- person drawer ---------- */
 function openDrawer(p){
@@ -1604,6 +1619,30 @@ function vcard(p){const nm=p.name.trim().split(/\s+/);const last=nm.length>1?nm.
 document.addEventListener('click',e=>{const b=e.target.closest('[data-vcard]');if(!b)return;const p=S.people.find(x=>x.id===b.dataset.vcard);if(p){download(p.name.replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'.vcf',vcard(p),'text/vcard');toast('Contact card downloaded');}});
 
 
+
+/* ---------- sheet health check ---------- */
+const KNOWN={group:/board|music|staff|ops|operation|prof|faculty/,status:/confirm|tentative|maybe|conversation|prospect|pending|invited|open|vacant|hiring/,aud:/everyone|all|board|fac|prof|staff/,atype:/update|decision|request|ask|action|pray|celebr|praise|win/,etype:/intens|board|meeting|mile|dead|due|other/,tstatus:/open|done|complete|closed|true|false|yes|no|x|todo|progress|blocked|waiting/};
+function audit(){
+  const w=[];const add=(tab,row,msg)=>w.push({tab,row,msg});
+  (RAW.people||[]).forEach((o,i)=>{const r=i+2;if(!pick(o,['Name','Full name','Person']))return add('People',r,'No name, so the row is skipped');const g=pick(o,['Group','Team','Category','Role group']);if(g&&!KNOWN.group.test(norm(g)))add('People',r,'Group “'+g+'” isn’t recognized (use Board, Professor, Staff or School of Music); shown under Professors');const st=pick(o,['Status']);if(st&&!KNOWN.status.test(norm(st)))add('People',r,'Status “'+st+'” isn’t recognized; shown as Confirmed');const em=pick(o,['Email','E-mail','Email address']);if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))add('People',r,'Email “'+em+'” doesn’t look like an address');});
+  (RAW.ann||[]).forEach((o,i)=>{const r=i+2;const d=pick(o,['Date','Posted','Posted on']);if(d&&!toISO(d))add('Announcements',r,'Date “'+d+'” couldn’t be read');const a=pick(o,['Audience','For','To']);if(a&&!KNOWN.aud.test(norm(a)))add('Announcements',r,'Audience “'+a+'” isn’t recognized; shown to Everyone');const t=pick(o,['Type','Kind','Category']);if(t&&!KNOWN.atype.test(norm(t)))add('Announcements',r,'Type “'+t+'” isn’t recognized; shown as Update');const rb=pick(o,['Respond by','Response by','Reply by','Due']);if(rb&&!toISO(rb))add('Announcements',r,'Respond-by “'+rb+'” couldn’t be read');});
+  (RAW.tasks||[]).forEach((o,i)=>{const r=i+2;const d=pick(o,['Due date','Due','Deadline']);if(d&&!toISO(d))add('Action Items',r,'Due date “'+d+'” couldn’t be read');const st=pick(o,['Status','Done','Complete']);if(st&&!KNOWN.tstatus.test(norm(st)))add('Action Items',r,'Status “'+st+'” isn’t recognized; treated as Open');});
+  (RAW.events||[]).forEach((o,i)=>{const r=i+2;const d=pick(o,['Date','Start','Start date']);if(!d)add('Calendar',r,'No date, so the row is skipped');else if(!toISO(d))add('Calendar',r,'Date “'+d+'” couldn’t be read, so the row is skipped');const e=pick(o,['End date','End','Through']);if(e&&!toISO(e))add('Calendar',r,'End date “'+e+'” couldn’t be read');const t=pick(o,['Type','Kind','Category']);if(t&&!KNOWN.etype.test(norm(t)))add('Calendar',r,'Type “'+t+'” isn’t recognized; shown as Other');});
+  (RAW.resources||[]).forEach((o,i)=>{const r=i+2;const u=pick(o,['URL','Link','Address','Href']);if(u&&!/^https?:\/\//i.test(u))add('Links',r,'URL “'+u+'” must start with https://, so the row is skipped');});
+  return w;
+}
+function renderHealth(){
+  const w=audit();const el=$('#health');
+  if(!w.length){el.hidden=true;return;}
+  el.hidden=false;el.textContent='· '+w.length+' sheet '+(w.length===1?'row needs':'rows need')+' a look';
+}
+function openHealth(){
+  const w=audit();const host=$('#healthList');
+  host.innerHTML=w.length?w.map(x=>`<div class="link"><div style="min-width:0"><a href="${esc(tabUrl(x.tab))}" target="_blank" rel="noopener">${esc(x.tab)} · row ${x.row}</a><div class="desc">${esc(x.msg)}</div></div></div>`).join(''):'<div class="allclear"><span class="ic"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 7"/></svg></span>Every row reads cleanly.</div>';
+  $('#healthScrim').hidden=false;
+}
+$('#health').addEventListener('click',openHealth);
+
 /* ---------- share panel + QR ---------- */
 const HUB_URL=location.origin+location.pathname;
 function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector('script[src="'+src+'"]'))return res();const sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
@@ -1641,7 +1680,7 @@ function palSearch(q){
   add('Playbook',PB.filter(([id,l])=>hit(l)||(q&&(document.getElementById(id).textContent||'').toLowerCase().includes(q))).map(([id,l])=>({ic:'P',t:l,s:'Playbook section',run:()=>{showView('playbook',{keepScroll:true});setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}),30);}})));
   if(q&&('course coverage professors assigned'.includes(q)||CATALOG.some(([,l])=>l.some(c=>c.toLowerCase().includes(q)))))add('Courses',[{ic:'C',t:'Course coverage',s:'Which courses have a professor assigned',run:()=>{dirGroup='courses';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='courses'));renderDir();showView('directory');}}]);
   add('Links',S.resources.filter(r=>hit(r.title+' '+r.category)).slice(0,5).map(r=>({ic:'↗',t:r.title,s:r.url.replace(/^https?:\/\//,''),k:r.category,run:()=>window.open(r.url,'_blank','noopener')})));
-  const cmds=[{ic:'⇗',t:'Share the hub',s:'Link and QR code',run:openShare},{ic:'?',t:'Keyboard shortcuts',s:'Everything you can do without the mouse',run:()=>{$('#helpScrim').hidden=false;}},{ic:'+',t:'New announcement',s:'Draft a post and copy the row for the sheet',run:openDraft},{ic:'≡',t:'Weekly summary',s:'Copy or email a plain-text briefing',run:openDigest},{ic:'⎙',t:'Print one-page brief',s:'Briefing, print-ready',run:()=>$('#printBtn').click()},{ic:'✉',t:'Email a group',s:'Opens your mail app with BCC',run:()=>openMail('all')},{ic:'◐',t:'Switch theme',s:'System · Light · Dark',run:()=>$('#themeBtn').click()}].filter(c=>hit(c.t+' '+c.s));if(q)add('Actions',cmds);
+  const cmds=[{ic:'✓',t:'Sheet health',s:'Rows the hub could not fully read',run:openHealth},{ic:'⇗',t:'Share the hub',s:'Link and QR code',run:openShare},{ic:'?',t:'Keyboard shortcuts',s:'Everything you can do without the mouse',run:()=>{$('#helpScrim').hidden=false;}},{ic:'+',t:'New announcement',s:'Draft a post and copy the row for the sheet',run:openDraft},{ic:'≡',t:'Weekly summary',s:'Copy or email a plain-text briefing',run:openDigest},{ic:'⎙',t:'Print one-page brief',s:'Briefing, print-ready',run:()=>$('#printBtn').click()},{ic:'✉',t:'Email a group',s:'Opens your mail app with BCC',run:()=>openMail('all')},{ic:'◐',t:'Switch theme',s:'System · Light · Dark',run:()=>$('#themeBtn').click()}].filter(c=>hit(c.t+' '+c.s));if(q)add('Actions',cmds);
   palItems=groups.flatMap(([,items])=>items);palSel=0;
   const res=$('#palRes');
   if(!palItems.length){res.innerHTML='<div class="none">Nothing matches “'+esc(q)+'”.</div>';return;}
@@ -1672,6 +1711,7 @@ $('#editSheet').href=SHEET_URL;$('#footSheet').href=SHEET_URL;
 lastVisit=Number(recall('lastVisit'))||0;
 const markVisit=()=>{remember('lastVisit',String(Date.now()));saveSnapshot();};
 window.addEventListener('pagehide',markVisit);
+window.addEventListener('online',()=>loadAll(false));
 setTimeout(markVisit,45000);
 function openPost(id){annAud='all';annType='';$$('#annFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.aud==='all'));$('#annType').value='';renderAnn();showView('announcements',{silent:true});setTimeout(()=>{const el=document.getElementById(id);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('hl');}},80);}
 let pendingPost=(location.hash.match(/^#post-(a\d+)$/)||[])[1]||'';
