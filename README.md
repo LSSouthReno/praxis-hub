@@ -11,7 +11,7 @@ Leadership hub for Praxis Theological Seminary: a briefing for the president and
 
 | Tab | Required columns | Optional columns |
 |---|---|---|
-| People | Name, Group, Title, Status | Church or Institution, Courses (comma-separated), Email, Phone, City, Notes, Sort order, and onboarding steps: Contract, Handbook, Syllabus, Bio & photo, W-9 (a date, "yes" or TRUE marks a step done) |
+| People | Name, Group, Title, Status | Church or Institution, Courses (comma-separated), Email, Phone, City, Photo (a direct image URL), Notes, Sort order, and onboarding steps: Contract, Handbook, Syllabus, Bio & photo, W-9 (a date, "yes" or TRUE marks a step done) |
 | Announcements | Date, Title, Message, Audience | Pinned, Posted by, Type (Update · Decision · Request · Prayer · Celebration), Response needed, Respond by, Link |
 | Action Items | Item, Status | Owner, Due date, Priority (High · Normal · Low), Link, Notes |
 | Calendar | Date, Title, Type | End date, Time, Location, Link, Agenda (one item per line or `;`), Minutes, Date TBD, Notes |

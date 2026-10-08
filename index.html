@@ -274,7 +274,8 @@ input.txt{font:inherit;color:inherit;background:var(--surface);border:1px solid 
 .people{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
 .person{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:left;align-items:start;min-width:0;transition:box-shadow .15s,border-color .15s}
 .person:hover{border-color:var(--muted);box-shadow:var(--shadow)}
-.person .av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:15px;color:var(--on-navy);background:var(--navy);letter-spacing:.02em}
+.person .av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:15px;color:var(--on-navy);background:var(--navy);letter-spacing:.02em;position:relative;overflow:hidden}
+.av.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .person.faculty .av{background:var(--gold-ink);color:#fff}
 .person.staff .av{background:#617073;color:#fff}
 .person.music .av{background:#003D52;color:#fff}
@@ -574,6 +575,7 @@ td b{font-weight:600}
             <button class="btn ghost" id="digestBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg><span>Weekly summary</span></button>
             <button class="btn ghost" id="emailBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span>Email a group</span></button>
             <button class="btn ghost" id="printBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg><span>Print brief</span></button>
+            <button class="btn ghost" id="shareBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg><span>Share the hub</span></button>
             <button class="btn ghost" id="icsMenu" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/></svg><span>Download dates (.ics)</span></button>
           </div>
         </div>
@@ -882,6 +884,22 @@ td b{font-weight:600}
 <div class="scrim right" id="drawerScrim" hidden>
   <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="drName" id="drawer"></div>
 </div>
+<!-- share -->
+<div class="scrim" id="shareScrim" hidden>
+  <div class="panel mail" role="dialog" aria-modal="true" aria-label="Share the hub">
+    <header><h3 style="font-size:19px">Share the hub</h3><button class="x" data-close="shareScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+    <div class="body">
+      <div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;align-items:start">
+        <div id="qr" style="width:150px;height:150px;background:#fff;border-radius:var(--r);padding:8px;display:grid;place-items:center" aria-label="QR code for the hub"></div>
+        <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div><label>Hub address</label><div class="rcpt" id="shareUrl" style="max-height:none;user-select:all"></div></div>
+          <p class="muted" style="font-size:13.5px;line-height:1.5">Anyone with this link can read the hub. Editing happens in the Google Sheet, so invite editors there. Drop the QR code on a slide and the room can open the hub on their phones.</p>
+        </div>
+      </div>
+    </div>
+    <div class="acts"><button class="btn" id="qrSave" type="button">Save QR (.png)</button><button class="btn primary" id="shareCopy" type="button">Copy link</button></div>
+  </div>
+</div>
 <!-- shortcuts -->
 <div class="scrim" id="helpScrim" hidden>
   <div class="panel mail" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
@@ -984,6 +1002,7 @@ const fmtDateLong=s=>{const d=parseISO(s);return d?['Sunday','Monday','Tuesday',
 const daysUntil=s=>{const d=parseISO(s);if(!d)return null;const t=parseISO(todayISO());return Math.round((d-t)/86400000);};
 const fmtWhen=ts=>{if(!ts)return '';const d=new Date(ts),diff=(Date.now()-ts)/60000;if(diff<1)return 'just now';if(diff<60)return Math.round(diff)+' min ago';if(diff<1440)return Math.round(diff/60)+' h ago';if(diff<7*1440)return Math.round(diff/1440)+' d ago';return MON[d.getMonth()]+' '+d.getDate()+(d.getFullYear()!==new Date().getFullYear()?', '+d.getFullYear():'');};
 const initials=n=>String(n||'').trim().split(/\s+/).map(w=>w[0]).filter(Boolean).slice(0,2).join('').toUpperCase()||'?';
+const avatar=(p,cls)=>p.photo?`<span class="${cls} photo"><img src="${esc(p.photo)}" alt="" loading="lazy" onerror="this.parentNode.classList.remove('photo');this.remove()">${esc(initials(p.name))}</span>`:`<span class="${cls}">${esc(initials(p.name))}</span>`;
 const relDays=n=>n===0?'Today':n===1?'Tomorrow':n<0?Math.abs(n)+' days ago':'In '+n+' days';
 async function copyText(t,okMsg){try{await navigator.clipboard.writeText(t);toast(okMsg||'Copied');}catch(e){const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy');}catch(_){}ta.remove();toast(ok?(okMsg||'Copied'):'Select and copy: '+t);}}
 const remember=(k,v)=>{try{localStorage.setItem('praxis.'+k,v);}catch(_){}};
@@ -1029,7 +1048,7 @@ const ONBOARD=[['contract',['Contract','Contract signed','Contract returned'],'C
 const stepDone=v=>{const t=String(v||'').trim();if(!t)return false;if(/^(no|n|false|0|pending|not yet|todo|-|—)$/i.test(t))return false;return truthy(t)||!!toISO(t)||/^(sent|received|signed|done|yes|complete|ok)/i.test(t);};
 function onboardOf(o){const r={};let any=false;ONBOARD.forEach(([k,keys])=>{const key=keys.map(norm).find(h=>h in o);if(key){any=true;r[k]=stepDone(o[key]);}else r[k]=null;});return any?r:null;}
 const MAP={
-  people:(o,i)=>{const name=pick(o,['Name','Full name','Person']);if(!name)return null;return {id:'p'+i,row:i+2,name,group:groupKey(pick(o,['Group','Team','Category','Role group'])),title:pick(o,['Title','Role','Position']),status:statusKey(pick(o,['Status'])),affiliation:pick(o,['Church or Institution','Church','Institution','Affiliation','Organization']),courses:pick(o,['Courses','Course','Teaching']),email:pick(o,['Email','E-mail','Email address']),phone:pick(o,['Phone','Cell','Mobile','Phone number']),city:pick(o,['City','Location']),notes:pick(o,['Notes','Note']),order:Number(pick(o,['Sort order','Order','Sort']))||500,ob:onboardOf(o)};},
+  people:(o,i)=>{const name=pick(o,['Name','Full name','Person']);if(!name)return null;return {id:'p'+i,row:i+2,name,group:groupKey(pick(o,['Group','Team','Category','Role group'])),title:pick(o,['Title','Role','Position']),status:statusKey(pick(o,['Status'])),affiliation:pick(o,['Church or Institution','Church','Institution','Affiliation','Organization']),courses:pick(o,['Courses','Course','Teaching']),email:pick(o,['Email','E-mail','Email address']),phone:pick(o,['Phone','Cell','Mobile','Phone number']),city:pick(o,['City','Location']),photo:(v=>/^https?:\/\//i.test(v)?v:'')(pick(o,['Photo','Photo URL','Image','Headshot'])),notes:pick(o,['Notes','Note']),order:Number(pick(o,['Sort order','Order','Sort']))||500,ob:onboardOf(o)};},
   ann:(o,i)=>{const title=pick(o,['Title','Subject','Headline']);const body=pick(o,['Message','Body','Text','Announcement']);if(!title&&!body)return null;const iso=toISO(pick(o,['Date','Posted','Posted on']));const rb=toISO(pick(o,['Respond by','Response by','Reply by','Due']));return {id:'a'+i,row:i+2,title:title||'Announcement',body,audience:audKey(pick(o,['Audience','For','To'])),pinned:truthy(pick(o,['Pinned','Pin'])),author:pick(o,['Posted by','Author','From','By']),type:atypeKey(pick(o,['Type','Kind','Category'])),respond:truthy(pick(o,['Response needed','Needs response','RSVP','Reply needed']))||!!rb,respondBy:rb,link:pick(o,['Link','URL']),date:iso,createdAt:iso?parseISO(iso).getTime():0};},
   tasks:(o,i)=>{const title=pick(o,['Item','Task','Action item','Title','What']);if(!title)return null;const st=norm(pick(o,['Status','Done','Complete']));return {id:'t'+i,row:i+2,title,owner:pick(o,['Owner','Assigned to','Who','Assignee']),due:toISO(pick(o,['Due date','Due','Deadline'])),status:(st.includes('done')||st.includes('complete')||st.includes('closed')||st==='true'||st==='x'||st==='yes')?'done':'open',priority:prioKey(pick(o,['Priority'])),link:pick(o,['Link','URL']),notes:pick(o,['Notes','Note','Details'])};},
   events:(o,i)=>{const title=pick(o,['Title','Event','Name','What']);const date=toISO(pick(o,['Date','Start','Start date']));if(!title||!date)return null;return {id:'e'+i,row:i+2,title,date,endDate:toISO(pick(o,['End date','End','Through'])),time:pick(o,['Time','Start time']),type:typeKey(pick(o,['Type','Kind','Category'])),location:pick(o,['Location','Where','Place']),link:pick(o,['Link','URL','Zoom','Join link']),agenda:splitLines(pick(o,['Agenda','Agenda items'])),minutes:pick(o,['Minutes','Minutes link','Notes link']),tbd:truthy(pick(o,['Date TBD','TBD','Tentative'])),notes:pick(o,['Notes','Note','Details'])};},
@@ -1200,7 +1219,7 @@ function renderOnboarding(){
 function personHTML(p){
   const courses=String(p.courses||'').split(',').map(s=>s.trim()).filter(Boolean);
   return `<button class="person ${esc(p.group)}" data-person="${esc(p.id)}" type="button">
-    <div class="av">${esc(initials(p.name))}</div>
+    ${avatar(p,'av')}
     <div style="min-width:0">
       <h4>${esc(p.name)}</h4>
       <div class="role">${esc([p.title,p.affiliation].filter(Boolean).join(' · '))||'<span class="muted">Role to be added</span>'}</div>
@@ -1492,7 +1511,7 @@ function openDrawer(p){
   const ct=(k,v,href)=>v?`<div class="ct"><div style="min-width:0"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>${href?`<a class="btn sm" href="${esc(href)}">${k==='Email'?'Write':'Call'}</a>`:''}<button class="btn sm" type="button" data-copy="${esc(v)}">Copy</button></div>`:`<div class="ct missing"><div><span class="k">${k}</span><span class="v">Not on file</span></div></div>`;
   d.innerHTML=`<header><div class="eyebrow">${esc(GROUPS[p.group])}</div><button class="x" data-close="drawerScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
   <div class="body">
-    <div class="hero ${esc(p.group)}"><div class="av">${esc(initials(p.name))}</div><div style="min-width:0"><h3 id="drName">${esc(p.name)}</h3><div class="sub">${esc([p.title,p.affiliation].filter(Boolean).join(' · '))||'Role to be added'}</div><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><span class="pill ${esc(p.group)}">${esc(GSHORT[p.group])}</span><span class="pill ${esc(p.status)}">${esc(STATUS[p.status])}</span></div></div></div>
+    <div class="hero ${esc(p.group)}">${avatar(p,'av')}<div style="min-width:0"><h3 id="drName">${esc(p.name)}</h3><div class="sub">${esc([p.title,p.affiliation].filter(Boolean).join(' · '))||'Role to be added'}</div><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><span class="pill ${esc(p.group)}">${esc(GSHORT[p.group])}</span><span class="pill ${esc(p.status)}">${esc(STATUS[p.status])}</span></div></div></div>
     ${ct('Email',p.email,p.email?'mailto:'+p.email:'')}
     ${ct('Phone',p.phone,p.phone?'tel:'+p.phone.replace(/[^+\d]/g,''):'')}
     ${p.city?`<div><div class="sec">Location</div><div style="font-size:14px">${esc(p.city)}</div></div>`:''}
@@ -1584,6 +1603,18 @@ $('#dirExport').addEventListener('click',()=>{const l=visiblePeople();if(!l.leng
 function vcard(p){const nm=p.name.trim().split(/\s+/);const last=nm.length>1?nm.pop():'';const first=nm.join(' ');const esc2=v=>String(v||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/[,;]/g,m=>'\\'+m);return ['BEGIN:VCARD','VERSION:3.0','N:'+esc2(last)+';'+esc2(first)+';;;','FN:'+esc2(p.name),p.title?'TITLE:'+esc2(p.title):'',p.affiliation?'ORG:'+esc2(p.affiliation):'',p.email?'EMAIL;TYPE=INTERNET:'+p.email:'',p.phone?'TEL;TYPE=CELL:'+p.phone:'',p.city?'ADR;TYPE=WORK:;;;'+esc2(p.city)+';;;':'','NOTE:'+esc2(['Praxis Theological Seminary · '+GROUPS[p.group],p.courses?'Courses: '+p.courses:'',p.notes].filter(Boolean).join('\n')),'END:VCARD'].filter(Boolean).join('\r\n');}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-vcard]');if(!b)return;const p=S.people.find(x=>x.id===b.dataset.vcard);if(p){download(p.name.replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'.vcf',vcard(p),'text/vcard');toast('Contact card downloaded');}});
 
+
+/* ---------- share panel + QR ---------- */
+const HUB_URL=location.origin+location.pathname;
+function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector('script[src="'+src+'"]'))return res();const sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
+async function openShare(){
+  $('#shareUrl').textContent=HUB_URL;$('#shareScrim').hidden=false;
+  const q=$('#qr');if(!q.dataset.done){q.innerHTML='<span class="muted" style="font-size:12px">Drawing…</span>';try{await loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');q.innerHTML='';new QRCode(q,{text:HUB_URL,width:134,height:134,colorDark:'#171A21',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});q.dataset.done='1';}catch(_){q.innerHTML='<span class="muted" style="font-size:12px;text-align:center">QR unavailable offline</span>';}}
+}
+$('#shareBtn').addEventListener('click',openShare);
+$('#shareCopy').addEventListener('click',()=>copyText(HUB_URL,'Link copied'));
+$('#qrSave').addEventListener('click',()=>{const c=$('#qr canvas'),img=$('#qr img');const src=c?c.toDataURL('image/png'):img?img.src:'';if(!src){toast('QR not ready yet');return;}const a=document.createElement('a');a.href=src;a.download='praxis-hub-qr.png';document.body.appendChild(a);a.click();a.remove();toast('QR saved');});
+
 /* ---------- overflow menu ---------- */
 (()=>{const m=$('#moreMenu'),b=$('#moreBtn'),pop=$('.pop',m);
 b.addEventListener('click',()=>{const open=pop.hidden;pop.hidden=!open;b.setAttribute('aria-expanded',String(open));});
@@ -1610,7 +1641,7 @@ function palSearch(q){
   add('Playbook',PB.filter(([id,l])=>hit(l)||(q&&(document.getElementById(id).textContent||'').toLowerCase().includes(q))).map(([id,l])=>({ic:'P',t:l,s:'Playbook section',run:()=>{showView('playbook',{keepScroll:true});setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}),30);}})));
   if(q&&('course coverage professors assigned'.includes(q)||CATALOG.some(([,l])=>l.some(c=>c.toLowerCase().includes(q)))))add('Courses',[{ic:'C',t:'Course coverage',s:'Which courses have a professor assigned',run:()=>{dirGroup='courses';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='courses'));renderDir();showView('directory');}}]);
   add('Links',S.resources.filter(r=>hit(r.title+' '+r.category)).slice(0,5).map(r=>({ic:'↗',t:r.title,s:r.url.replace(/^https?:\/\//,''),k:r.category,run:()=>window.open(r.url,'_blank','noopener')})));
-  const cmds=[{ic:'?',t:'Keyboard shortcuts',s:'Everything you can do without the mouse',run:()=>{$('#helpScrim').hidden=false;}},{ic:'+',t:'New announcement',s:'Draft a post and copy the row for the sheet',run:openDraft},{ic:'≡',t:'Weekly summary',s:'Copy or email a plain-text briefing',run:openDigest},{ic:'⎙',t:'Print one-page brief',s:'Briefing, print-ready',run:()=>$('#printBtn').click()},{ic:'✉',t:'Email a group',s:'Opens your mail app with BCC',run:()=>openMail('all')},{ic:'◐',t:'Switch theme',s:'System · Light · Dark',run:()=>$('#themeBtn').click()}].filter(c=>hit(c.t+' '+c.s));if(q)add('Actions',cmds);
+  const cmds=[{ic:'⇗',t:'Share the hub',s:'Link and QR code',run:openShare},{ic:'?',t:'Keyboard shortcuts',s:'Everything you can do without the mouse',run:()=>{$('#helpScrim').hidden=false;}},{ic:'+',t:'New announcement',s:'Draft a post and copy the row for the sheet',run:openDraft},{ic:'≡',t:'Weekly summary',s:'Copy or email a plain-text briefing',run:openDigest},{ic:'⎙',t:'Print one-page brief',s:'Briefing, print-ready',run:()=>$('#printBtn').click()},{ic:'✉',t:'Email a group',s:'Opens your mail app with BCC',run:()=>openMail('all')},{ic:'◐',t:'Switch theme',s:'System · Light · Dark',run:()=>$('#themeBtn').click()}].filter(c=>hit(c.t+' '+c.s));if(q)add('Actions',cmds);
   palItems=groups.flatMap(([,items])=>items);palSel=0;
   const res=$('#palRes');
   if(!palItems.length){res.innerHTML='<div class="none">Nothing matches “'+esc(q)+'”.</div>';return;}
