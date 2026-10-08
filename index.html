@@ -111,6 +111,11 @@ main{min-width:0;display:flex;flex-direction:column}
 .top .sub .dot.off{background:var(--crit)}
 .top .sub .dot.wait{background:var(--warn)}
 .topActions{display:flex;gap:8px;flex-wrap:wrap}
+.menu{position:relative}
+.menu .pop{position:absolute;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-lg);padding:6px;display:flex;flex-direction:column;min-width:220px;z-index:40}
+.menu .pop[hidden]{display:none}
+.menu .pop .btn{justify-content:flex-start;width:100%;color:var(--fg)}
+@media (min-width:1280px){.menu .pop{position:static;display:contents;box-shadow:none}.menu .pop[hidden]{display:contents}.menu .pop .btn{width:auto;color:var(--fg);border-color:var(--border);background:var(--surface)}.menu .pop .btn:hover{border-color:var(--muted);background:var(--surface)}#moreBtn{display:none}}
 .content{padding:22px 32px 56px;display:flex;flex-direction:column;gap:22px}
 .view[hidden]{display:none}
 .view{display:flex;flex-direction:column;gap:22px}
@@ -522,6 +527,7 @@ td b{font-weight:600}
   .stats{grid-template-columns:1fr 1fr}
   .stat:nth-child(5):last-child{grid-column:1/-1}
   #printBtn{display:none}
+  .menu .pop .btn span{display:inline}
   .ev{grid-template-columns:56px minmax(0,1fr)}
   .ev .r{grid-column:2;justify-content:flex-start}
   .scrim{padding:8vh 10px 10px}
@@ -560,10 +566,16 @@ td b{font-weight:600}
       <div><h1 id="title">Briefing</h1><div class="sub"><span class="dot wait" id="dot"></span><span id="status">Connecting to the data sheet…</span><span id="newline"></span></div></div>
       <div class="topActions">
         <button class="btn ghost" id="refresh" type="button" title="Reload from Google Sheets"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg><span>Refresh</span></button>
-        <button class="btn" id="draftBtn" type="button" title="Draft an announcement for the sheet"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>New post</span></button>
-        <button class="btn" id="digestBtn" type="button" title="Weekly summary to copy or email"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg><span>Summary</span></button>
-        <button class="btn" id="printBtn" type="button" title="Print a one-page brief"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg><span>Print</span></button>
-        <button class="btn" id="emailBtn" type="button" title="Email a group"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span>Email a group</span></button>
+        <div class="menu" id="moreMenu">
+          <button class="btn" id="moreBtn" type="button" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg><span>More</span></button>
+          <div class="pop" role="menu" hidden>
+            <button class="btn ghost" id="draftBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>New post</span></button>
+            <button class="btn ghost" id="digestBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg><span>Weekly summary</span></button>
+            <button class="btn ghost" id="emailBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span>Email a group</span></button>
+            <button class="btn ghost" id="printBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg><span>Print brief</span></button>
+            <button class="btn ghost" id="icsMenu" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/></svg><span>Download dates (.ics)</span></button>
+          </div>
+        </div>
         <a class="btn primary" id="editSheet" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>Edit in Google Sheets</span></a>
       </div>
     </div>
@@ -599,6 +611,7 @@ td b{font-weight:600}
               <div class="card-head"><div class="eyebrow">Coming up</div><button class="btn ghost sm" data-go="calendar">Calendar</button></div>
               <div class="events" id="ovEvents"></div>
             </div>
+            <div id="decisionsCard"></div>
             <div class="card" id="metricsCard">
               <div class="card-head"><div class="eyebrow">Launch numbers</div><span class="muted" style="font-size:12.5px" id="metricsAsOf"></span></div>
               <div id="metrics"></div>
@@ -1043,11 +1056,19 @@ function renderStatus(){
       'The hub can’t read its Google Sheet yet. Open <a href="'+esc(SHEET_URL)+'" target="_blank" rel="noopener">Praxis Hub Data</a>, choose Share, and set general access to <b>Anyone with the link · Viewer</b>. Then press Refresh.':
       'The data sheet didn’t load ('+esc(loadErr.message)+'). Check your connection and press Refresh.';
   }else{n.hidden=true;setStatus('ok',lastLoad?'Live from Google Sheets · updated '+fmtWhen(lastLoad):'Connecting to the data sheet…');}
-  const nl=$('#newline');const nn=newAnn().length;
+  const nl=$('#newline');const nn=newAnn().length+newEvents().length+newPeople().length+newTasks().length;
   nl.textContent=nn?'· '+nn+' new since your last visit':'';
 }
 setInterval(()=>{if(!loadErr&&lastLoad)setStatus('ok','Live from Google Sheets · updated '+fmtWhen(lastLoad));},30000);
 const newAnn=()=>lastVisit?S.ann.filter(a=>a.createdAt>lastVisit):[];
+/* snapshot of titles/names from the previous visit, to spot new rows that carry no date */
+let snap=null;try{snap=JSON.parse(recall('snapshot')||'null');}catch(_){snap=null;}
+const sigE=e=>e.title+'|'+e.date,sigP=p=>p.name+'|'+p.group,sigT=t=>t.title;
+const newEvents=()=>snap&&snap.events?S.events.filter(e=>!snap.events.includes(sigE(e))):[];
+const newPeople=()=>snap&&snap.people?S.people.filter(p=>!snap.people.includes(sigP(p))):[];
+const newTasks=()=>snap&&snap.tasks?S.tasks.filter(t=>!snap.tasks.includes(sigT(t))):[];
+const isNewEv=e=>newEvents().some(x=>x===e),isNewP=p=>newPeople().some(x=>x===p);
+function saveSnapshot(){if(!(loaded.events&&loaded.people&&loaded.tasks))return;remember('snapshot',JSON.stringify({events:S.events.map(sigE),people:S.people.map(sigP),tasks:S.tasks.map(sigT),at:Date.now()}));}
 const isNew=a=>lastVisit&&a.createdAt>lastVisit;
 
 /* ---------- navigation ---------- */
@@ -1161,7 +1182,7 @@ function personHTML(p){
       <div class="role">${esc([p.title,p.affiliation].filter(Boolean).join(' · '))||'<span class="muted">Role to be added</span>'}</div>
       ${p.email?`<div class="line"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span>${esc(p.email)}</span></div>`:`<div class="line missing"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span>No email on file</span></div>`}
       ${p.phone?`<div class="line"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span>${esc(p.phone)}</span></div>`:''}
-      <div class="foot"><span class="pill ${esc(p.status||'confirmed')}">${esc(STATUS[p.status]||'Confirmed')}</span>${courses.slice(0,3).map(c=>`<span class="tag">${esc(c)}</span>`).join('')}${courses.length>3?`<span class="tag">+${courses.length-3}</span>`:''}</div>
+      <div class="foot">${isNewP(p)?'<span class="pill new">New</span>':''}<span class="pill ${esc(p.status||'confirmed')}">${esc(STATUS[p.status]||'Confirmed')}</span>${courses.slice(0,3).map(c=>`<span class="tag">${esc(c)}</span>`).join('')}${courses.length>3?`<span class="tag">+${courses.length-3}</span>`:''}</div>
       ${p.ob&&p.group==='faculty'?`<div class="steps" title="${esc(obSteps(p).filter(x=>x.done).length+' of '+obSteps(p).length+' onboarding steps')}">${obSteps(p).map(x=>`<i class="${x.done?'on':''}" title="${esc(x.label)}"></i>`).join('')}</div>`:''}
     </div></button>`;
 }
@@ -1226,7 +1247,7 @@ function evHTML(ev,past,opts={}){
   return `<div class="ev ${esc(ev.type)}${past?' past':''}">
     <div class="d"><b>${ev.tbd?'—':d.getDate()}</b><span>${MON[d.getMonth()]}${ev.tbd?'':' '+String(d.getFullYear()).slice(2)}</span></div>
     <div style="min-width:0"><div class="t">${esc(ev.title)}</div><div class="m">${esc(ev.tbd?MON[d.getMonth()]+' '+d.getFullYear()+' · exact date TBD':range)}${ev.time?' · '+esc(ev.time):''}${ev.location?' · '+esc(ev.location):''}${ev.notes&&!opts.short?' · '+esc(ev.notes):''}</div>${!opts.short&&ev.agenda.length?`<ul class="agenda">${ev.agenda.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}</div>
-    <div class="r"><span class="pill ${esc(ev.type||'other')}">${esc(ETYPES[ev.type]||'Other')}</span>${rel?`<span class="muted num" style="font-size:13px">${esc(rel)}</span>`:''}${ev.link&&!past?`<a class="btn ghost xs" href="${esc(ev.link)}" target="_blank" rel="noopener">Join</a>`:''}${ev.minutes&&past?`<a class="btn ghost xs" href="${esc(ev.minutes)}" target="_blank" rel="noopener">Minutes</a>`:''}${!opts.short&&!past?`<button class="btn ghost xs" data-ics="${esc(ev.id)}" title="Add to your calendar">+ Cal</button>`:''}</div>
+    <div class="r">${isNewEv(ev)?'<span class="pill new">New</span>':''}<span class="pill ${esc(ev.type||'other')}">${esc(ETYPES[ev.type]||'Other')}</span>${rel?`<span class="muted num" style="font-size:13px">${esc(rel)}</span>`:''}${ev.link&&!past?`<a class="btn ghost xs" href="${esc(ev.link)}" target="_blank" rel="noopener">Join</a>`:''}${ev.minutes&&past?`<a class="btn ghost xs" href="${esc(ev.minutes)}" target="_blank" rel="noopener">Minutes</a>`:''}${!opts.short&&!past?`<button class="btn ghost xs" data-ics="${esc(ev.id)}" title="Add to your calendar">+ Cal</button>`:''}</div>
   </div>`;
 }
 const upcomingEvents=()=>{const t=todayISO();return S.events.filter(e=>(e.endDate||e.date)>=t).sort((a,b)=>a.date.localeCompare(b.date));};
@@ -1336,6 +1357,8 @@ function attention(){
   if(noEmail)items.push({cls:'info',ic:'mail',t:noEmail+' of '+S.people.filter(p=>p.group==='faculty').length+' professors have no email on file',m:'Add addresses on the People tab to reach them from here',go:'directory',missing:true});
   const ob=onboarding();if(ob.steps.length&&ob.complete<ob.rows.length)items.push({cls:'warn',ic:'user',t:(ob.rows.length-ob.complete)+' of '+ob.rows.length+' professors still have onboarding steps open',m:ob.steps.map(([k,,l])=>l+' '+ob.rows.filter(r=>!r.st.find(x=>x.k===k&&x.done)).length+' pending').join(' · '),go:'directory',onboarding:true});
   const cv=coverage();if(cv.total&&cv.covered<cv.total)items.push({cls:'info',ic:'book',t:(cv.total-cv.covered)+' of '+cv.total+' courses have no professor assigned',m:cv.covered?'See which courses still need a scholar or practitioner':'Add course names to the Courses column on the People tab',go:'directory',courses:true});
+  const ne=newEvents(),np=newPeople(),nt=newTasks();const bits=[];if(ne.length)bits.push(ne.length+' new '+(ne.length===1?'date':'dates'));if(np.length)bits.push(np.length+' new '+(np.length===1?'person':'people'));if(nt.length)bits.push(nt.length+' new action '+(nt.length===1?'item':'items'));
+  if(bits.length)items.push({cls:'gold',ic:'bell',t:'Since your last visit: '+bits.join(', '),m:[...ne.map(e=>e.title),...np.map(p=>p.name),...nt.map(t=>t.title)].slice(0,3).join(' · '),go:ne.length?'calendar':np.length?'directory':'tasks'});
   const nn=newAnn();if(nn.length)items.push({cls:'gold',ic:'bell',t:nn.length+' new '+(nn.length===1?'announcement':'announcements')+' since your last visit',m:nn.map(a=>a.title).slice(0,2).join(' · '),go:'announcements'});
   return items;
 }
@@ -1367,6 +1390,13 @@ function renderMeeting(){
   const n=daysUntil(m.date);
   host.innerHTML=`<div class="card meeting"><div class="card-head"><div class="eyebrow">Next board meeting</div><span class="muted num" style="font-size:12.5px">${esc(relDays(n))}</span></div><div class="when">${esc(m.tbd?MONL[parseISO(m.date).getMonth()]+' '+parseISO(m.date).getFullYear()+' · date TBD':fmtDateLong(m.date))}</div><div class="muted" style="font-size:14px;margin-top:2px">${esc([m.time,m.location].filter(Boolean).join(' · ')||m.title)}</div>${m.agenda.length?`<ul>${m.agenda.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:(m.notes?`<p class="muted" style="font-size:14px;margin-top:8px">${esc(m.notes)}</p>`:'')}<div class="acts">${m.link?`<a class="btn primary sm" href="${esc(m.link)}" target="_blank" rel="noopener">Join meeting</a>`:''}<button class="btn sm" data-ics="${esc(m.id)}">Add to calendar</button>${sheetBtn('Calendar','Edit agenda')}</div></div>`;
 }
+function renderDecisions(){
+  const host=$('#decisionsCard');if(!loaded.ann){host.innerHTML='';return;}
+  const l=sortAnn(S.ann.filter(a=>a.type==='decision')).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  if(!l.length){host.innerHTML='';return;}
+  host.innerHTML=`<div class="card"><div class="card-head"><div class="eyebrow">Decisions log</div><button class="btn ghost sm" data-decisions type="button">All ${l.length}</button></div><div class="attn">${l.slice(0,5).map(a=>`<button type="button" data-open-post="${esc(a.id)}"><span class="ic gold"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 7"/></svg></span><span style="min-width:0"><span class="t" style="display:block">${esc(a.title)}</span><span class="m">${esc((a.date?fmtDate(a.date)+' · ':'')+(a.author||'Praxis Hub'))}</span></span><span class="go"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span></button>`).join('')}</div></div>`;
+}
+document.addEventListener('click',e=>{const d=e.target.closest('[data-decisions]');if(d){annAud='all';annType='decision';$$('#annFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.aud==='all'));$('#annType').value='decision';renderAnn();showView('announcements');return;}const o=e.target.closest('[data-open-post]');if(o)openPost(o.dataset.openPost);});
 function renderMetrics(){
   const host=$('#metrics'),card=$('#metricsCard');
   if(!loaded.metrics){host.innerHTML=loadingBox();return;}
@@ -1393,7 +1423,7 @@ function renderOverview(){
     ['calendar',upcoming.length,'Upcoming dates',next?'Next: '+next.title:'','']
   ];
   $('#stats').innerHTML=stats.map(([go,v,l,d,cls])=>`<button class="stat" data-go="${go}" type="button"><div class="v num">${any?esc(String(v)):'…'}</div><div class="l">${esc(l)}</div>${d?`<div class="d ${esc(cls)}">${esc(d)}</div>`:''}</button>`).join('');
-  renderBand();renderTimeline();renderAttention();renderPres();renderMeeting();renderMetrics();
+  renderBand();renderTimeline();renderAttention();renderPres();renderMeeting();renderDecisions();renderMetrics();
   const ov=$('#ovAnn');
   if(!loaded.ann)ov.innerHTML=loadingBox();
   else{const l=sortAnn(S.ann).slice(0,4);ov.innerHTML=l.length?l.map(a=>annHTML(a,true)).join(''):emptyBox('No announcements yet',sheetHint('Announcements'));}
@@ -1507,6 +1537,15 @@ $('#draftCopy').addEventListener('click',()=>{
   copyText(row,'Row copied. Paste it into the first empty row of the Announcements tab.');
 });
 
+
+/* ---------- overflow menu ---------- */
+(()=>{const m=$('#moreMenu'),b=$('#moreBtn'),pop=$('.pop',m);
+b.addEventListener('click',()=>{const open=pop.hidden;pop.hidden=!open;b.setAttribute('aria-expanded',String(open));});
+document.addEventListener('click',e=>{if(!m.contains(e.target)){pop.hidden=true;b.setAttribute('aria-expanded','false');}});
+pop.addEventListener('click',e=>{if(e.target.closest('.btn')){pop.hidden=true;b.setAttribute('aria-expanded','false');}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!pop.hidden){pop.hidden=true;b.setAttribute('aria-expanded','false');}});
+$('#icsMenu').addEventListener('click',()=>$('#icsAll').click());})();
+
 /* ---------- command palette ---------- */
 let palSel=0,palItems=[];
 function openPal(){$('#palScrim').hidden=false;const i=$('#palInput');i.value='';palSearch('');setTimeout(()=>i.focus(),20);}
@@ -1549,7 +1588,7 @@ document.addEventListener('keydown',e=>{
 /* ---------- boot ---------- */
 $('#editSheet').href=SHEET_URL;$('#footSheet').href=SHEET_URL;
 lastVisit=Number(recall('lastVisit'))||0;
-const markVisit=()=>remember('lastVisit',String(Date.now()));
+const markVisit=()=>{remember('lastVisit',String(Date.now()));saveSnapshot();};
 window.addEventListener('pagehide',markVisit);
 setTimeout(markVisit,45000);
 function openPost(id){annAud='all';annType='';$$('#annFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.aud==='all'));$('#annType').value='';renderAnn();showView('announcements',{silent:true});setTimeout(()=>{const el=document.getElementById(id);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('hl');}},80);}
