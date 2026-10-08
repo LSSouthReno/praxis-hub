@@ -172,17 +172,18 @@ input.txt{font:inherit;color:inherit;background:var(--surface);border:1px solid 
 .tl .month{position:absolute;top:130px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-navy-muted);transform:translateX(-50%);white-space:nowrap}
 .tl .month:before{content:"";position:absolute;left:50%;top:-6px;width:1px;height:5px;background:rgba(255,255,255,.25)}
 .tl .ev{position:absolute;top:0;height:100%;width:0}
-.tl .ev .lbl{position:absolute;left:-60px;width:120px;text-align:center;font-size:11.5px;line-height:1.25;color:var(--on-navy);padding-bottom:3px}
+.tl .ev .lbl{position:absolute;left:-62px;width:124px;text-align:center;font-size:11.5px;line-height:1.25;color:var(--on-navy);padding-bottom:3px}
+.tl .ev .lbl .tt{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl .ev .lbl b{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--on-navy-muted);font-weight:500;margin-top:2px}
 .tl .ev .dotp{position:absolute;top:119px;left:0;width:12px;height:12px;border-radius:50%;background:var(--navy);border:2px solid var(--on-navy-muted);transform:translateX(-50%)}
 .tl .ev.intensive .dotp{border-color:var(--gold);background:var(--gold)}
 .tl .ev.board .dotp{border-color:var(--on-navy)}
-.tl .ev.r0 .lbl{bottom:calc(100% - 114px)}.tl .ev.r1 .lbl{bottom:calc(100% - 78px)}.tl .ev.r2 .lbl{bottom:calc(100% - 42px)}
+.tl .ev.r0 .lbl{bottom:calc(100% - 114px)}.tl .ev.r1 .lbl{bottom:calc(100% - 80px)}.tl .ev.r2 .lbl{bottom:calc(100% - 46px)}
 .tl .ev.unl .lbl{display:none}
 .tl .ev.unl .dotp{cursor:help}
 .tl .ev .lbl .more{display:inline-block;margin-left:4px;font-size:10px;padding:0 5px;border-radius:999px;background:rgba(255,255,255,.12);color:var(--on-navy)}
 .tl .ev .stem{position:absolute;left:0;width:1px;background:rgba(255,255,255,.22)}
-.tl .ev.r0 .stem{top:114px;height:6px}.tl .ev.r1 .stem{top:78px;height:42px}.tl .ev.r2 .stem{top:42px;height:78px}.tl .ev.unl .stem{display:none}
+.tl .ev.r0 .stem{top:114px;height:6px}.tl .ev.r1 .stem{top:80px;height:40px}.tl .ev.r2 .stem{top:46px;height:74px}.tl .ev.unl .stem{display:none}
 .tl .ev .lbl:hover{z-index:2;background:var(--navy)}
 .tl-list{display:none;list-style:none;margin:0;padding:0}
 .tl-list li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid rgba(255,255,255,.1);font-size:13.5px}
@@ -1436,7 +1437,7 @@ function renderTimeline(){
   html+=`<div class="today" style="left:${pct(t0).toFixed(2)}%"><span>Today</span></div>`;
   const W=host.clientWidth||600,LW=124,rowsRight=[-1e9,-1e9,-1e9];let lastLabeled=null;const placed=[];
   up.forEach(e=>{const d=parseISO(e.date);const x=pct(d)/100*W;let row=rowsRight.findIndex(r=>x-LW/2>=r+8);if(row<0){if(lastLabeled)lastLabeled.more++;placed.push({e,d,row:-1});return;}rowsRight[row]=x+LW/2;const it={e,d,row,more:0};placed.push(it);lastLabeled=it;});
-  placed.forEach(({e,d,row,more})=>{html+=`<div class="ev ${esc(e.type)} ${row<0?'unl':'r'+row}" style="left:${pct(d).toFixed(2)}%"><div class="stem"></div><div class="dotp" title="${esc(e.title)} · ${esc(fmtDate(e.date))}"></div><div class="lbl">${esc(e.title)}${more?`<span class="more" title="${more} more close by">+${more}</span>`:''}<b>${esc(e.tbd?MON[d.getMonth()]+' '+d.getFullYear()+' · TBD':MON[d.getMonth()]+' '+d.getDate())}</b></div></div>`;});
+  placed.forEach(({e,d,row,more})=>{html+=`<div class="ev ${esc(e.type)} ${row<0?'unl':'r'+row}" style="left:${pct(d).toFixed(2)}%"><div class="stem"></div><div class="dotp" title="${esc(e.title)} · ${esc(fmtDate(e.date))}"></div><div class="lbl" title="${esc(e.title)} · ${esc(fmtDate(e.date))}"><span class="tt">${esc(e.title)}</span>${more?`<span class="more" title="${more} more close by">+${more}</span>`:''}<b>${esc(e.tbd?MON[d.getMonth()]+' '+d.getFullYear()+' · TBD':MON[d.getMonth()]+' '+d.getDate())}</b></div></div>`;});
   html+='<ol class="tl-list">'+up.slice(0,5).map(e=>{const d=parseISO(e.date);return `<li class="${esc(e.type)}"><span class="dotp"></span><span style="min-width:0">${esc(e.title)}</span><span class="w num">${esc(e.tbd?MON[d.getMonth()]+' '+d.getFullYear()+' · TBD':fmtDate(e.date))}</span></li>`;}).join('')+'</ol>';
   host.innerHTML=html;
 }
