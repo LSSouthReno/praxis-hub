@@ -1692,6 +1692,122 @@ $('#smsBody').addEventListener('input',()=>{clearTimeout(renderMail._t);renderMa
 $('#mailCopy').addEventListener('click',()=>{const l=audience();const v=channel==='email'?emailsOf(l):phonesOf(l);if(!v.length){toast('Nothing to copy');return;}copyText(v.join(', '),'Copied '+v.length+(channel==='email'?' addresses':' numbers'));});
 $('#mailOpen').addEventListener('click',e=>{const l=audience();const v=channel==='email'?emailsOf(l):phonesOf(l);if(!v.length){e.preventDefault();toast(channel==='email'?'No addresses on file for this choice':'No phone numbers on file for this choice');return;}if(channel==='text'&&!isPhone()){e.preventDefault();toast('Group texts send from a phone. Scan the QR code or copy the numbers.');return;}toast(channel==='email'?'Opening your mail app':'Opening Messages');});
 
+/* ---------- weekly summary & print ---------- */
+function buildDigest(){
+  const L=[];const t=todayISO();
+  L.push('PRAXIS HUB BRIEFING · '+fmtDate(t));
+  const le=launchEvent();if(le)L.push((Math.max(0,daysUntil(le.date)))+' days to '+le.title+(le.tbd?' (date TBD)':'')+' · '+fmtDate(le.date));
+  L.push('');
+  const items=attention().filter(i=>!i.missing&&i.ic!=='bell');
+  L.push('NEEDS ATTENTION'+(items.length?'':' · all clear'));items.forEach(i=>L.push('• '+i.t+(i.m?' — '+i.m:'')));
+  L.push('');
+  const up=upcomingEvents().slice(0,6);L.push('COMING UP');if(!up.length)L.push('• No dates on the calendar');up.forEach(e=>L.push('• '+(e.tbd?MONL[parseISO(e.date).getMonth()]+' '+parseISO(e.date).getFullYear()+' (date TBD)':fmtDate(e.date))+' — '+e.title+(e.location?' · '+e.location:'')));
+  L.push('');
+  const open=sortTasks(S.tasks.filter(x=>x.status!=='done'));L.push('OPEN ACTION ITEMS ('+open.length+')');open.slice(0,10).forEach(x=>L.push('• '+x.title+' — '+(x.owner||'unassigned')+(x.due?' · due '+fmtDate(x.due)+(daysUntil(x.due)<0?' (overdue)':''):'')));if(open.length>10)L.push('• …and '+(open.length-10)+' more');
+  L.push('');
+  const ann=sortAnn(S.ann).slice(0,4);L.push('RECENT ANNOUNCEMENTS');if(!ann.length)L.push('• None yet');ann.forEach(a=>L.push('• '+a.title+' — '+(a.author||'Praxis Hub')+(a.date?', '+fmtDate(a.date):'')+(a.respond?' · response needed':'')));
+  L.push('');
+  const fac=S.people.filter(p=>p.group==='faculty');
+  L.push('TEAM · '+S.people.filter(p=>p.group==='board').length+' board · '+fac.length+' professors ('+fac.filter(p=>p.status==='confirmed').length+' confirmed) · '+S.people.filter(p=>p.group==='staff'||p.group==='music').length+' staff & music'+(S.people.filter(p=>p.status==='open').length?' · '+S.people.filter(p=>p.status==='open').length+' open roles':''));
+  {const pr=sortAnn(S.ann.filter(a=>a.type==='prayer')).slice(0,3);if(pr.length){L.push('');L.push('PRAYER');pr.forEach(a=>L.push('• '+a.title+' — '+(a.author||'Praxis Hub')));}}
+  {const ob=onboarding();if(ob.steps.length)L.push('ONBOARDING · '+ob.complete+' of '+ob.rows.length+' professors complete');}
+  if(S.metrics.length){L.push('');L.push('LAUNCH NUMBERS');S.metrics.forEach(m=>L.push('• '+m.label+': '+(m.value!==null?fmtNum(m.value,m.unit):'—')+(m.target!==null?' of '+fmtNum(m.target,m.unit):'')));}
+  L.push('');L.push('Hub: '+location.origin+location.pathname+' · Data: '+SHEET_URL);
+  return L.join('\n');
+}
+function openDigest(){const txt=buildDigest();$('#digestText').value=txt;const em=emailsOf(groupList('board'));$('#digestMail').href='mailto:?bcc='+encodeURIComponent(em.join(','))+'&subject='+encodeURIComponent('[Praxis] Briefing · '+fmtDate(todayISO()))+'&body='+encodeURIComponent(txt);$('#digestScrim').hidden=false;setTimeout(()=>$('#digestText').focus(),20);}
+$('#digestBtn').addEventListener('click',openDigest);
+$('#digestCopy').addEventListener('click',()=>copyText($('#digestText').value,'Summary copied'));
+$('#digestMail').addEventListener('click',e=>{if(!emailsOf(groupList('board')).length){e.preventDefault();toast('No board addresses on file yet');}});
+$('#printBtn').addEventListener('click',()=>{if(view!=='overview')showView('overview');setTimeout(()=>window.print(),80);});
+
+
+/* ---------- draft announcement (copy a row for the sheet) ---------- */
+const tsvCell=v=>{v=String(v??'');return /[\t\n"]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+function openDraft(){$('#draftOpen').href=tabUrl('Announcements');const me=recall('draft.by');if(me&&!$('#dBy').value)$('#dBy').value=me;closeOverlay($('#palScrim'));$('#draftScrim').hidden=false;setTimeout(()=>$('#dTitle').focus(),20);}
+$('#draftBtn').addEventListener('click',openDraft);
+$('#draftCopy').addEventListener('click',()=>{
+  const title=$('#dTitle').value.trim(),body=$('#dBody').value.trim();
+  if(!title&&!body){toast('Add a title or a message first');$('#dTitle').focus();return;}
+  const by=$('#dBy').value.trim();if(by)remember('draft.by',by);
+  // Column order of the Announcements tab: Date, Title, Message, Audience, Pinned, Posted by, Type, Response needed, Respond by
+  const row=[todayISO(),title,body,$('#dAud').value,$('#dPin').checked?'TRUE':'FALSE',by,$('#dType').value,$('#dRespond').value?'TRUE':'',$('#dRespond').value].map(tsvCell).join('\t');
+  copyText(row,'Row copied. Paste it into the first empty row of the Announcements tab.');
+});
+
+
+
+/* ---------- directory export & vCards ---------- */
+const csvCell=v=>{v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+function visiblePeople(){const groups=dirGroup==='all'||dirGroup==='courses'||dirGroup==='onboarding'?Object.keys(GROUPS):[dirGroup];return groups.flatMap(g=>sortPeople(S.people.filter(p=>p.group===g&&dirMatch(p))));}
+$('#dirExport').addEventListener('click',()=>{const l=visiblePeople();if(!l.length){toast('Nothing to export');return;}const head=['Name','Group','Title','Status','Church or Institution','Courses','Email','Phone','City','Notes'];const rows=l.map(p=>[p.name,GSHORT[p.group],p.title,STATUS[p.status],p.affiliation,p.courses,p.email,p.phone,p.city,p.notes].map(csvCell).join(','));download('praxis-directory-'+todayISO()+'.csv','\ufeff'+[head.join(','),...rows].join('\r\n'),'text/csv');toast('Exported '+l.length+' '+(l.length===1?'person':'people'));});
+function vcard(p){const nm=p.name.trim().split(/\s+/);const last=nm.length>1?nm.pop():'';const first=nm.join(' ');const esc2=v=>String(v||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/[,;]/g,m=>'\\'+m);return ['BEGIN:VCARD','VERSION:3.0','N:'+esc2(last)+';'+esc2(first)+';;;','FN:'+esc2(p.name),p.title?'TITLE:'+esc2(p.title):'',p.affiliation?'ORG:'+esc2(p.affiliation):'',p.email?'EMAIL;TYPE=INTERNET:'+p.email:'',p.phone?'TEL;TYPE=CELL:'+p.phone:'',p.city?'ADR;TYPE=WORK:;;;'+esc2(p.city)+';;;':'','NOTE:'+esc2(['Praxis Theological Seminary · '+GROUPS[p.group],p.courses?'Courses: '+p.courses:'',p.notes].filter(Boolean).join('\n')),'END:VCARD'].filter(Boolean).join('\r\n');}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-vcard]');if(!b)return;const p=S.people.find(x=>x.id===b.dataset.vcard);if(p){download(p.name.replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'.vcf',vcard(p),'text/vcard');toast('Contact card downloaded');}});
+
+
+
+/* ---------- sheet health check ---------- */
+const KNOWN={group:/board|music|staff|ops|operation|prof|faculty/,status:/confirm|tentative|maybe|conversation|prospect|pending|invited|open|vacant|hiring/,aud:/everyone|all|board|fac|prof|staff/,atype:/update|decision|request|ask|action|pray|celebr|praise|win/,etype:/intens|board|meeting|mile|dead|due|other/,tstatus:/open|done|complete|closed|true|false|yes|no|x|todo|progress|blocked|waiting/};
+function audit(){
+  const w=[];const add=(tab,row,msg)=>w.push({tab,row,msg});
+  (RAW.people||[]).forEach((o,i)=>{const r=i+2;if(!pick(o,['Name','Full name','Person']))return add('People',r,'No name, so the row is skipped');const g=pick(o,['Group','Team','Category','Role group']);if(g&&!KNOWN.group.test(norm(g)))add('People',r,'Group “'+g+'” isn’t recognized (use Board, Professor, Staff or School of Music); shown under Professors');const st=pick(o,['Status']);if(st&&!KNOWN.status.test(norm(st)))add('People',r,'Status “'+st+'” isn’t recognized; shown as Confirmed');const em=pick(o,['Email','E-mail','Email address']);if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))add('People',r,'Email “'+em+'” doesn’t look like an address');});
+  (RAW.ann||[]).forEach((o,i)=>{const r=i+2;const d=pick(o,['Date','Posted','Posted on']);if(d&&!toISO(d))add('Announcements',r,'Date “'+d+'” couldn’t be read');const a=pick(o,['Audience','For','To']);if(a&&!KNOWN.aud.test(norm(a)))add('Announcements',r,'Audience “'+a+'” isn’t recognized; shown to Everyone');const t=pick(o,['Type','Kind','Category']);if(t&&!KNOWN.atype.test(norm(t)))add('Announcements',r,'Type “'+t+'” isn’t recognized; shown as Update');const rb=pick(o,['Respond by','Response by','Reply by','Due']);if(rb&&!toISO(rb))add('Announcements',r,'Respond-by “'+rb+'” couldn’t be read');});
+  (RAW.tasks||[]).forEach((o,i)=>{const r=i+2;const d=pick(o,['Due date','Due','Deadline']);if(d&&!toISO(d))add('Action Items',r,'Due date “'+d+'” couldn’t be read');const st=pick(o,['Status','Done','Complete']);if(st&&!KNOWN.tstatus.test(norm(st)))add('Action Items',r,'Status “'+st+'” isn’t recognized; treated as Open');});
+  (RAW.events||[]).forEach((o,i)=>{const r=i+2;const d=pick(o,['Date','Start','Start date']);if(!d)add('Calendar',r,'No date, so the row is skipped');else if(!toISO(d))add('Calendar',r,'Date “'+d+'” couldn’t be read, so the row is skipped');const e=pick(o,['End date','End','Through']);if(e&&!toISO(e))add('Calendar',r,'End date “'+e+'” couldn’t be read');const t=pick(o,['Type','Kind','Category']);if(t&&!KNOWN.etype.test(norm(t)))add('Calendar',r,'Type “'+t+'” isn’t recognized; shown as Other');});
+  (RAW.resources||[]).forEach((o,i)=>{const r=i+2;const u=pick(o,['URL','Link','Address','Href']);if(u&&!/^https?:\/\//i.test(u))add('Links',r,'URL “'+u+'” must start with https://, so the row is skipped');});
+  return w;
+}
+function renderHealth(){
+  const w=audit();const el=$('#health');
+  if(!w.length){el.hidden=true;return;}
+  el.hidden=false;el.textContent='· '+w.length+' sheet '+(w.length===1?'row needs':'rows need')+' a look';
+}
+function openHealth(){
+  const w=audit();const host=$('#healthList');
+  host.innerHTML=w.length?w.map(x=>`<div class="link"><div style="min-width:0"><a href="${esc(tabUrl(x.tab))}" target="_blank" rel="noopener">${esc(x.tab)} · row ${x.row}</a><div class="desc">${esc(x.msg)}</div></div></div>`).join(''):'<div class="allclear"><span class="ic"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 7"/></svg></span>Every row reads cleanly.</div>';
+  $('#healthScrim').hidden=false;
+}
+$('#health').addEventListener('click',openHealth);
+
+/* ---------- collapsible playbook ---------- */
+(()=>{let state={};try{state=JSON.parse(recall('pb.collapsed')||'{}');}catch(_){}
+$$('.pb-body .card').forEach(c=>{if(state[c.id])c.classList.add('collapsed');});
+document.addEventListener('click',e=>{const eb=e.target.closest('.pb-body .card>.eyebrow');if(!eb||e.target.closest('a,button'))return;const c=eb.parentElement;const col=c.classList.toggle('collapsed');state[c.id]=col;remember('pb.collapsed',JSON.stringify(state));});
+document.addEventListener('click',e=>{const pb=e.target.closest('[data-pb]');if(!pb)return;const c=document.getElementById(pb.dataset.pb);if(c&&c.classList.contains('collapsed')){c.classList.remove('collapsed');state[c.id]=false;remember('pb.collapsed',JSON.stringify(state));}});})();
+
+/* ---------- first-run tour ---------- */
+const TOUR=[
+  ['One sheet, one hub','Everything on this page comes from the Praxis Hub Data sheet in Google Drive. Change a cell there and the hub updates on its next refresh. Nothing is edited here, so there is nothing to break.'],
+  ['Start with the briefing','Needs attention lists what is overdue, waiting on a response or still undated. More → Weekly summary turns the whole page into a short email for the board.'],
+  ['Find anything fast','Press ⌘K or / to search people, posts, dates and the playbook. Press ? for every shortcut. Share the hub with More → Share the hub, which includes a QR code for slides.']
+];
+let tourI=0;
+function tourShow(){const [t,b]=TOUR[tourI];$('#tourStep').textContent='Welcome · '+(tourI+1)+' of '+TOUR.length;$('#tourTitle').textContent=t;$('#tourBody').textContent=b;$('#tourNext').textContent=tourI===TOUR.length-1?'Done':'Next';}
+function openTour(){tourI=0;tourShow();$('#tourScrim').hidden=false;setTimeout(()=>$('#tourNext').focus(),20);}
+function endTour(){remember('tour.done','1');closeOverlay($('#tourScrim'));}
+$('#tourNext').addEventListener('click',()=>{if(tourI>=TOUR.length-1)endTour();else{tourI++;tourShow();}});
+$('#tourSkip').addEventListener('click',endTour);
+$('#tourScrim').addEventListener('click',e=>{if(e.target===e.currentTarget)endTour();});
+if(!recall('tour.done')&&!location.hash)setTimeout(()=>{if(!$$('.scrim').some(x=>!x.hidden))openTour();},1200);
+
+/* ---------- share panel + QR ---------- */
+function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector('script[src="'+src+'"]'))return res();const sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
+async function openShare(){
+  $('#shareUrl').textContent=HUB_URL;$('#shareScrim').hidden=false;
+  const q=$('#qr');if(!q.dataset.done){q.innerHTML='<span class="muted" style="font-size:12px">Drawing…</span>';try{await loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');q.innerHTML='';new QRCode(q,{text:HUB_URL,width:134,height:134,colorDark:'#171A21',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});q.dataset.done='1';}catch(_){q.innerHTML='<span class="muted" style="font-size:12px;text-align:center">QR unavailable offline</span>';}}
+}
+$('#shareBtn').addEventListener('click',openShare);
+$('#shareCopy').addEventListener('click',()=>copyText(HUB_URL,'Link copied'));
+$('#qrSave').addEventListener('click',()=>{const c=$('#qr canvas'),img=$('#qr img');const src=c?c.toDataURL('image/png'):img?img.src:'';if(!src){toast('QR not ready yet');return;}const a=document.createElement('a');a.href=src;a.download='praxis-hub-qr.png';document.body.appendChild(a);a.click();a.remove();toast('QR saved');});
+
+/* ---------- overflow menu ---------- */
+(()=>{const m=$('#moreMenu'),b=$('#moreBtn'),pop=$('.pop',m);
+b.addEventListener('click',()=>{const open=pop.hidden;pop.hidden=!open;b.setAttribute('aria-expanded',String(open));});
+document.addEventListener('click',e=>{if(!m.contains(e.target)){pop.hidden=true;b.setAttribute('aria-expanded','false');}});
+pop.addEventListener('click',e=>{if(e.target.closest('.btn')){pop.hidden=true;b.setAttribute('aria-expanded','false');}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!pop.hidden){pop.hidden=true;b.setAttribute('aria-expanded','false');}});
+$('#icsMenu').addEventListener('click',()=>$('#icsAll').click());})();
+
 /* ---------- command palette ---------- */
 let palSel=0,palItems=[];
 function openPal(){$('#palScrim').hidden=false;const i=$('#palInput');i.value='';palSearch('');setTimeout(()=>i.focus(),20);}
