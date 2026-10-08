@@ -303,6 +303,28 @@ input.txt{font:inherit;color:inherit;background:var(--surface);border:1px solid 
 .course.none .n{color:var(--faint)}
 .course .un{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
 
+/* ---------- onboarding ---------- */
+.ob-sum{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+.ob-sum .big{font-family:var(--display);font-size:26px;font-weight:600}
+.ob-sum .bar{flex:1 1 160px;height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.ob-sum .bar i{display:block;height:100%;background:var(--gold)}
+.obt{width:100%;border-collapse:collapse;font-size:14px}
+.obt th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:8px 8px;text-align:center;border-bottom:1px solid var(--border)}
+.obt th:first-child{text-align:left}
+.obt td{padding:8px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle}
+.obt td:first-child{text-align:left}
+.obt tr:hover td{background:var(--surface-2)}
+.obt .nm{font-weight:500}
+.obt .nm small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.obt .ok,.obt .no{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700}
+.obt .ok{background:var(--good-soft);color:var(--good)}
+.obt .no{background:var(--surface-2);color:var(--faint)}
+.obt tr.done td:first-child{color:var(--muted)}
+.obt .prog{font-size:12px;color:var(--muted);white-space:nowrap}
+.person .steps{display:flex;gap:3px;margin-top:6px}
+.person .steps i{width:14px;height:5px;border-radius:999px;background:var(--surface-3)}
+.person .steps i.on{background:var(--good)}
+
 /* ---------- tasks ---------- */
 .tasks{display:flex;flex-direction:column}
 .task{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 4px;border-top:1px solid var(--border)}
@@ -619,6 +641,7 @@ td b{font-weight:600}
             <button class="chip" data-group="staff">Staff <span class="n" data-n="staff"></span></button>
             <button class="chip" data-group="music">School of Music <span class="n" data-n="music"></span></button>
             <button class="chip" data-group="courses">By course <span class="n" id="covN"></span></button>
+            <button class="chip" data-group="onboarding">Onboarding <span class="n" id="obN"></span></button>
           </div>
           <div class="spacer"></div>
           <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="dirSearch" type="search" placeholder="Search name, church, course…" aria-label="Search directory"></div>
@@ -966,8 +989,11 @@ const typeKey=v=>{const t=norm(v);if(t.includes('intens'))return 'intensive';if(
 const prioKey=v=>{const p=norm(v);return p.includes('high')||p.includes('urgent')||p==='1'?'high':p.includes('low')?'low':'normal';};
 const splitLines=v=>String(v||'').split(/\r?\n|;|•/).map(s=>s.trim()).filter(Boolean);
 
+const ONBOARD=[['contract',['Contract','Contract signed','Contract returned'],'Contract'],['handbook',['Handbook','Handbook signed','Handbook agreement'],'Handbook'],['syllabus',['Syllabus','Syllabus received'],'Syllabus'],['bio',['Bio','Bio and photo','Bio & photo','Photo'],'Bio & photo'],['w9',['W-9','W9','Tax form'],'W-9']];
+const stepDone=v=>{const t=String(v||'').trim();if(!t)return false;if(/^(no|n|false|0|pending|not yet|todo|-|—)$/i.test(t))return false;return truthy(t)||!!toISO(t)||/^(sent|received|signed|done|yes|complete|ok)/i.test(t);};
+function onboardOf(o){const r={};let any=false;ONBOARD.forEach(([k,keys])=>{const key=keys.map(norm).find(h=>h in o);if(key){any=true;r[k]=stepDone(o[key]);}else r[k]=null;});return any?r:null;}
 const MAP={
-  people:(o,i)=>{const name=pick(o,['Name','Full name','Person']);if(!name)return null;return {id:'p'+i,row:i+2,name,group:groupKey(pick(o,['Group','Team','Category','Role group'])),title:pick(o,['Title','Role','Position']),status:statusKey(pick(o,['Status'])),affiliation:pick(o,['Church or Institution','Church','Institution','Affiliation','Organization']),courses:pick(o,['Courses','Course','Teaching']),email:pick(o,['Email','E-mail','Email address']),phone:pick(o,['Phone','Cell','Mobile','Phone number']),city:pick(o,['City','Location']),notes:pick(o,['Notes','Note']),order:Number(pick(o,['Sort order','Order','Sort']))||500};},
+  people:(o,i)=>{const name=pick(o,['Name','Full name','Person']);if(!name)return null;return {id:'p'+i,row:i+2,name,group:groupKey(pick(o,['Group','Team','Category','Role group'])),title:pick(o,['Title','Role','Position']),status:statusKey(pick(o,['Status'])),affiliation:pick(o,['Church or Institution','Church','Institution','Affiliation','Organization']),courses:pick(o,['Courses','Course','Teaching']),email:pick(o,['Email','E-mail','Email address']),phone:pick(o,['Phone','Cell','Mobile','Phone number']),city:pick(o,['City','Location']),notes:pick(o,['Notes','Note']),order:Number(pick(o,['Sort order','Order','Sort']))||500,ob:onboardOf(o)};},
   ann:(o,i)=>{const title=pick(o,['Title','Subject','Headline']);const body=pick(o,['Message','Body','Text','Announcement']);if(!title&&!body)return null;const iso=toISO(pick(o,['Date','Posted','Posted on']));const rb=toISO(pick(o,['Respond by','Response by','Reply by','Due']));return {id:'a'+i,row:i+2,title:title||'Announcement',body,audience:audKey(pick(o,['Audience','For','To'])),pinned:truthy(pick(o,['Pinned','Pin'])),author:pick(o,['Posted by','Author','From','By']),type:atypeKey(pick(o,['Type','Kind','Category'])),respond:truthy(pick(o,['Response needed','Needs response','RSVP','Reply needed']))||!!rb,respondBy:rb,link:pick(o,['Link','URL']),date:iso,createdAt:iso?parseISO(iso).getTime():0};},
   tasks:(o,i)=>{const title=pick(o,['Item','Task','Action item','Title','What']);if(!title)return null;const st=norm(pick(o,['Status','Done','Complete']));return {id:'t'+i,row:i+2,title,owner:pick(o,['Owner','Assigned to','Who','Assignee']),due:toISO(pick(o,['Due date','Due','Deadline'])),status:(st.includes('done')||st.includes('complete')||st.includes('closed')||st==='true'||st==='x'||st==='yes')?'done':'open',priority:prioKey(pick(o,['Priority'])),link:pick(o,['Link','URL']),notes:pick(o,['Notes','Note','Details'])};},
   events:(o,i)=>{const title=pick(o,['Title','Event','Name','What']);const date=toISO(pick(o,['Date','Start','Start date']));if(!title||!date)return null;return {id:'e'+i,row:i+2,title,date,endDate:toISO(pick(o,['End date','End','Through'])),time:pick(o,['Time','Start time']),type:typeKey(pick(o,['Type','Kind','Category'])),location:pick(o,['Location','Where','Place']),link:pick(o,['Link','URL','Zoom','Join link']),agenda:splitLines(pick(o,['Agenda','Agenda items'])),minutes:pick(o,['Minutes','Minutes link','Notes link']),tbd:truthy(pick(o,['Date TBD','TBD','Tentative'])),notes:pick(o,['Notes','Note','Details'])};},
@@ -1112,6 +1138,20 @@ function renderCoverage(){
     <div class="cov">${cv.groups.map(([name,list])=>`<div class="card grp"><h4>${esc(name)}</h4>${list.map(c=>`<div class="course${c.who.length?'':' none'}"><span class="n">${esc(c.name)}</span>${c.who.length?`<span class="who">${c.who.map(p=>`<button type="button" data-person="${esc(p.id)}" title="${esc(p.name)}"><i>${esc(initials(p.name))}</i>${esc(p.name.split(' ').slice(-1)[0])}</button>`).join('')}</span>`:'<span class="un">Unassigned</span>'}</div>`).join('')}</div>`).join('')}</div>`;
 }
 
+
+/* ---------- faculty onboarding ---------- */
+const obSteps=p=>ONBOARD.filter(([k])=>p.ob&&p.ob[k]!==null).map(([k,,label])=>({k,label,done:!!p.ob[k]}));
+function onboarding(){const profs=sortPeople(S.people.filter(p=>p.group==='faculty'));const tracked=profs.filter(p=>p.ob);const steps=ONBOARD.filter(([k])=>tracked.some(p=>p.ob[k]!==null));const rows=tracked.map(p=>{const st=steps.map(([k,,label])=>({k,label,done:p.ob[k]===true}));return {p,st,done:st.filter(x=>x.done).length};});return {steps,rows,complete:rows.filter(r=>r.st.length&&r.done===r.st.length).length};}
+function renderOnboarding(){
+  const ob=onboarding();
+  if(!ob.steps.length)return `<div class="card"><div class="eyebrow">Faculty onboarding</div><h3>Track each professor’s paperwork here</h3><p class="muted" style="font-size:14px;max-width:62ch;margin-top:6px">Add any of these columns to the People tab and mark them with a date, “yes” or TRUE as each step lands: <b>Contract</b>, <b>Handbook</b>, <b>Syllabus</b>, <b>Bio &amp; photo</b>, <b>W-9</b>. This view, the directory cards and the briefing will pick them up automatically.</p><div style="margin-top:12px">${sheetBtn('People','Open the People tab')}</div></div>`;
+  const pct=ob.rows.length?Math.round(ob.complete/ob.rows.length*100):0;
+  const sorted=[...ob.rows].sort((a,b)=>(a.done===a.st.length)-(b.done===b.st.length)||a.done-b.done||a.p.name.localeCompare(b.p.name));
+  return `<div class="card"><div class="card-head"><div class="eyebrow">Faculty onboarding</div>${sheetBtn('People','Update in the sheet')}</div>
+    <div class="ob-sum"><span class="big num">${ob.complete} <span class="muted" style="font-size:15px;font-family:var(--ui);font-weight:500">of ${ob.rows.length} professors fully onboarded</span></span><span class="bar"><i style="width:${pct}%"></i></span>${ob.steps.map(([k,,label])=>`<span class="muted num" style="font-size:13px">${esc(label)} ${ob.rows.filter(r=>r.st.find(x=>x.k===k&&x.done)).length}/${ob.rows.length}</span>`).join('')}</div>
+    <div class="tscroll" style="margin-top:10px"><table class="obt"><thead><tr><th>Professor</th>${ob.steps.map(([,,l])=>`<th>${esc(l)}</th>`).join('')}<th></th></tr></thead><tbody>${sorted.map(r=>`<tr class="${r.done===r.st.length?'done':''}"><td><button type="button" class="nm" data-person="${esc(r.p.id)}" style="text-align:left">${esc(r.p.name)}<small>${esc(r.p.affiliation||STATUS[r.p.status])}</small></button></td>${r.st.map(x=>`<td><span class="${x.done?'ok':'no'}" aria-label="${esc(x.label+(x.done?' done':' pending'))}">${x.done?'✓':'·'}</span></td>`).join('')}<td class="prog num">${r.done}/${r.st.length}</td></tr>`).join('')}</tbody></table></div></div>`;
+}
+
 function personHTML(p){
   const courses=String(p.courses||'').split(',').map(s=>s.trim()).filter(Boolean);
   return `<button class="person ${esc(p.group)}" data-person="${esc(p.id)}" type="button">
@@ -1122,6 +1162,7 @@ function personHTML(p){
       ${p.email?`<div class="line"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span>${esc(p.email)}</span></div>`:`<div class="line missing"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span>No email on file</span></div>`}
       ${p.phone?`<div class="line"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span>${esc(p.phone)}</span></div>`:''}
       <div class="foot"><span class="pill ${esc(p.status||'confirmed')}">${esc(STATUS[p.status]||'Confirmed')}</span>${courses.slice(0,3).map(c=>`<span class="tag">${esc(c)}</span>`).join('')}${courses.length>3?`<span class="tag">+${courses.length-3}</span>`:''}</div>
+      ${p.ob&&p.group==='faculty'?`<div class="steps" title="${esc(obSteps(p).filter(x=>x.done).length+' of '+obSteps(p).length+' onboarding steps')}">${obSteps(p).map(x=>`<i class="${x.done?'on':''}" title="${esc(x.label)}"></i>`).join('')}</div>`:''}
     </div></button>`;
 }
 function sortPeople(l){const s=[...l];if(dirSort==='name')s.sort((a,b)=>a.name.localeCompare(b.name));else if(dirSort==='status'){const o={open:0,prospect:1,tentative:2,confirmed:3};s.sort((a,b)=>o[a.status]-o[b.status]||a.name.localeCompare(b.name));}else s.sort((a,b)=>(a.order??999)-(b.order??999)||a.name.localeCompare(b.name));return s;}
@@ -1130,8 +1171,9 @@ function renderDir(){
   const host=$('#dirBody');
   $$('#dirFilter [data-n]').forEach(n=>{const k=n.dataset.n;const c=groupList(k).length;n.textContent=loaded.people&&c?c:'';});
   if(!loaded.people){host.innerHTML=loadingBox();return;}
-  {const cv=coverage();$('#covN').textContent=cv.covered+'/'+cv.total;}
+  {const cv=coverage();$('#covN').textContent=cv.covered+'/'+cv.total;const ob=onboarding();$('#obN').textContent=ob.steps.length?ob.complete+'/'+ob.rows.length:'';}
   if(dirGroup==='courses'){host.innerHTML='<div class="stack">'+renderCoverage()+'</div>';return;}
+  if(dirGroup==='onboarding'){host.innerHTML='<div class="stack">'+renderOnboarding()+'</div>';return;}
   const groups=dirGroup==='all'?Object.keys(GROUPS):[dirGroup];
   let html='',any=false;
   groups.forEach(g=>{
@@ -1292,6 +1334,7 @@ function attention(){
   if(open.length)items.push({cls:'info',ic:'user',t:open.length+' open '+(open.length===1?'role':'roles'),m:open.map(p=>p.name).join(' · '),go:'directory'});
   const noEmail=S.people.filter(p=>p.group==='faculty'&&!p.email).length;
   if(noEmail)items.push({cls:'info',ic:'mail',t:noEmail+' of '+S.people.filter(p=>p.group==='faculty').length+' professors have no email on file',m:'Add addresses on the People tab to reach them from here',go:'directory',missing:true});
+  const ob=onboarding();if(ob.steps.length&&ob.complete<ob.rows.length)items.push({cls:'warn',ic:'user',t:(ob.rows.length-ob.complete)+' of '+ob.rows.length+' professors still have onboarding steps open',m:ob.steps.map(([k,,l])=>l+' '+ob.rows.filter(r=>!r.st.find(x=>x.k===k&&x.done)).length+' pending').join(' · '),go:'directory',onboarding:true});
   const cv=coverage();if(cv.total&&cv.covered<cv.total)items.push({cls:'info',ic:'book',t:(cv.total-cv.covered)+' of '+cv.total+' courses have no professor assigned',m:cv.covered?'See which courses still need a scholar or practitioner':'Add course names to the Courses column on the People tab',go:'directory',courses:true});
   const nn=newAnn();if(nn.length)items.push({cls:'gold',ic:'bell',t:nn.length+' new '+(nn.length===1?'announcement':'announcements')+' since your last visit',m:nn.map(a=>a.title).slice(0,2).join(' · '),go:'announcements'});
   return items;
@@ -1305,7 +1348,7 @@ function renderAttention(){
   host.innerHTML=items.length?items.map((it,i)=>`<button type="button" data-attn="${i}"><span class="ic ${it.cls}">${ICONS[it.ic]}</span><span style="min-width:0"><span class="t" style="display:block">${esc(it.t)}</span><span class="m">${esc(it.m)}</span></span><span class="go"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span></button>`).join(''):'<div class="allclear"><span class="ic"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 7"/></svg></span>All clear. Nothing overdue, nothing waiting on a response.</div>';
   host._items=items;
 }
-$('#attn').addEventListener('click',e=>{const b=e.target.closest('[data-attn]');if(!b)return;const it=$('#attn')._items[+b.dataset.attn];if(!it)return;if(it.missing){dirMissing=true;$('#dirMissing').setAttribute('aria-pressed','true');dirGroup='faculty';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='faculty'));renderDir();}if(it.courses){dirGroup='courses';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='courses'));renderDir();}showView(it.go);if(it.ann)setTimeout(()=>{const el=document.getElementById(it.ann);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('hl');}},60);});
+$('#attn').addEventListener('click',e=>{const b=e.target.closest('[data-attn]');if(!b)return;const it=$('#attn')._items[+b.dataset.attn];if(!it)return;if(it.missing){dirMissing=true;$('#dirMissing').setAttribute('aria-pressed','true');dirGroup='faculty';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='faculty'));renderDir();}if(it.onboarding){dirGroup='onboarding';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='onboarding'));renderDir();}if(it.courses){dirGroup='courses';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='courses'));renderDir();}showView(it.go);if(it.ann)setTimeout(()=>{const el=document.getElementById(it.ann);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('hl');}},60);});
 function renderPres(){
   const host=$('#presCard');
   if(!(loaded.ann&&loaded.people)){host.innerHTML='';return;}
@@ -1387,6 +1430,7 @@ function openDrawer(p){
     ${ct('Phone',p.phone,p.phone?'tel:'+p.phone.replace(/[^+\d]/g,''):'')}
     ${p.city?`<div><div class="sec">Location</div><div style="font-size:14px">${esc(p.city)}</div></div>`:''}
     ${courses.length?`<div><div class="sec">Courses</div><div style="display:flex;gap:6px;flex-wrap:wrap">${courses.map(c=>`<span style="font-size:12.5px;background:var(--surface-2);padding:2px 9px;border-radius:999px">${esc(c)}</span>`).join('')}</div></div>`:''}
+    ${p.ob&&obSteps(p).length?`<div><div class="sec">Onboarding</div><div style="display:flex;gap:6px;flex-wrap:wrap">${obSteps(p).map(x=>`<span class="pill ${x.done?'done':'other'}">${esc(x.label)}${x.done?' ✓':''}</span>`).join('')}</div></div>`:''}
     ${p.notes?`<div><div class="sec">Notes</div><div class="notes">${esc(p.notes)}</div></div>`:''}
     <div class="foot"><a class="btn sm" href="${esc(tabUrl('People'))}" target="_blank" rel="noopener">Edit row ${p.row} in Google Sheets</a></div>
   </div>`;
@@ -1438,6 +1482,7 @@ function buildDigest(){
   L.push('');
   const fac=S.people.filter(p=>p.group==='faculty');
   L.push('TEAM · '+S.people.filter(p=>p.group==='board').length+' board · '+fac.length+' professors ('+fac.filter(p=>p.status==='confirmed').length+' confirmed) · '+S.people.filter(p=>p.group==='staff'||p.group==='music').length+' staff & music'+(S.people.filter(p=>p.status==='open').length?' · '+S.people.filter(p=>p.status==='open').length+' open roles':''));
+  {const ob=onboarding();if(ob.steps.length)L.push('ONBOARDING · '+ob.complete+' of '+ob.rows.length+' professors complete');}
   if(S.metrics.length){L.push('');L.push('LAUNCH NUMBERS');S.metrics.forEach(m=>L.push('• '+m.label+': '+(m.value!==null?fmtNum(m.value,m.unit):'—')+(m.target!==null?' of '+fmtNum(m.target,m.unit):'')));}
   L.push('');L.push('Hub: '+location.origin+location.pathname+' · Data: '+SHEET_URL);
   return L.join('\n');
