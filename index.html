@@ -155,21 +155,22 @@ input.txt{font:inherit;color:inherit;background:var(--surface);border:1px solid 
 .band .mission{font-family:var(--display);font-style:italic;font-size:13px;color:var(--on-navy-muted);margin-top:14px;max-width:38ch;line-height:1.45}
 .band .mission em{color:var(--gold);font-style:italic}
 /* timeline */
-.tl{position:relative;height:150px;min-width:0}
-.tl .track{position:absolute;left:0;right:0;top:78px;height:2px;background:rgba(255,255,255,.18)}
-.tl .today{position:absolute;top:66px;width:2px;height:26px;background:var(--gold)}
+.tl{position:relative;height:170px;min-width:0}
+.tl .track{position:absolute;left:0;right:0;top:98px;height:2px;background:rgba(255,255,255,.18)}
+.tl .today{position:absolute;top:86px;width:2px;height:26px;background:var(--gold)}
 .tl .today span{position:absolute;top:28px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);white-space:nowrap}
-.tl .month{position:absolute;top:84px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-navy-muted);transform:translateX(-50%);white-space:nowrap}
+.tl .month{position:absolute;top:104px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-navy-muted);transform:translateX(-50%);white-space:nowrap}
 .tl .month:before{content:"";position:absolute;left:50%;top:-6px;width:1px;height:5px;background:rgba(255,255,255,.25)}
-.tl .ev{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;width:0}
-.tl .ev .lbl{position:absolute;bottom:0;width:120px;text-align:center;font-size:11.5px;line-height:1.25;color:var(--on-navy);background:none;padding-bottom:4px}
+.tl .ev{position:absolute;top:0;height:100%;width:0}
+.tl .ev .lbl{position:absolute;left:-60px;width:120px;text-align:center;font-size:11.5px;line-height:1.25;color:var(--on-navy);padding-bottom:3px}
 .tl .ev .lbl b{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--on-navy-muted);font-weight:500;margin-top:2px}
-.tl .ev .dotp{position:absolute;top:73px;width:12px;height:12px;border-radius:50%;background:var(--navy);border:2px solid var(--on-navy-muted);transform:translate(-50%,0);left:0}
+.tl .ev .dotp{position:absolute;top:93px;left:0;width:12px;height:12px;border-radius:50%;background:var(--navy);border:2px solid var(--on-navy-muted);transform:translateX(-50%)}
 .tl .ev.intensive .dotp{border-color:var(--gold);background:var(--gold)}
 .tl .ev.board .dotp{border-color:var(--on-navy)}
-.tl .ev.r0 .lbl{bottom:92px}.tl .ev.r1 .lbl{bottom:122px}
-.tl .ev .stem{position:absolute;left:0;top:0;width:1px;background:rgba(255,255,255,.2)}
-.tl .ev.r0 .stem{top:58px;height:15px}.tl .ev.r1 .stem{top:28px;height:45px}
+.tl .ev.r0 .lbl{bottom:calc(100% - 88px)}.tl .ev.r1 .lbl{bottom:calc(100% - 54px)}
+.tl .ev .stem{position:absolute;left:0;width:1px;background:rgba(255,255,255,.22)}
+.tl .ev.r0 .stem{top:88px;height:6px}.tl .ev.r1 .stem{top:54px;height:40px}
+.tl .ev .lbl:hover{z-index:2;background:var(--navy)}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;cursor:pointer;text-align:left;min-width:0}
 .stat:hover{border-color:var(--muted)}
@@ -430,8 +431,8 @@ td b{font-weight:600}
   .content{padding:16px 16px calc(84px + env(safe-area-inset-bottom,0px))}
   .band{padding:20px}
   .band .count{font-size:48px}
-  .tl{height:140px}
-  .tl .ev .lbl{width:92px;font-size:11px}
+  .tl{height:160px}
+  .tl .ev .lbl{width:92px;left:-46px;font-size:11px}
   .ev{grid-template-columns:56px minmax(0,1fr)}
   .ev .r{grid-column:2;justify-content:flex-start}
   .scrim{padding:8vh 10px 10px}
@@ -1083,8 +1084,9 @@ function renderTimeline(){
   const start=new Date(t0);start.setDate(start.getDate()-10);
   const span=end-start;const pct=d=>Math.max(0,Math.min(100,((d-start)/span)*100));
   let html='<div class="track"></div>';
-  const m=new Date(t0.getFullYear(),t0.getMonth()+1,1);
-  while(m<end){html+=`<div class="month" style="left:${pct(m).toFixed(2)}%">${MON[m.getMonth()]}${m.getMonth()===0?' '+m.getFullYear():''}</div>`;m.setMonth(m.getMonth()+1);}
+  const pxPerMonth=(host.clientWidth||600)*(30.4*86400000/span);const every=pxPerMonth>=40?1:pxPerMonth>=20?2:3;
+  const m=new Date(t0.getFullYear(),t0.getMonth()+1,1);let mi=0;
+  while(m<end){if(mi%every===0||m.getMonth()===0)html+=`<div class="month" style="left:${pct(m).toFixed(2)}%">${MON[m.getMonth()]}${m.getMonth()===0?' '+m.getFullYear():''}</div>`;m.setMonth(m.getMonth()+1);mi++;}
   html+=`<div class="today" style="left:${pct(t0).toFixed(2)}%"><span>Today</span></div>`;
   up.forEach((e,i)=>{const d=parseISO(e.date);html+=`<div class="ev ${esc(e.type)} r${i%2}" style="left:${pct(d).toFixed(2)}%" title="${esc(e.title)} · ${esc(fmtDate(e.date))}"><div class="stem"></div><div class="dotp"></div><div class="lbl">${esc(e.title)}<b>${esc(e.tbd?MON[d.getMonth()]+' '+d.getFullYear()+' · TBD':MON[d.getMonth()]+' '+d.getDate())}</b></div></div>`;});
   host.innerHTML=html;
@@ -1282,6 +1284,7 @@ window.addEventListener('hashchange',()=>{const h=(location.hash||'').replace('#
 loadAll(false);
 setInterval(()=>{if(document.visibilityState==='visible')loadAll(false);},REFRESH_MS);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-lastLoad>60000)loadAll(false);});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(renderTimeline,150);});
 })();
 </script>
 </body>
