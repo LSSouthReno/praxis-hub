@@ -29,7 +29,7 @@ Values that drive behaviour:
 
 ## Features
 
-Briefing with launch countdown and milestone timeline · needs-attention panel · president's note · next board meeting · launch numbers · weekly summary (copy or email) · one-page print brief · group email with BCC · command palette (⌘K, `/`, keys 1–6) · person drawer · calendar export (.ics) · light/dark/system theme · "new since your last visit" badges · phone layout with bottom tabs.
+Briefing with launch countdown and milestone timeline · needs-attention panel · president's note · next board meeting · launch numbers · weekly summary (copy or email) · one-page print brief · email or group text by category, status or hand-picked selection (Select mode in the Directory; desktop shows a QR to open the group text on your phone) · command palette (⌘K, `/`, keys 1–6) · person drawer · calendar export (.ics) · light/dark/system theme · "new since your last visit" badges · phone layout with bottom tabs.
 
 ## A weekly rhythm for the president
 
@@ -38,6 +38,7 @@ Briefing with launch countdown and milestone timeline · needs-attention panel �
 3. Post updates with **More → New post**, which copies a row you paste into the Announcements tab. Use Type *Decision* for anything the board decided so it lands in the decisions log, and *Request* with a Respond-by date when you need answers.
 4. Before a board meeting, put the agenda on the meeting's Calendar row and the hub shows it on the briefing with a join link. Afterwards add the Minutes link to the same row.
 5. Share the hub with **More → Share the hub**: copy the link or drop the QR code on a slide.
+6. To reach people, press **E** (email) or **X** (text), pick a group and a status, or use **Select** in the Directory to tick exactly who you mean. Texts send from a phone; on a laptop the panel shows a QR code that opens Messages with everyone filled in.
 
 ## Branding
 
