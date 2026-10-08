@@ -31,6 +31,14 @@ Values that drive behaviour:
 
 Briefing with launch countdown and milestone timeline · needs-attention panel · president's note · next board meeting · launch numbers · weekly summary (copy or email) · one-page print brief · group email with BCC · command palette (⌘K, `/`, keys 1–6) · person drawer · calendar export (.ics) · light/dark/system theme · "new since your last visit" badges · phone layout with bottom tabs.
 
+## A weekly rhythm for the president
+
+1. Open the hub on Monday. The **Needs attention** panel lists what is overdue, waiting on a response, or still undated.
+2. Press **More → Weekly summary** and send it to the board with one click, or paste it into your own note.
+3. Post updates with **More → New post**, which copies a row you paste into the Announcements tab. Use Type *Decision* for anything the board decided so it lands in the decisions log, and *Request* with a Respond-by date when you need answers.
+4. Before a board meeting, put the agenda on the meeting's Calendar row and the hub shows it on the briefing with a join link. Afterwards add the Minutes link to the same row.
+5. Share the hub with **More → Share the hub**: copy the link or drop the QR code on a slide.
+
 ## Branding
 
 Palette and type follow the Praxis brand sheets and website: rich black `#171A21`, Payne's gray `#617073`, ghost white `#F8F7FF`, dark goldenrod `#B68F40`, midnight green `#003D52`; Droid Serif (Noto Serif) for headings and Century Gothic (Montserrat fallback) for text.

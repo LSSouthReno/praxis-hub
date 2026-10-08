@@ -632,7 +632,7 @@ td b{font-weight:600}
             </div>
             <div class="card" id="copyRowCard">
               <div class="card-head"><div class="eyebrow">Reach a group</div></div>
-              <p class="muted" style="font-size:13.5px;margin-bottom:10px">Opens your mail app with the group in BCC. Hold Alt to copy the addresses instead.</p>
+              <p class="muted" style="font-size:13.5px;margin-bottom:10px">Opens your mail app with the group in BCC so addresses stay private. Hold Alt to copy the addresses instead.</p>
               <div class="copyrow" id="copyRow"></div>
             </div>
           </div>
@@ -938,7 +938,7 @@ td b{font-weight:600}
   <div class="panel mail" role="dialog" aria-modal="true" aria-label="Draft an announcement">
     <header><h3 style="font-size:19px">New announcement</h3><button class="x" data-close="draftScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
     <div class="body">
-      <p class="muted" style="font-size:13.5px">Write it here, then paste the row into the Announcements tab. It appears on the hub on the next refresh.</p>
+      <p class="muted" style="font-size:13.5px">Write it here, copy the row, and paste it into the first empty row of the Announcements tab. It shows on the hub at the next refresh.</p>
       <div><label for="dTitle">Title</label><input class="txt" id="dTitle" type="text"></div>
       <div><label for="dBody">Message</label><textarea class="txt" id="dBody" style="min-height:120px;resize:vertical"></textarea></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -957,7 +957,7 @@ td b{font-weight:600}
   <div class="panel mail" role="dialog" aria-modal="true" aria-label="Weekly summary">
     <header><h3 style="font-size:19px">Weekly summary</h3><button class="x" data-close="digestScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
     <div class="body">
-      <p class="muted" style="font-size:13.5px">Plain text built from the sheet right now. Paste it into an email, a text thread or meeting notes.</p>
+      <p class="muted" style="font-size:13.5px">Plain text built from the sheet as it stands right now. Paste it into an email, a text thread or the top of your meeting notes.</p>
       <textarea id="digestText" style="width:100%;min-height:260px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:inherit;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);padding:10px;resize:vertical" spellcheck="false"></textarea>
     </div>
     <div class="acts"><button class="btn" id="digestCopy" type="button">Copy</button><a class="btn primary" id="digestMail" href="#">Email to the board</a></div>
@@ -988,6 +988,7 @@ const tabUrl=t=>GIDS[t]!==undefined?SHEET_URL+'#gid='+GIDS[t]:SHEET_URL;
 const TABS={people:'People',ann:'Announcements',tasks:'Action Items',events:'Calendar',resources:'Links',metrics:'Metrics'};
 const OPTIONAL={metrics:true};
 const REFRESH_MS=5*60*1000;
+const HUB_URL=location.origin+location.pathname;
 
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1102,6 +1103,7 @@ async function loadAll(manual){
   if(okCount)lastLoad=Date.now();
   renderAll();
   if(pendingPost&&loaded.ann){const id=pendingPost;pendingPost='';openPost(id);}
+  if(pendingPerson&&loaded.people){const r=pendingPerson;pendingPerson=0;openPersonRow(r);}
   btn.classList.remove('spin');btn.disabled=false;loading=false;
   if(manual&&okCount)toast('Up to date');
 }
@@ -1542,12 +1544,12 @@ function openDrawer(p){
     ${courses.length?`<div><div class="sec">Courses</div><div style="display:flex;gap:6px;flex-wrap:wrap">${courses.map(c=>`<span style="font-size:12.5px;background:var(--surface-2);padding:2px 9px;border-radius:999px">${esc(c)}</span>`).join('')}</div></div>`:''}
     ${p.ob&&obSteps(p).length?`<div><div class="sec">Onboarding</div><div style="display:flex;gap:6px;flex-wrap:wrap">${obSteps(p).map(x=>`<span class="pill ${x.done?'done':'other'}">${esc(x.label)}${x.done?' ✓':''}</span>`).join('')}</div></div>`:''}
     ${p.notes?`<div><div class="sec">Notes</div><div class="notes">${esc(p.notes)}</div></div>`:''}
-    <div class="foot"><button class="btn sm" type="button" data-vcard="${esc(p.id)}">Save contact (.vcf)</button><a class="btn sm" href="${esc(tabUrl('People'))}" target="_blank" rel="noopener">Edit row ${p.row} in Google Sheets</a></div>
+    <div class="foot"><button class="btn sm" type="button" data-copylink="${esc(HUB_URL+'#person-row-'+p.row)}">Copy link</button><button class="btn sm" type="button" data-vcard="${esc(p.id)}">Save contact (.vcf)</button><a class="btn sm" href="${esc(tabUrl('People'))}" target="_blank" rel="noopener">Edit row ${p.row} in Google Sheets</a></div>
   </div>`;
   $('#drawerScrim').hidden=false;
   setTimeout(()=>{const f=d.querySelector('.x');if(f)f.focus();},20);
 }
-document.addEventListener('click',e=>{const c=e.target.closest('[data-copy]');if(c)copyText(c.dataset.copy,'Copied '+c.dataset.copy);const x=e.target.closest('[data-close]');if(x)closeOverlay(document.getElementById(x.dataset.close));});
+document.addEventListener('click',e=>{const cl=e.target.closest('[data-copylink]');if(cl){copyText(cl.dataset.copylink,'Link copied');return;}const c=e.target.closest('[data-copy]');if(c)copyText(c.dataset.copy,'Copied '+c.dataset.copy);const x=e.target.closest('[data-close]');if(x)closeOverlay(document.getElementById(x.dataset.close));});
 $$('.scrim').forEach(s=>s.addEventListener('click',e=>{if(e.target===s)closeOverlay(s);}));
 /* focus management: remember the opener, trap Tab inside an open overlay, restore focus on close */
 let lastFocus=null;
@@ -1658,7 +1660,6 @@ $$('.pb-body .card').forEach(c=>{if(state[c.id])c.classList.add('collapsed');});
 document.addEventListener('click',e=>{const eb=e.target.closest('.pb-body .card>.eyebrow');if(!eb||e.target.closest('a,button'))return;const c=eb.parentElement;const col=c.classList.toggle('collapsed');state[c.id]=col;remember('pb.collapsed',JSON.stringify(state));});
 document.addEventListener('click',e=>{const pb=e.target.closest('[data-pb]');if(!pb)return;const c=document.getElementById(pb.dataset.pb);if(c&&c.classList.contains('collapsed')){c.classList.remove('collapsed');state[c.id]=false;remember('pb.collapsed',JSON.stringify(state));}});})();
 /* ---------- share panel + QR ---------- */
-const HUB_URL=location.origin+location.pathname;
 function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector('script[src="'+src+'"]'))return res();const sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
 async function openShare(){
   $('#shareUrl').textContent=HUB_URL;$('#shareScrim').hidden=false;
@@ -1729,10 +1730,12 @@ window.addEventListener('online',()=>loadAll(false));
 setTimeout(markVisit,45000);
 function openPost(id){annAud='all';annType='';$$('#annFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.aud==='all'));$('#annType').value='';renderAnn();showView('announcements',{silent:true});setTimeout(()=>{const el=document.getElementById(id);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('hl');}},80);}
 let pendingPost=(location.hash.match(/^#post-(a\d+)$/)||[])[1]||'';
-function initialView(){const h=(location.hash||'').replace('#','');if(pendingPost)return 'announcements';if(VIEWS[h])return h;const r=recall('view');return VIEWS[r]?r:'overview';}
+let pendingPerson=Number((location.hash.match(/^#person-row-(\d+)$/)||[])[1])||0;
+function openPersonRow(row){const p=S.people.find(x=>x.row===row);if(!p){toast('That person is no longer in the sheet');return;}showView('directory',{silent:true});openDrawer(p);}
+function initialView(){const h=(location.hash||'').replace('#','');if(pendingPost)return 'announcements';if(pendingPerson)return 'directory';if(VIEWS[h])return h;const r=recall('view');return VIEWS[r]?r:'overview';}
 showView(initialView(),{silent:true});
 if(paintCached()){renderAll();setStatus('wait','Showing the last copy · refreshing from Google Sheets…');}else renderAll();
-window.addEventListener('hashchange',()=>{const h=(location.hash||'').replace('#','');const pm=h.match(/^post-(a\d+)$/);if(pm){openPost(pm[1]);return;}if(VIEWS[h]&&h!==view)showView(h,{silent:true});});
+window.addEventListener('hashchange',()=>{const h=(location.hash||'').replace('#','');const pm=h.match(/^post-(a\d+)$/);if(pm){openPost(pm[1]);return;}const pr=h.match(/^person-row-(\d+)$/);if(pr){openPersonRow(Number(pr[1]));return;}if(VIEWS[h]&&h!==view)showView(h,{silent:true});});
 loadAll(false);
 setInterval(()=>{if(document.visibilityState==='visible')loadAll(false);},REFRESH_MS);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-lastLoad>60000)loadAll(false);});
