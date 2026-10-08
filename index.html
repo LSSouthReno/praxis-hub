@@ -286,6 +286,23 @@ input.txt{font:inherit;color:inherit;background:var(--surface);border:1px solid 
 .group-h .n{color:var(--faint);font-size:13px}
 .group-h .btn{margin-left:auto}
 
+/* ---------- course coverage ---------- */
+.cov-sum{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+.cov-sum .big{font-family:var(--display);font-size:26px;font-weight:600}
+.cov-sum .bar{flex:1 1 180px;height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden}
+.cov-sum .bar i{display:block;height:100%;background:var(--gold)}
+.cov{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.cov .grp h4{font-size:15px;margin-bottom:6px}
+.cov .grp .sub{font-size:12px;color:var(--muted);margin:-4px 0 8px}
+.course{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--border);font-size:14px}
+.course:first-of-type{border-top:0}
+.course .who{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.course .who button{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:2px 8px 2px 3px;border-radius:999px;background:var(--surface-2)}
+.course .who button i{width:18px;height:18px;border-radius:50%;background:var(--gold-ink);color:#fff;font-style:normal;font-size:9px;font-weight:600;display:grid;place-items:center}
+.course .who button:hover{background:var(--gold-soft)}
+.course.none .n{color:var(--faint)}
+.course .un{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+
 /* ---------- tasks ---------- */
 .tasks{display:flex;flex-direction:column}
 .task{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 4px;border-top:1px solid var(--border)}
@@ -583,6 +600,7 @@ td b{font-weight:600}
             <button class="chip" data-group="faculty">Professors <span class="n" data-n="faculty"></span></button>
             <button class="chip" data-group="staff">Staff <span class="n" data-n="staff"></span></button>
             <button class="chip" data-group="music">School of Music <span class="n" data-n="music"></span></button>
+            <button class="chip" data-group="courses">By course <span class="n" id="covN"></span></button>
           </div>
           <div class="spacer"></div>
           <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="dirSearch" type="search" placeholder="Search name, church, course…" aria-label="Search directory"></div>
@@ -939,6 +957,7 @@ async function loadAll(manual){
   loadErr=okCount?null:firstErr;
   if(okCount)lastLoad=Date.now();
   renderAll();
+  if(pendingPost&&loaded.ann){const id=pendingPost;pendingPost='';openPost(id);}
   btn.classList.remove('spin');btn.disabled=false;loading=false;
   if(manual&&okCount)toast('Up to date');
 }
@@ -1000,7 +1019,7 @@ function annHTML(a,compact){
       <div class="body${!compact&&long?' clamp':''}">${esc(a.body)}</div>
       ${!compact&&long?'<button class="more" data-more type="button">Read more</button>':''}
       ${!compact&&a.respond?`<div class="respond"><b>Response needed${a.respondBy?' by '+esc(fmtDate(a.respondBy)):''}</b>${a.respondBy&&daysUntil(a.respondBy)!==null?`<span class="muted">${esc(relDays(daysUntil(a.respondBy)))}</span>`:''}${p&&p.email?`<a class="btn sm" href="mailto:${esc(p.email)}?subject=${encodeURIComponent('Re: '+a.title)}">Reply to ${esc(p.name.split(' ')[0])}</a>`:''}</div>`:''}
-      ${!compact&&a.link?`<div class="acts"><a class="btn sm" href="${esc(a.link)}" target="_blank" rel="noopener">Open link</a></div>`:''}
+      ${compact?'':`<div class="acts">${a.link?`<a class="btn sm" href="${esc(a.link)}" target="_blank" rel="noopener">Open link</a>`:''}<button class="btn ghost xs" type="button" data-permalink="${esc(a.id)}">Copy link</button></div>`}
     </div></article>`;
 }
 const sortAnn=l=>[...l].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.createdAt||0)-(a.createdAt||0)||b.row-a.row);
@@ -1013,7 +1032,38 @@ function renderAnn(){
 }
 $('#annFilter').addEventListener('click',e=>{const b=e.target.closest('[data-aud]');if(!b)return;annAud=b.dataset.aud;$$('#annFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c===b));renderAnn();});
 $('#annType').addEventListener('change',e=>{annType=e.target.value;renderAnn();});
-document.addEventListener('click',e=>{const m=e.target.closest('[data-more]');if(!m)return;const body=m.previousElementSibling;const open=body.classList.toggle('clamp');m.textContent=open?'Read more':'Show less';});
+document.addEventListener('click',e=>{const pl=e.target.closest('[data-permalink]');if(pl){copyText(location.origin+location.pathname+'#post-'+pl.dataset.permalink,'Link copied');return;}const m=e.target.closest('[data-more]');if(!m)return;const body=m.previousElementSibling;const open=body.classList.toggle('clamp');m.textContent=open?'Read more':'Show less';});
+
+
+/* ---------- course coverage ---------- */
+const CATALOG=[
+  ['Doctrine · MABS core',['Law','Prophets','Writings','Gospels/Acts','Epistles–Revelation']],
+  ['Doctrine · MATS core',["God's Image","God's Attributes","God's Gospel",'OT Survey','NT Survey']],
+  ['Doctrine · shared',['Biblical Church Leadership','Hermeneutics','Church History','Ethics','Systematic Theology','Biblical Theology','Ecclesiology']],
+  ['Practitioner · Preaching',['Preaching Foundations','Doctrinal Preaching','Advanced Preaching']],
+  ['Practitioner · Leadership',['Strategic Planning','Healthy Teams','$/HR and Operations','Integrated Discipleship/LD']],
+  ['Practitioner · Mission',['Contextualization','Global Missions','Evangelism/Apologetics','Church Planting']],
+  ['Practitioner · Endurance',['Spiritual Warfare','Leading Through Conflict','Denominations, Cults, Religions']],
+  ['Practitioner · Pastoral care',['Liturgy','Counseling','Pastoral Care/Duties']],
+  ['Formation',['Spiritual Formation']]
+];
+const ALIAS={'otsurvey':['oldtestamentsurvey','otsurvey','oldtestament'],'ntsurvey':['newtestamentsurvey','ntsurvey','newtestament'],'gospelsacts':['gospels','acts'],'epistlesrevelation':['epistles','revelation'],'hrandoperations':['hroperations','operations','finance','hr'],'integrateddiscipleshipld':['discipleship','leadershipdevelopment'],'evangelismapologetics':['evangelism','apologetics'],'denominationscultsreligions':['denominations','cults','religions','worldreligions'],'pastoralcareduties':['pastoralcare','pastoralduties'],'leadingthroughconflict':['conflict'],'spiritualformation':['formation'],'biblicalchurchleadership':['churchleadership'],'godsimage':['imageofgod','godsimage'],'godsattributes':['attributesofgod'],'godsgospel':['gospel']};
+function courseMatch(course,text){const c=norm(course),t=norm(text);if(!t)return false;if(t===c||(t.length>=4&&(c.includes(t)||t.includes(c))))return true;return (ALIAS[c]||[]).some(a=>t===a||(a.length>=4&&(t.includes(a))));}
+function coverage(){
+  const profs=S.people.filter(p=>p.group==='faculty'||p.group==='board'||p.group==='music');
+  const used=new Set();const groups=CATALOG.map(([name,courses])=>[name,courses.map(c=>{const who=[];profs.forEach(p=>String(p.courses||'').split(',').map(x=>x.trim()).filter(Boolean).forEach(x=>{if(courseMatch(c,x)){if(!who.some(w=>w.id===p.id))who.push(p);used.add(p.id+'|'+norm(x));}}));return {name:c,who};})]);
+  const other=[];profs.forEach(p=>String(p.courses||'').split(',').map(x=>x.trim()).filter(Boolean).forEach(x=>{if(!used.has(p.id+'|'+norm(x))){let o=other.find(y=>norm(y.name)===norm(x));if(!o){o={name:x,who:[]};other.push(o);}if(!o.who.some(w=>w.id===p.id))o.who.push(p);}}));
+  if(other.length)groups.push(['Other courses listed in the sheet',other]);
+  const all=groups.filter(([n])=>!n.startsWith('Other')).flatMap(([,l])=>l);
+  return {groups,total:all.length,covered:all.filter(c=>c.who.length).length};
+}
+function renderCoverage(){
+  const cv=coverage();
+  const pct=cv.total?Math.round(cv.covered/cv.total*100):0;
+  return `<div class="card"><div class="card-head"><div class="eyebrow">Course coverage</div>${sheetBtn('People','Assign courses in the sheet')}</div>
+    <div class="cov-sum"><span class="big num">${cv.covered} <span class="muted" style="font-size:15px;font-family:var(--ui);font-weight:500">of ${cv.total} courses have a professor</span></span><span class="bar"><i style="width:${pct}%"></i></span><span class="muted" style="font-size:13px">Add course names to the Courses column on the People tab, separated by commas.</span></div></div>
+    <div class="cov">${cv.groups.map(([name,list])=>`<div class="card grp"><h4>${esc(name)}</h4>${list.map(c=>`<div class="course${c.who.length?'':' none'}"><span class="n">${esc(c.name)}</span>${c.who.length?`<span class="who">${c.who.map(p=>`<button type="button" data-person="${esc(p.id)}" title="${esc(p.name)}"><i>${esc(initials(p.name))}</i>${esc(p.name.split(' ').slice(-1)[0])}</button>`).join('')}</span>`:'<span class="un">Unassigned</span>'}</div>`).join('')}</div>`).join('')}</div>`;
+}
 
 function personHTML(p){
   const courses=String(p.courses||'').split(',').map(s=>s.trim()).filter(Boolean);
@@ -1033,6 +1083,8 @@ function renderDir(){
   const host=$('#dirBody');
   $$('#dirFilter [data-n]').forEach(n=>{const k=n.dataset.n;const c=groupList(k).length;n.textContent=loaded.people&&c?c:'';});
   if(!loaded.people){host.innerHTML=loadingBox();return;}
+  {const cv=coverage();$('#covN').textContent=cv.covered+'/'+cv.total;}
+  if(dirGroup==='courses'){host.innerHTML='<div class="stack">'+renderCoverage()+'</div>';return;}
   const groups=dirGroup==='all'?Object.keys(GROUPS):[dirGroup];
   let html='',any=false;
   groups.forEach(g=>{
@@ -1166,10 +1218,11 @@ function attention(){
   if(open.length)items.push({cls:'info',ic:'user',t:open.length+' open '+(open.length===1?'role':'roles'),m:open.map(p=>p.name).join(' · '),go:'directory'});
   const noEmail=S.people.filter(p=>p.group==='faculty'&&!p.email).length;
   if(noEmail)items.push({cls:'info',ic:'mail',t:noEmail+' of '+S.people.filter(p=>p.group==='faculty').length+' professors have no email on file',m:'Add addresses on the People tab to reach them from here',go:'directory',missing:true});
+  const cv=coverage();if(cv.total&&cv.covered<cv.total)items.push({cls:'info',ic:'book',t:(cv.total-cv.covered)+' of '+cv.total+' courses have no professor assigned',m:cv.covered?'See which courses still need a scholar or practitioner':'Add course names to the Courses column on the People tab',go:'directory',courses:true});
   const nn=newAnn();if(nn.length)items.push({cls:'gold',ic:'bell',t:nn.length+' new '+(nn.length===1?'announcement':'announcements')+' since your last visit',m:nn.map(a=>a.title).slice(0,2).join(' · '),go:'announcements'});
   return items;
 }
-const ICONS={alert:'<svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 4.3 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0z"/></svg>',reply:'<svg viewBox="0 0 24 24"><path d="M9 17 4 12l5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>',clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',cal:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',user:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',mail:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',bell:'<svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg>'};
+const ICONS={alert:'<svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 4.3 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0z"/></svg>',reply:'<svg viewBox="0 0 24 24"><path d="M9 17 4 12l5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>',clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',cal:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',user:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',mail:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',bell:'<svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg>',book:'<svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>'};
 function renderAttention(){
   const host=$('#attn');
   if(!(loaded.tasks&&loaded.ann&&loaded.events&&loaded.people)){host.innerHTML=loadingBox();$('#attnCount').textContent='';return;}
@@ -1178,7 +1231,7 @@ function renderAttention(){
   host.innerHTML=items.length?items.map((it,i)=>`<button type="button" data-attn="${i}"><span class="ic ${it.cls}">${ICONS[it.ic]}</span><span style="min-width:0"><span class="t" style="display:block">${esc(it.t)}</span><span class="m">${esc(it.m)}</span></span><span class="go"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span></button>`).join(''):'<div class="allclear"><span class="ic"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 7"/></svg></span>All clear. Nothing overdue, nothing waiting on a response.</div>';
   host._items=items;
 }
-$('#attn').addEventListener('click',e=>{const b=e.target.closest('[data-attn]');if(!b)return;const it=$('#attn')._items[+b.dataset.attn];if(!it)return;if(it.missing){dirMissing=true;$('#dirMissing').setAttribute('aria-pressed','true');dirGroup='faculty';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='faculty'));renderDir();}showView(it.go);if(it.ann)setTimeout(()=>{const el=document.getElementById(it.ann);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('hl');}},60);});
+$('#attn').addEventListener('click',e=>{const b=e.target.closest('[data-attn]');if(!b)return;const it=$('#attn')._items[+b.dataset.attn];if(!it)return;if(it.missing){dirMissing=true;$('#dirMissing').setAttribute('aria-pressed','true');dirGroup='faculty';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='faculty'));renderDir();}if(it.courses){dirGroup='courses';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='courses'));renderDir();}showView(it.go);if(it.ann)setTimeout(()=>{const el=document.getElementById(it.ann);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('hl');}},60);});
 function renderPres(){
   const host=$('#presCard');
   if(!(loaded.ann&&loaded.people)){host.innerHTML='';return;}
@@ -1331,6 +1384,7 @@ function palSearch(q){
   add('Dates',upcomingEvents().filter(e=>hit(e.title+' '+e.location+' '+e.notes)).slice(0,q?6:3).map(e=>({ic:MON[parseISO(e.date).getMonth()].toUpperCase(),t:e.title,s:fmtDate(e.date)+(e.location?' · '+e.location:''),k:relDays(daysUntil(e.date)),run:()=>{calType='all';$$('#calFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.type==='all'));renderCal();showView('calendar');}})));
   add('Action items',S.tasks.filter(t=>t.status!=='done'&&hit(t.title+' '+t.owner+' '+t.notes)).slice(0,q?6:3).map(t=>({ic:'✓',t:t.title,s:(t.owner||'Unassigned')+(t.due?' · due '+fmtDate(t.due):''),run:()=>{taskSt='open';taskOwner='';$$('#taskFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.st==='open'));renderTasks();showView('tasks');}})));
   add('Playbook',PB.filter(([id,l])=>hit(l)||(q&&(document.getElementById(id).textContent||'').toLowerCase().includes(q))).map(([id,l])=>({ic:'P',t:l,s:'Playbook section',run:()=>{showView('playbook',{keepScroll:true});setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}),30);}})));
+  if(q&&('course coverage professors assigned'.includes(q)||CATALOG.some(([,l])=>l.some(c=>c.toLowerCase().includes(q)))))add('Courses',[{ic:'C',t:'Course coverage',s:'Which courses have a professor assigned',run:()=>{dirGroup='courses';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='courses'));renderDir();showView('directory');}}]);
   add('Links',S.resources.filter(r=>hit(r.title+' '+r.category)).slice(0,5).map(r=>({ic:'↗',t:r.title,s:r.url.replace(/^https?:\/\//,''),k:r.category,run:()=>window.open(r.url,'_blank','noopener')})));
   const cmds=[{ic:'≡',t:'Weekly summary',s:'Copy or email a plain-text briefing',run:openDigest},{ic:'⎙',t:'Print one-page brief',s:'Briefing, print-ready',run:()=>$('#printBtn').click()},{ic:'✉',t:'Email a group',s:'Opens your mail app with BCC',run:()=>openMail('all')},{ic:'◐',t:'Switch theme',s:'System · Light · Dark',run:()=>$('#themeBtn').click()}].filter(c=>hit(c.t+' '+c.s));if(q)add('Actions',cmds);
   palItems=groups.flatMap(([,items])=>items);palSel=0;
@@ -1359,10 +1413,12 @@ lastVisit=Number(recall('lastVisit'))||0;
 const markVisit=()=>remember('lastVisit',String(Date.now()));
 window.addEventListener('pagehide',markVisit);
 setTimeout(markVisit,45000);
-function initialView(){const h=(location.hash||'').replace('#','');if(VIEWS[h])return h;const r=recall('view');return VIEWS[r]?r:'overview';}
+function openPost(id){annAud='all';annType='';$$('#annFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.aud==='all'));$('#annType').value='';renderAnn();showView('announcements',{silent:true});setTimeout(()=>{const el=document.getElementById(id);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('hl');}},80);}
+let pendingPost=(location.hash.match(/^#post-(a\d+)$/)||[])[1]||'';
+function initialView(){const h=(location.hash||'').replace('#','');if(pendingPost)return 'announcements';if(VIEWS[h])return h;const r=recall('view');return VIEWS[r]?r:'overview';}
 showView(initialView(),{silent:true});
 renderAll();
-window.addEventListener('hashchange',()=>{const h=(location.hash||'').replace('#','');if(VIEWS[h]&&h!==view)showView(h,{silent:true});});
+window.addEventListener('hashchange',()=>{const h=(location.hash||'').replace('#','');const pm=h.match(/^post-(a\d+)$/);if(pm){openPost(pm[1]);return;}if(VIEWS[h]&&h!==view)showView(h,{silent:true});});
 loadAll(false);
 setInterval(()=>{if(document.visibilityState==='visible')loadAll(false);},REFRESH_MS);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-lastLoad>60000)loadAll(false);});
