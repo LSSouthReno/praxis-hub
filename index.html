@@ -601,6 +601,7 @@ td b{font-weight:600}
               <div class="attn" id="attn"></div>
             </div>
             <div id="presCard"></div>
+            <div id="prayerCard"></div>
             <div class="card">
               <div class="card-head"><div class="eyebrow">Latest announcements</div><button class="btn ghost sm" data-go="announcements">See all</button></div>
               <div id="ovAnn"></div>
@@ -613,6 +614,7 @@ td b{font-weight:600}
               <div class="events" id="ovEvents"></div>
             </div>
             <div id="decisionsCard"></div>
+            <div id="callCard"></div>
             <div class="card" id="metricsCard">
               <div class="card-head"><div class="eyebrow">Launch numbers</div><span class="muted" style="font-size:12.5px" id="metricsAsOf"></span></div>
               <div id="metrics"></div>
@@ -1412,6 +1414,19 @@ function renderMeeting(){
   const n=daysUntil(m.date);
   host.innerHTML=`<div class="card meeting"><div class="card-head"><div class="eyebrow">Next board meeting</div><span class="muted num" style="font-size:12.5px">${esc(relDays(n))}</span></div><div class="when">${esc(m.tbd?MONL[parseISO(m.date).getMonth()]+' '+parseISO(m.date).getFullYear()+' · date TBD':fmtDateLong(m.date))}</div><div class="muted" style="font-size:14px;margin-top:2px">${esc([m.time,m.location].filter(Boolean).join(' · ')||m.title)}</div>${m.agenda.length?`<ul>${m.agenda.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:(m.notes?`<p class="muted" style="font-size:14px;margin-top:8px">${esc(m.notes)}</p>`:'')}<div class="acts">${m.link?`<a class="btn primary sm" href="${esc(m.link)}" target="_blank" rel="noopener">Join meeting</a>`:''}<button class="btn sm" data-ics="${esc(m.id)}">Add to calendar</button>${sheetBtn('Calendar','Edit agenda')}</div></div>`;
 }
+function renderPrayer(){
+  const host=$('#prayerCard');if(!loaded.ann){host.innerHTML='';return;}
+  const l=sortAnn(S.ann.filter(a=>a.type==='prayer')).slice(0,4);
+  if(!l.length){host.innerHTML='';return;}
+  host.innerHTML=`<div class="card" style="border-left:3px solid var(--info)"><div class="card-head"><div class="eyebrow">Prayer</div><button class="btn ghost sm" data-prayer type="button">All</button></div>${l.map(a=>`<article class="ann compact" style="cursor:pointer" data-open-post="${esc(a.id)}"><div><div class="head"><b>${esc(a.author||'Praxis Hub')}</b>${a.date?'<span>·</span><span>'+esc(fmtDate(a.date))+'</span>':''}${isNew(a)?'<span class="pill new">New</span>':''}</div><h4>${esc(a.title)}</h4><div class="body">${esc(a.body)}</div></div></article>`).join('')}</div>`;
+}
+function renderCall(){
+  const host=$('#callCard');if(!loaded.people){host.innerHTML='';return;}
+  const l=sortPeople(S.people.filter(p=>p.phone&&(p.group==='staff'||p.group==='board'||p.group==='music')));
+  if(!l.length){host.innerHTML='';return;}
+  host.innerHTML=`<div class="card"><div class="card-head"><div class="eyebrow">Who to call</div><button class="btn ghost sm" data-go="directory">Directory</button></div><div class="attn">${l.slice(0,8).map(p=>`<button type="button" data-person="${esc(p.id)}"><span class="ic info" style="font-size:11px;font-weight:600">${esc(initials(p.name))}</span><span style="min-width:0"><span class="t" style="display:block">${esc(p.name)}</span><span class="m">${esc(p.title||GSHORT[p.group])}</span></span><a class="btn ghost xs" href="tel:${esc(p.phone.replace(/[^+\d]/g,''))}" onclick="event.stopPropagation()">${esc(p.phone)}</a></button>`).join('')}</div></div>`;
+}
+document.addEventListener('click',e=>{const d=e.target.closest('[data-prayer]');if(d){annAud='all';annType='prayer';$$('#annFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.aud==='all'));$('#annType').value='prayer';renderAnn();showView('announcements');}});
 function renderDecisions(){
   const host=$('#decisionsCard');if(!loaded.ann){host.innerHTML='';return;}
   const l=sortAnn(S.ann.filter(a=>a.type==='decision')).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
@@ -1445,7 +1460,7 @@ function renderOverview(){
     ['calendar',upcoming.length,'Upcoming dates',next?'Next: '+next.title:'','']
   ];
   $('#stats').innerHTML=stats.map(([go,v,l,d,cls])=>`<button class="stat" data-go="${go}" type="button"><div class="v num">${any?esc(String(v)):'…'}</div><div class="l">${esc(l)}</div>${d?`<div class="d ${esc(cls)}">${esc(d)}</div>`:''}</button>`).join('');
-  renderBand();renderTimeline();renderAttention();renderPres();renderMeeting();renderDecisions();renderMetrics();
+  renderBand();renderTimeline();renderAttention();renderPres();renderPrayer();renderMeeting();renderDecisions();renderCall();renderMetrics();
   const ov=$('#ovAnn');
   if(!loaded.ann)ov.innerHTML=loadingBox();
   else{const l=sortAnn(S.ann).slice(0,4);ov.innerHTML=l.length?l.map(a=>annHTML(a,true)).join(''):emptyBox('No announcements yet',sheetHint('Announcements'));}
@@ -1534,6 +1549,7 @@ function buildDigest(){
   L.push('');
   const fac=S.people.filter(p=>p.group==='faculty');
   L.push('TEAM · '+S.people.filter(p=>p.group==='board').length+' board · '+fac.length+' professors ('+fac.filter(p=>p.status==='confirmed').length+' confirmed) · '+S.people.filter(p=>p.group==='staff'||p.group==='music').length+' staff & music'+(S.people.filter(p=>p.status==='open').length?' · '+S.people.filter(p=>p.status==='open').length+' open roles':''));
+  {const pr=sortAnn(S.ann.filter(a=>a.type==='prayer')).slice(0,3);if(pr.length){L.push('');L.push('PRAYER');pr.forEach(a=>L.push('• '+a.title+' — '+(a.author||'Praxis Hub')));}}
   {const ob=onboarding();if(ob.steps.length)L.push('ONBOARDING · '+ob.complete+' of '+ob.rows.length+' professors complete');}
   if(S.metrics.length){L.push('');L.push('LAUNCH NUMBERS');S.metrics.forEach(m=>L.push('• '+m.label+': '+(m.value!==null?fmtNum(m.value,m.unit):'—')+(m.target!==null?' of '+fmtNum(m.target,m.unit):'')));}
   L.push('');L.push('Hub: '+location.origin+location.pathname+' · Data: '+SHEET_URL);

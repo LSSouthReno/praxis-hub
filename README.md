@@ -34,3 +34,7 @@ Briefing with launch countdown and milestone timeline Â· needs-attention panel Â
 ## Branding
 
 Palette and type follow the Praxis brand sheets and website: rich black `#171A21`, Payne's gray `#617073`, ghost white `#F8F7FF`, dark goldenrod `#B68F40`, midnight green `#003D52`; Droid Serif (Noto Serif) for headings and Century Gothic (Montserrat fallback) for text.
+
+## Tests
+
+`node tests/run.js` checks the CSV parser, date parsing and column mapping against sample rows. No dependencies.
