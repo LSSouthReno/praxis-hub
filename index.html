@@ -399,6 +399,11 @@ td b{font-weight:600}
 .pb-nav a:hover{background:var(--surface-2);color:var(--fg);text-decoration:none}
 .pb-body{display:flex;flex-direction:column;gap:18px;min-width:0}
 .pb-body .card{scroll-margin-top:90px}
+.pb-body .card>.eyebrow{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.pb-body .card>.eyebrow:after{content:'−';font-size:16px;color:var(--faint);font-weight:400}
+.pb-body .card.collapsed>.eyebrow:after{content:'+'}
+.pb-body .card.collapsed>:not(.eyebrow):not(h3){display:none}
+.pb-body .card.collapsed h3{margin-bottom:0;color:var(--muted)}
 .pb-body .card p,.pb-body .card li{max-width:68ch;line-height:1.6}
 .pb-body ul,.pb-body ol{margin:8px 0 0;padding-left:20px}
 .pb-body li{margin:4px 0}
@@ -644,6 +649,7 @@ td b{font-weight:600}
             <button class="chip" data-aud="staff">Staff <span class="n" data-n="staff"></span></button>
           </div>
           <div class="spacer"></div>
+          <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="annSearch" type="search" placeholder="Search posts…" aria-label="Search announcements"></div>
           <button class="btn ghost sm" id="markRead" type="button" hidden>Mark all read</button>
           <select class="sel" id="annType" aria-label="Filter by type"><option value="">All types</option><option value="update">Updates</option><option value="decision">Decisions</option><option value="request">Requests</option><option value="prayer">Prayer</option><option value="celebration">Celebrations</option></select>
         </div>
@@ -997,7 +1003,7 @@ const S={people:[],ann:[],tasks:[],events:[],resources:[],metrics:[]};
 const RAW={};
 const loaded={people:false,ann:false,tasks:false,events:false,resources:false,metrics:false};
 const missing={};
-let view='overview',annAud='all',annType='',dirGroup='all',dirQ='',dirSort='order',dirMissing=false,taskSt='open',taskOwner='',taskGroup='due',calType='all',calView='list',mgY=0,mgM=0,lastLoad=0,loadErr=null,lastVisit=0;
+let view='overview',annAud='all',annType='',annQ='',dirGroup='all',dirQ='',dirSort='order',dirMissing=false,taskSt='open',taskOwner='',taskGroup='due',calType='all',calView='list',mgY=0,mgM=0,lastLoad=0,loadErr=null,lastVisit=0;
 
 /* ---------- helpers ---------- */
 const toast=(m)=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),2400);};
@@ -1178,11 +1184,13 @@ function renderAnn(){
   $$('#annFilter [data-n]').forEach(n=>{const k=n.dataset.n;const c=S.ann.filter(a=>k==='all'||a.audience===k||a.audience==='all').length;n.textContent=loaded.ann&&c?c:'';});
   $('#markRead').hidden=!(newAnn().length||newEvents().length||newPeople().length||newTasks().length);
   if(!loaded.ann){list.innerHTML=loadingBox();return;}
-  const l=sortAnn(S.ann.filter(a=>(annAud==='all'||a.audience===annAud||a.audience==='all')&&(!annType||a.type===annType)));
-  list.innerHTML=l.length?l.map(a=>annHTML(a,false)).join(''):emptyBox(S.ann.length?'Nothing matches':'Nothing posted yet',S.ann.length?'Try another audience or type.':sheetHint('Announcements'));
+  const q=annQ.toLowerCase();
+  const l=sortAnn(S.ann.filter(a=>(annAud==='all'||a.audience===annAud||a.audience==='all')&&(!annType||a.type===annType)&&(!q||(a.title+' '+a.body+' '+a.author).toLowerCase().includes(q))));
+  list.innerHTML=l.length?l.map(a=>annHTML(a,false)).join(''):emptyBox(S.ann.length?'Nothing matches':'Nothing posted yet',S.ann.length?'Try another search, audience or type.':sheetHint('Announcements'));
 }
 $('#annFilter').addEventListener('click',e=>{const b=e.target.closest('[data-aud]');if(!b)return;annAud=b.dataset.aud;$$('#annFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c===b));renderAnn();});
 $('#annType').addEventListener('change',e=>{annType=e.target.value;renderAnn();});
+$('#annSearch').addEventListener('input',e=>{annQ=e.target.value.trim();renderAnn();});
 $('#markRead').addEventListener('click',()=>{lastVisit=Date.now();snap=null;markVisit();try{snap=JSON.parse(recall('snapshot'));}catch(_){}renderAll();toast('Marked everything as read');});
 document.addEventListener('click',e=>{const pl=e.target.closest('[data-permalink]');if(pl){copyText(location.origin+location.pathname+'#post-'+pl.dataset.permalink,'Link copied');return;}const m=e.target.closest('[data-more]');if(!m)return;const body=m.previousElementSibling;const open=body.classList.toggle('clamp');m.textContent=open?'Read more':'Show less';});
 
@@ -1500,6 +1508,7 @@ function renderOverview(){
   else{const l=sortAnn(S.ann).slice(0,4);ov.innerHTML=l.length?l.map(a=>annHTML(a,true)).join(''):emptyBox('No announcements yet',sheetHint('Announcements'));}
   const oe=$('#ovEvents');
   if(!loaded.events)oe.innerHTML=loadingBox();else oe.innerHTML=upcoming.length?upcoming.slice(0,5).map(e=>evHTML(e,false,{short:true})).join(''):emptyBox('No upcoming dates',sheetHint('Calendar'));
+  $('#copyRowCard').hidden=loaded.people&&!emailsOf(S.people).length&&!S.people.length;
   const ot=$('#ovTasks');
   if(!loaded.tasks)ot.innerHTML=loadingBox();else{const l=sortTasks(openTasks).slice(0,5);ot.innerHTML=l.length?l.map(taskHTML).join(''):emptyBox('All clear','No open action items right now.');}
   $('#copyRow').innerHTML=[['all','Everyone'],['board','Board'],['faculty','Professors'],['staff','Staff'],['music','School of Music']].map(([g,l])=>{const cnt=emailsOf(groupList(g)).length;return `<button class="btn sm" type="button" data-email-group="${g}" ${cnt?'':'disabled'}><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>${esc(l)} <span class="muted num">(${cnt})</span></button>`;}).join('');
@@ -1643,6 +1652,11 @@ function openHealth(){
 }
 $('#health').addEventListener('click',openHealth);
 
+/* ---------- collapsible playbook ---------- */
+(()=>{let state={};try{state=JSON.parse(recall('pb.collapsed')||'{}');}catch(_){}
+$$('.pb-body .card').forEach(c=>{if(state[c.id])c.classList.add('collapsed');});
+document.addEventListener('click',e=>{const eb=e.target.closest('.pb-body .card>.eyebrow');if(!eb||e.target.closest('a,button'))return;const c=eb.parentElement;const col=c.classList.toggle('collapsed');state[c.id]=col;remember('pb.collapsed',JSON.stringify(state));});
+document.addEventListener('click',e=>{const pb=e.target.closest('[data-pb]');if(!pb)return;const c=document.getElementById(pb.dataset.pb);if(c&&c.classList.contains('collapsed')){c.classList.remove('collapsed');state[c.id]=false;remember('pb.collapsed',JSON.stringify(state));}});})();
 /* ---------- share panel + QR ---------- */
 const HUB_URL=location.origin+location.pathname;
 function loadScript(src){return new Promise((res,rej)=>{if(document.querySelector('script[src="'+src+'"]'))return res();const sc=document.createElement('script');sc.src=src;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
