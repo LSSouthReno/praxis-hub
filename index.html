@@ -335,6 +335,7 @@ input.txt{font:inherit;color:inherit;background:var(--surface);border:1px solid 
 .ev .t{font-weight:500;overflow-wrap:anywhere}
 .ev .m{font-size:13px;color:var(--muted)}
 .ev.past{opacity:.6}
+.ev .agenda{margin:6px 0 0;padding-left:16px;font-size:13px;color:var(--muted);line-height:1.45}
 .ev .r{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .meeting{border-left:3px solid var(--navy)}
 .meeting .when{font-family:var(--display);font-size:20px;font-weight:600}
@@ -521,6 +522,7 @@ td b{font-weight:600}
       <div><h1 id="title">Briefing</h1><div class="sub"><span class="dot wait" id="dot"></span><span id="status">Connecting to the data sheet…</span><span id="newline"></span></div></div>
       <div class="topActions">
         <button class="btn ghost" id="refresh" type="button" title="Reload from Google Sheets"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg><span>Refresh</span></button>
+        <button class="btn" id="draftBtn" type="button" title="Draft an announcement for the sheet"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>New post</span></button>
         <button class="btn" id="digestBtn" type="button" title="Weekly summary to copy or email"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg><span>Summary</span></button>
         <button class="btn" id="printBtn" type="button" title="Print a one-page brief"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg><span>Print</span></button>
         <button class="btn" id="emailBtn" type="button" title="Email a group"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span>Email a group</span></button>
@@ -818,6 +820,25 @@ td b{font-weight:600}
 <div class="scrim right" id="drawerScrim" hidden>
   <div class="drawer" role="dialog" aria-modal="true" aria-labelledby="drName" id="drawer"></div>
 </div>
+<!-- draft announcement -->
+<div class="scrim" id="draftScrim" hidden>
+  <div class="panel mail" role="dialog" aria-modal="true" aria-label="Draft an announcement">
+    <header><h3 style="font-size:19px">New announcement</h3><button class="x" data-close="draftScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+    <div class="body">
+      <p class="muted" style="font-size:13.5px">Write it here, then paste the row into the Announcements tab. It appears on the hub on the next refresh.</p>
+      <div><label for="dTitle">Title</label><input class="txt" id="dTitle" type="text"></div>
+      <div><label for="dBody">Message</label><textarea class="txt" id="dBody" style="min-height:120px;resize:vertical"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><label for="dAud">Audience</label><select class="sel" id="dAud" style="width:100%"><option>Everyone</option><option>Board</option><option>Faculty</option><option>Staff</option></select></div>
+        <div><label for="dType">Type</label><select class="sel" id="dType" style="width:100%"><option>Update</option><option>Decision</option><option>Request</option><option>Prayer</option><option>Celebration</option></select></div>
+        <div><label for="dBy">Posted by</label><input class="txt" id="dBy" type="text" placeholder="Your name as it appears in People"></div>
+        <div><label for="dRespond">Respond by (optional)</label><input class="txt" id="dRespond" type="date"></div>
+      </div>
+      <label class="muted" style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-weight:400;font-size:14px"><input type="checkbox" id="dPin"> Pin to the top</label>
+    </div>
+    <div class="acts"><a class="btn" id="draftOpen" href="#" target="_blank" rel="noopener">Open the Announcements tab</a><button class="btn primary" id="draftCopy" type="button">Copy row for the sheet</button></div>
+  </div>
+</div>
 <!-- weekly summary -->
 <div class="scrim" id="digestScrim" hidden>
   <div class="panel mail" role="dialog" aria-modal="true" aria-label="Weekly summary">
@@ -945,8 +966,11 @@ async function fetchTab(key,tab){
   const rows=parseCSV(t);
   const heads=(rows[0]||[]).map(norm);
   if(!REQUIRED[key].some(h=>heads.includes(h)))throw new Error('no-tab');
+  remember('csv.'+key,t);
   return rowsToObjects(rows);
 }
+/* paint from the last good copy immediately; the live fetch replaces it */
+function paintCached(){let any=false;Object.keys(TABS).forEach(key=>{const t=recall('csv.'+key);if(!t)return;try{const rows=parseCSV(t);S[key]=rowsToObjects(rows).map(MAP[key]).filter(Boolean);loaded[key]=true;any=true;}catch(_){}});return any;}
 let loading=false;
 async function loadAll(manual){
   if(loading)return;loading=true;
@@ -1137,7 +1161,7 @@ function evHTML(ev,past,opts={}){
   const rel=past?'':relDays(n);
   return `<div class="ev ${esc(ev.type)}${past?' past':''}">
     <div class="d"><b>${ev.tbd?'—':d.getDate()}</b><span>${MON[d.getMonth()]}${ev.tbd?'':' '+String(d.getFullYear()).slice(2)}</span></div>
-    <div style="min-width:0"><div class="t">${esc(ev.title)}</div><div class="m">${esc(ev.tbd?MON[d.getMonth()]+' '+d.getFullYear()+' · exact date TBD':range)}${ev.time?' · '+esc(ev.time):''}${ev.location?' · '+esc(ev.location):''}${ev.notes&&!opts.short?' · '+esc(ev.notes):''}</div></div>
+    <div style="min-width:0"><div class="t">${esc(ev.title)}</div><div class="m">${esc(ev.tbd?MON[d.getMonth()]+' '+d.getFullYear()+' · exact date TBD':range)}${ev.time?' · '+esc(ev.time):''}${ev.location?' · '+esc(ev.location):''}${ev.notes&&!opts.short?' · '+esc(ev.notes):''}</div>${!opts.short&&ev.agenda.length?`<ul class="agenda">${ev.agenda.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}</div>
     <div class="r"><span class="pill ${esc(ev.type||'other')}">${esc(ETYPES[ev.type]||'Other')}</span>${rel?`<span class="muted num" style="font-size:13px">${esc(rel)}</span>`:''}${ev.link&&!past?`<a class="btn ghost xs" href="${esc(ev.link)}" target="_blank" rel="noopener">Join</a>`:''}${ev.minutes&&past?`<a class="btn ghost xs" href="${esc(ev.minutes)}" target="_blank" rel="noopener">Minutes</a>`:''}${!opts.short&&!past?`<button class="btn ghost xs" data-ics="${esc(ev.id)}" title="Add to your calendar">+ Cal</button>`:''}</div>
   </div>`;
 }
@@ -1377,6 +1401,20 @@ $('#digestCopy').addEventListener('click',()=>copyText($('#digestText').value,'S
 $('#digestMail').addEventListener('click',e=>{if(!emailsOf(groupList('board')).length){e.preventDefault();toast('No board addresses on file yet');}});
 $('#printBtn').addEventListener('click',()=>{if(view!=='overview')showView('overview');setTimeout(()=>window.print(),80);});
 
+
+/* ---------- draft announcement (copy a row for the sheet) ---------- */
+const tsvCell=v=>{v=String(v??'');return /[\t\n"]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+function openDraft(){$('#draftOpen').href=tabUrl('Announcements');const me=recall('draft.by');if(me&&!$('#dBy').value)$('#dBy').value=me;closeOverlay($('#palScrim'));$('#draftScrim').hidden=false;setTimeout(()=>$('#dTitle').focus(),20);}
+$('#draftBtn').addEventListener('click',openDraft);
+$('#draftCopy').addEventListener('click',()=>{
+  const title=$('#dTitle').value.trim(),body=$('#dBody').value.trim();
+  if(!title&&!body){toast('Add a title or a message first');$('#dTitle').focus();return;}
+  const by=$('#dBy').value.trim();if(by)remember('draft.by',by);
+  // Column order of the Announcements tab: Date, Title, Message, Audience, Pinned, Posted by, Type, Response needed, Respond by
+  const row=[todayISO(),title,body,$('#dAud').value,$('#dPin').checked?'TRUE':'FALSE',by,$('#dType').value,$('#dRespond').value?'TRUE':'',$('#dRespond').value].map(tsvCell).join('\t');
+  copyText(row,'Row copied. Paste it into the first empty row of the Announcements tab.');
+});
+
 /* ---------- command palette ---------- */
 let palSel=0,palItems=[];
 function openPal(){$('#palScrim').hidden=false;const i=$('#palInput');i.value='';palSearch('');setTimeout(()=>i.focus(),20);}
@@ -1395,7 +1433,7 @@ function palSearch(q){
   add('Playbook',PB.filter(([id,l])=>hit(l)||(q&&(document.getElementById(id).textContent||'').toLowerCase().includes(q))).map(([id,l])=>({ic:'P',t:l,s:'Playbook section',run:()=>{showView('playbook',{keepScroll:true});setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}),30);}})));
   if(q&&('course coverage professors assigned'.includes(q)||CATALOG.some(([,l])=>l.some(c=>c.toLowerCase().includes(q)))))add('Courses',[{ic:'C',t:'Course coverage',s:'Which courses have a professor assigned',run:()=>{dirGroup='courses';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='courses'));renderDir();showView('directory');}}]);
   add('Links',S.resources.filter(r=>hit(r.title+' '+r.category)).slice(0,5).map(r=>({ic:'↗',t:r.title,s:r.url.replace(/^https?:\/\//,''),k:r.category,run:()=>window.open(r.url,'_blank','noopener')})));
-  const cmds=[{ic:'≡',t:'Weekly summary',s:'Copy or email a plain-text briefing',run:openDigest},{ic:'⎙',t:'Print one-page brief',s:'Briefing, print-ready',run:()=>$('#printBtn').click()},{ic:'✉',t:'Email a group',s:'Opens your mail app with BCC',run:()=>openMail('all')},{ic:'◐',t:'Switch theme',s:'System · Light · Dark',run:()=>$('#themeBtn').click()}].filter(c=>hit(c.t+' '+c.s));if(q)add('Actions',cmds);
+  const cmds=[{ic:'+',t:'New announcement',s:'Draft a post and copy the row for the sheet',run:openDraft},{ic:'≡',t:'Weekly summary',s:'Copy or email a plain-text briefing',run:openDigest},{ic:'⎙',t:'Print one-page brief',s:'Briefing, print-ready',run:()=>$('#printBtn').click()},{ic:'✉',t:'Email a group',s:'Opens your mail app with BCC',run:()=>openMail('all')},{ic:'◐',t:'Switch theme',s:'System · Light · Dark',run:()=>$('#themeBtn').click()}].filter(c=>hit(c.t+' '+c.s));if(q)add('Actions',cmds);
   palItems=groups.flatMap(([,items])=>items);palSel=0;
   const res=$('#palRes');
   if(!palItems.length){res.innerHTML='<div class="none">Nothing matches “'+esc(q)+'”.</div>';return;}
@@ -1426,7 +1464,7 @@ function openPost(id){annAud='all';annType='';$$('#annFilter .chip').forEach(c=>
 let pendingPost=(location.hash.match(/^#post-(a\d+)$/)||[])[1]||'';
 function initialView(){const h=(location.hash||'').replace('#','');if(pendingPost)return 'announcements';if(VIEWS[h])return h;const r=recall('view');return VIEWS[r]?r:'overview';}
 showView(initialView(),{silent:true});
-renderAll();
+if(paintCached()){renderAll();setStatus('wait','Showing the last copy · refreshing from Google Sheets…');}else renderAll();
 window.addEventListener('hashchange',()=>{const h=(location.hash||'').replace('#','');const pm=h.match(/^post-(a\d+)$/);if(pm){openPost(pm[1]);return;}if(VIEWS[h]&&h!==view)showView(h,{silent:true});});
 loadAll(false);
 setInterval(()=>{if(document.visibilityState==='visible')loadAll(false);},REFRESH_MS);
