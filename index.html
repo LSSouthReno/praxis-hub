@@ -97,6 +97,7 @@ kbd{font:11px/1 var(--ui);padding:3px 6px;border:1px solid var(--border);border-
 .nav button[aria-current="page"]{background:rgba(255,255,255,.06);color:var(--on-navy);box-shadow:inset 3px 0 0 var(--gold)}
 .nav .count{margin-left:auto;font-size:12px;color:var(--on-navy-muted);background:rgba(255,255,255,.07);padding:1px 8px;border-radius:999px}
 .nav .count.new{background:var(--gold);color:#1B1A14;font-weight:600}
+.nav .count:empty{display:none}
 .rail-foot{padding:14px 16px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:10px;font-size:13px;min-width:0}
 .rail-foot .mission{font-family:var(--display);font-style:italic;font-size:12.5px;color:var(--on-navy-muted);line-height:1.4}
 .rail-foot .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -105,21 +106,23 @@ kbd{font:11px/1 var(--ui);padding:3px 6px;border:1px solid var(--border);border-
 .rail-foot svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2}
 
 main{min-width:0;display:flex;flex-direction:column}
-.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 32px 18px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 32px 16px;flex-wrap:wrap;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:15}
 .top h1{font-size:28px}
 .top .sub{color:var(--muted);font-size:14px;margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .top .sub .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good)}
 .top .sub .dot.off{background:var(--crit)}
 .top .sub .dot.wait{background:var(--warn)}
-.topActions{display:flex;gap:8px;flex-wrap:wrap}
+.topActions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#refresh{padding:9px}
 .menu{position:relative}
 .menu .pop{position:absolute;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-lg);padding:6px;display:flex;flex-direction:column;min-width:220px;z-index:40}
 .menu .pop[hidden]{display:none}
 .menu .pop .btn{justify-content:flex-start;width:100%;color:var(--fg)}
-@media (min-width:1400px){.menu .pop{position:static;display:contents;box-shadow:none}.menu .pop[hidden]{display:contents!important}.menu .pop .btn{width:auto;color:var(--fg);border-color:var(--border);background:var(--surface)}.menu .pop .btn:hover{border-color:var(--muted);background:var(--surface)}#moreBtn{display:none}}
+
 .content{padding:22px 32px 56px;display:flex;flex-direction:column;gap:22px}
 .view[hidden]{display:none}
-.view{display:flex;flex-direction:column;gap:22px}
+.view{display:flex;flex-direction:column;gap:22px;animation:fade .18s ease-out}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 
 /* ---------- controls ---------- */
 .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);font-weight:500;font-size:14px;line-height:1.2;white-space:nowrap;color:var(--fg)}
@@ -158,6 +161,7 @@ input.txt{font:inherit;color:inherit;background:var(--surface);border:1px solid 
 .band .eyebrow{color:var(--gold);margin-bottom:6px}
 .band .count{font-family:var(--display);font-size:64px;line-height:1;font-weight:600;color:var(--on-navy)}
 .band .count small{font-family:var(--ui);font-size:14px;font-weight:500;color:var(--on-navy-muted);display:block;margin-top:6px;max-width:22ch;line-height:1.35}
+.band .bandsub{display:block;font-family:var(--ui);font-size:12.5px;color:var(--on-navy-muted);margin-top:4px;max-width:30ch;line-height:1.35}
 .band .mission{font-family:var(--display);font-style:italic;font-size:13px;color:var(--on-navy-muted);margin-top:14px;max-width:38ch;line-height:1.45}
 .band .mission em{color:var(--gold);font-style:italic}
 /* timeline */
@@ -218,6 +222,13 @@ input.txt{font:inherit;color:inherit;background:var(--surface);border:1px solid 
 .attn button{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 4px;border-top:1px solid var(--border);text-align:left;width:100%}
 .attn button:first-child{border-top:0}
 .attn button:hover .t{color:var(--gold-ink)}
+.attn-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.attn-row+.attn-row button[data-attn]{border-top:1px solid var(--border)}
+.attn-row button[data-attn]{border-top:0}
+.attn .snz{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:var(--faint);opacity:0;transition:opacity .15s}
+.attn-row:hover .snz,.attn .snz:focus-visible{opacity:1}
+.attn .snz:hover{background:var(--surface-2);color:var(--fg)}
+.attn .snz svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
 .attn .ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center}
 .attn .ic svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .attn .ic.crit{background:var(--crit-soft);color:var(--crit)}.attn .ic.warn{background:var(--warn-soft);color:var(--warn)}.attn .ic.info{background:var(--info-soft);color:var(--info)}.attn .ic.gold{background:var(--gold-soft);color:var(--gold-ink)}
@@ -391,7 +402,13 @@ th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);ver
 th{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
 td b{font-weight:600}
 .tscroll{overflow-x:auto}
-.rhythm td:first-child{font-family:var(--display);font-weight:600}
+.terms{display:flex;flex-direction:column}
+.term{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;padding:10px 0;border-top:1px solid var(--border)}
+.term:first-child{border-top:0;padding-top:0}
+.term b{font-family:var(--display);font-size:16px;font-weight:600}
+.term dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 10px;font-size:13.5px}
+.term dt{color:var(--muted)}
+.term dd{margin:0}
 
 /* ---------- playbook ---------- */
 .pb{display:grid;grid-template-columns:200px minmax(0,1fr);gap:24px;align-items:start}
@@ -497,7 +514,7 @@ td b{font-weight:600}
   @page{margin:14mm 12mm}
 }
 @media (min-width:1100px){.stats{grid-template-columns:repeat(5,1fr)}}
-@media (prefers-reduced-motion:reduce){.toast,.drawer,.ann.hl{transition:none;animation:none}.btn.spin svg,.skel:after{animation:none}}
+@media (prefers-reduced-motion:reduce){.toast,.drawer,.ann.hl,.view{transition:none;animation:none}.btn.spin svg,.skel:after{animation:none}}
 @media (max-width:900px){
   .cols,.cols.eq{grid-template-columns:1fr}
   .pb{grid-template-columns:1fr}
@@ -550,7 +567,7 @@ td b{font-weight:600}
       <svg viewBox="0 0 143.7 200" aria-hidden="true"><path fill="currentColor" d="M98.7,200h-53.6c-24.9,0-45.1-20.2-45.1-45.1V45.1C0,20.2,20.2,0,45.1,0h53.6c24.9,0,45.1,20.2,45.1,45.1v109.8c0,24.9-20.2,45.1-45.1,45.1ZM45.1,6.1C23.6,6.1,6.1,23.6,6.1,45.1v109.8c0,21.5,17.5,39,39,39h53.6c21.5,0,39-17.5,39-39V45.1c0-21.5-17.5-39-39-39h-53.6Z"/><path fill="currentColor" d="M113.4,163.6l-3.8-1.4-3.4-2.6-3.8-3.9-24.6-27.7.2-2.7,24.5-27.8,3.6-4,3.6-2.3,3.7-1.5,4.8-.6,1.1.2-.2-4.9h-36c0-.1-.2,4.9-.2,4.9h.6c0,.1,7.4,1,7.4,1l2.6,2.7-.4,2-1,2.1-1.2,2-1.3,1.7-11.8,13.6v-17.5c0,0,.1-14.3.1-14.3h7.4c0,.1,14.9-2.2,14.9-2.2l9.8-6,5.4-8.6,1.8-10.1-2-10.3-5.1-8-9.3-4.6-12.9-1.9h-33.3c0,0-.2,5.1-.2,5.1l1.7-.2,3.7.5,3.1,1.1,2.2,2.4.6,4.2.3,33v19.9s-.1,17.5-.1,17.5l-11.8-13.5-1.3-1.8-1.1-2.1-.9-2.1-.5-1.9,2.4-2.7,7.4-.9h.4c0-.1,0-5.2,0-5.2H24.5s.1,5,.1,5l.8.2,4.8.3,3.7,1.5,3.5,2.4,3.7,4,24.8,27.6v2.8c-.1,0-24.8,27.7-24.8,27.7l-3.8,3.9-3.5,2.5-3.7,1.4-4.7.6h-.9s0,5.1,0,5.1l30.1-.3h5.9s22.6,0,22.6,0h8.3s27.7.2,27.7.2v-5.1c.1,0-1,0-1,0l-4.8-.3ZM85.8,36.5l8.5,1.5,5.7,3.5,3.3,6.1.7,8.7-.8,9.6-3.7,6.4-6.3,3.5-9.1,1.2h-6.1c0,.1-.1-40.2-.1-40.2l8-.2ZM65.9,151.4v4c-.1,0-.7,4.5-.7,4.5l-2.3,2.4-3,1.3-2.2.4-4.9-1.1-2.6-2.7.5-2,1.1-2,1.2-2,1.3-1.7,11.5-13.8v11.5c.1,0,.1,1.1.1,1.1ZM90.9,162.9l-5,1.1-2.1-.4-3-1.2-2.1-2.3-.7-4.1-.3-4.6v-1.1s.2-11.5.2-11.5l11.6,13.6,1.5,1.6,1,2.2,1.1,2.1.5,2-2.6,2.7Z"/></svg>
       <div><div class="word">Praxis</div><div class="sub">Leadership Hub</div></div>
     </div>
-    <button class="railsearch" id="openPal" type="button" aria-label="Search the hub"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search people, dates, posts…</span><kbd>⌘K</kbd></button>
+    <button class="railsearch" id="openPal" type="button" aria-label="Search the hub"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search</span><kbd>⌘K</kbd></button>
     <nav class="nav" id="nav" aria-label="Sections">
       <button data-view="overview"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>Briefing</button>
       <button data-view="announcements"><svg viewBox="0 0 24 24"><path d="M3 10v4h3l7 4V6l-7 4H3z"/><path d="M17 9a4 4 0 0 1 0 6"/></svg>Announcements<span class="count" id="c-ann"></span></button>
@@ -574,7 +591,7 @@ td b{font-weight:600}
     <div class="top">
       <div><h1 id="title">Briefing</h1><div class="sub"><span class="dot wait" id="dot"></span><span id="status">Connecting to the data sheet…</span><span id="newline"></span><button class="btn ghost xs" id="health" type="button" hidden style="color:var(--warn)"></button></div></div>
       <div class="topActions">
-        <button class="btn ghost" id="refresh" type="button" title="Reload from Google Sheets"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg><span>Refresh</span></button>
+        <button class="btn ghost" id="refresh" type="button" title="Reload from Google Sheets" aria-label="Reload from Google Sheets"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg></button>
         <div class="menu" id="moreMenu">
           <button class="btn" id="moreBtn" type="button" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg><span>More</span></button>
           <div class="pop" role="menu" hidden>
@@ -597,7 +614,7 @@ td b{font-weight:600}
         <div class="band" id="band">
           <div>
             <div class="eyebrow" id="bandEyebrow">Road to launch</div>
-            <div class="count num" id="bandCount">…<small id="bandLabel">Loading the calendar</small></div>
+            <div class="count num" id="bandCount">…<small id="bandLabel">Loading the calendar</small><span class="bandsub" id="bandSub"></span></div>
             <div class="mission">Training pastors at the intersection of <em>Christ-centered doctrine</em> and <em>missional application.</em></div>
           </div>
           <div class="tl" id="timeline" aria-label="Upcoming milestones"></div>
@@ -728,13 +745,11 @@ td b{font-weight:600}
             <div id="meetingsCard"></div>
             <div class="card">
               <div class="card-head"><div class="eyebrow">Annual rhythm</div></div>
-              <div class="tscroll"><table class="rhythm">
-                <thead><tr><th>Term</th><th>Classes</th><th>Intensive</th><th>Break</th></tr></thead>
-                <tbody>
-                  <tr><td>Fall</td><td>August – October</td><td>3rd week of September</td><td>November</td></tr>
-                  <tr><td>Winter</td><td>December – February</td><td>3rd week of January</td><td>March</td></tr>
-                  <tr><td>Spring</td><td>April – June</td><td>3rd week of May</td><td>July</td></tr>
-                </tbody></table></div>
+              <div class="terms">
+                <div class="term"><b>Fall</b><dl><dt>Classes</dt><dd>August – October</dd><dt>Intensive</dt><dd>3rd week of September</dd><dt>Break</dt><dd>November</dd></dl></div>
+                <div class="term"><b>Winter</b><dl><dt>Classes</dt><dd>December – February</dd><dt>Intensive</dt><dd>3rd week of January</dd><dt>Break</dt><dd>March</dd></dl></div>
+                <div class="term"><b>Spring</b><dl><dt>Classes</dt><dd>April – June</dd><dt>Intensive</dt><dd>3rd week of May</dd><dt>Break</dt><dd>July</dd></dl></div>
+              </div>
               <p class="muted" style="font-size:13px;margin-top:10px">No classwork is due during Christmas week or Holy Week.</p>
             </div>
             <div class="card">
@@ -1412,7 +1427,7 @@ function renderTimeline(){
   const start=new Date(t0);start.setDate(start.getDate()-10);
   const span=end-start;const pct=d=>Math.max(0,Math.min(100,((d-start)/span)*100));
   let html='<div class="track"></div>';
-  const pxPerMonth=(host.clientWidth||600)*(30.4*86400000/span);const every=pxPerMonth>=40?1:pxPerMonth>=20?2:3;
+  const pxPerMonth=(host.clientWidth||600)*(30.4*86400000/span);const every=pxPerMonth>=56?1:pxPerMonth>=28?2:3;
   const m=new Date(t0.getFullYear(),t0.getMonth()+1,1);let mi=0;
   while(m<end){if(mi%every===0||m.getMonth()===0)html+=`<div class="month" style="left:${pct(m).toFixed(2)}%">${MON[m.getMonth()]}${m.getMonth()===0?' '+m.getFullYear():''}</div>`;m.setMonth(m.getMonth()+1);mi++;}
   html+=`<div class="today" style="left:${pct(t0).toFixed(2)}%"><span>Today</span></div>`;
@@ -1424,10 +1439,12 @@ function renderBand(){
   const c=$('#bandCount'),l=$('#bandLabel');
   if(!loaded.events){return;}
   const le=launchEvent();
-  if(!le){c.firstChild.textContent='—';l.textContent='No upcoming dates on the calendar';return;}
+  if(!le){c.firstChild.textContent='—';l.textContent='No upcoming dates on the calendar';$('#bandSub').textContent='';return;}
   const n=Math.max(0,daysUntil(le.date));
   c.firstChild.textContent=String(n);
-  l.textContent=(n===1?'day':'days')+' to '+le.title+(le.tbd?' (date TBD)':'')+' · '+fmtDate(le.date);
+  const what=/class/i.test(le.title)?'first classes':le.type==='intensive'?'the next intensive':le.type==='board'?'the board meeting':le.title;
+  l.textContent=(n===1?'day':'days')+' until '+what;
+  $('#bandSub').textContent=(what===le.title?'':le.title+' · ')+(le.tbd?MONL[parseISO(le.date).getMonth()]+' '+parseISO(le.date).getFullYear()+' · date TBD':fmtDate(le.date));
   $('#bandEyebrow').textContent=/intens/i.test(le.title)||le.type==='intensive'?'Next intensive':'Road to launch';
 }
 function attention(){
@@ -1449,14 +1466,18 @@ function attention(){
   return items;
 }
 const ICONS={alert:'<svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 4.3 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0z"/></svg>',reply:'<svg viewBox="0 0 24 24"><path d="M9 17 4 12l5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>',clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',cal:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',user:'<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',mail:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',bell:'<svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg>',book:'<svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>'};
+let snoozed={};try{snoozed=JSON.parse(recall('snooze')||'{}');}catch(_){}
+const snoozeKey=it=>it.t.replace(/\d+/g,'#');
 function renderAttention(){
   const host=$('#attn');
   if(!(loaded.tasks&&loaded.ann&&loaded.events&&loaded.people)){host.innerHTML=loadingBox();$('#attnCount').textContent='';return;}
-  const items=attention();
-  $('#attnCount').textContent=items.length?items.length+' item'+(items.length===1?'':'s'):'';
-  host.innerHTML=items.length?items.map((it,i)=>`<button type="button" data-attn="${i}"><span class="ic ${it.cls}">${ICONS[it.ic]}</span><span style="min-width:0"><span class="t" style="display:block">${esc(it.t)}</span><span class="m">${esc(it.m)}</span></span><span class="go"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span></button>`).join(''):'<div class="allclear"><span class="ic"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 7"/></svg></span>All clear. Nothing overdue, nothing waiting on a response.</div>';
+  const now=Date.now();Object.keys(snoozed).forEach(k=>{if(snoozed[k]<now)delete snoozed[k];});
+  const all=attention();const items=all.filter(it=>!snoozed[snoozeKey(it)]);const hidden=all.length-items.length;
+  $('#attnCount').innerHTML=(items.length?items.length+' item'+(items.length===1?'':'s'):'')+(hidden?` <button class="btn ghost xs" type="button" data-unsnooze>${hidden} snoozed</button>`:'');
+  host.innerHTML=items.length?items.map((it,i)=>`<div class="attn-row"><button type="button" data-attn="${i}"><span class="ic ${it.cls}">${ICONS[it.ic]}</span><span style="min-width:0"><span class="t" style="display:block">${esc(it.t)}</span><span class="m">${esc(it.m)}</span></span><span class="go"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span></button><button class="snz" type="button" data-snooze="${i}" title="Hide for a week" aria-label="Hide for a week"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`).join(''):'<div class="allclear"><span class="ic"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 7"/></svg></span>'+(hidden?'Nothing new. '+hidden+' item'+(hidden===1?' is':'s are')+' snoozed.':'All clear. Nothing is overdue and nothing is waiting on a response.')+'</div>';
   host._items=items;
 }
+document.addEventListener('click',e=>{const sz=e.target.closest('[data-snooze]');if(sz){const it=$('#attn')._items[+sz.dataset.snooze];if(it){snoozed[snoozeKey(it)]=Date.now()+7*86400000;remember('snooze',JSON.stringify(snoozed));renderAttention();toast('Hidden for a week');}return;}const un=e.target.closest('[data-unsnooze]');if(un){snoozed={};remember('snooze','{}');renderAttention();return;}});
 $('#attn').addEventListener('click',e=>{const b=e.target.closest('[data-attn]');if(!b)return;const it=$('#attn')._items[+b.dataset.attn];if(!it)return;if(it.missing){dirMissing=true;$('#dirMissing').setAttribute('aria-pressed','true');dirGroup='faculty';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='faculty'));renderDir();}if(it.onboarding){dirGroup='onboarding';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='onboarding'));renderDir();}if(it.courses){dirGroup='courses';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='courses'));renderDir();}showView(it.go);if(it.ann)setTimeout(()=>{const el=document.getElementById(it.ann);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('hl');}},60);});
 function renderPres(){
   const host=$('#presCard');
