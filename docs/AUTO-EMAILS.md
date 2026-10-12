@@ -1,6 +1,6 @@
 # Automatic reminder emails (design only. Nothing is built or turned on.)
 
-**Status: OFF.** The hub cannot send email today. The "Preview my reminder email" button on My Checklist only shows text on screen.
+**Status: OFF.** The hub cannot send email today. The "Preview my reminder email" button on My Praxis only shows text on screen.
 
 ## The idea from the call
 
@@ -9,7 +9,7 @@ A dedicated Gmail account for Praxis (for example an "admin" address) is connect
 ## How it would work
 
 1. **Account.** Create the Praxis Gmail account. Turn on 2-step verification. Create an app password (or, better, an OAuth grant limited to "send mail"). The secret goes in Google Apps Script properties or GitHub Actions secrets, never in this repo.
-2. **Sender.** A small Google Apps Script bound to the Praxis Hub Data sheet (same pattern as the church hub's checklist email). It reads People, Calendar and Action Items, builds each person's message with the same wording as the preview on My Checklist, and sends with `MailApp.sendEmail` from the Praxis account.
+2. **Sender.** A small Google Apps Script bound to the Praxis Hub Data sheet (same pattern as the church hub's checklist email). It reads People, Calendar and Action Items, builds each person's message with the same wording as the preview on My Praxis, and sends with `MailApp.sendEmail` from the Praxis account.
 3. **Trigger.** A time-based trigger, weekly. Nothing runs unless someone creates the trigger.
 4. **Safety.** Before any live send:
    - A `Send mode` cell in the sheet with values `off`, `test`, `live`. Ship as `off`.

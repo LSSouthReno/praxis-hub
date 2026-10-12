@@ -1,6 +1,6 @@
 # Praxis Hub
 
-Practice Hub for Praxis Theological Seminary. Professors get their courses, schedule, a personal checklist and updates. The board signs in to also see the briefing, program status, action items and the playbook.
+Praxis Hub for Praxis Theological Seminary. Professors get their courses, schedule, a personal checklist and updates. The board signs in to also see the briefing, program status, action items and the playbook.
 
 - **Site:** https://lssouthreno.github.io/praxis-hub/
 - **Data:** the [Praxis Hub Data](https://docs.google.com/spreadsheets/d/1tkiJcJP1Eux57y4qkI2DUynBpc6teKtAWdNNY-M8MXE/edit) Google Sheet. The page reads every tab live on load, so edits in the sheet appear on the next refresh. No build step and nothing to push.
@@ -9,7 +9,7 @@ Practice Hub for Praxis Theological Seminary. Professors get their courses, sche
 
 | | Professors (default) | Board (after sign-in) |
 |---|---|---|
-| Opens to | **My Checklist**: pick your name; see paperwork still needed, dates to hold, tasks assigned to you, and a “Your next thing is…” card | **Briefing** |
+| Opens to | **My Praxis**: pick your name; see paperwork still needed, dates to hold, tasks assigned to you, and a “Your next thing is…” card | **Briefing** |
 | Sees | Courses & Schedule, Announcements (Everyone and Faculty), Directory (no phone numbers or notes), Calendar (no board meetings), Ideas & Updates | Everything, including **Program Status** (scorecard, launch numbers, onboarding, decisions log, items awaiting reply), Action Items, Playbook, board-only posts, board meetings |
 
 **Ideas & Updates** opens the visitor's email app with their note addressed to the address in `CONFIG.IDEAS_EMAIL` (top of the script in `index.html`). Move it to the hub's own Gmail address later by editing that one line.
@@ -52,7 +52,7 @@ Values that drive behaviour:
 
 ## Features
 
-My Checklist · Courses & Schedule · Program Status · Ideas & Updates · board sign-in · Briefing with launch countdown and milestone timeline · needs-attention panel · president's note · next board meeting · launch numbers · weekly summary (copy or email) · one-page print brief · email or group text by category, status or hand-picked selection (Select mode in the Directory; desktop shows a QR to open the group text on your phone) · command palette (⌘K, `/`, keys 1–6) · person drawer · calendar export (.ics) · light/dark/system theme · "new since your last visit" badges · phone layout with bottom tabs.
+My Praxis · Courses & Schedule · Program Status · Ideas & Updates · board sign-in · Briefing with launch countdown and milestone timeline · needs-attention panel · president's note · next board meeting · launch numbers · weekly summary (copy or email) · one-page print brief · email or group text by category, status or hand-picked selection (Select mode in the Directory; desktop shows a QR to open the group text on your phone) · command palette (⌘K, `/`, keys 1–6) · person drawer · calendar export (.ics) · light/dark/system theme · "new since your last visit" badges · phone layout with bottom tabs.
 
 ## A weekly rhythm for the president
 
