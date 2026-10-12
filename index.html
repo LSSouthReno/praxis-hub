@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Praxis Hub</title>
-<meta name="description" content="Leadership hub for the Praxis Theological Seminary board, faculty and staff.">
+<title>Praxis Practice Hub</title>
+<meta name="description" content="The Praxis Practice Hub: courses, schedule, checklists and updates for the Praxis Theological Seminary faculty and board.">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#171A21">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 143.7 200'%3E%3Crect width='143.7' height='200' rx='45' fill='%23171A21'/%3E%3Cpath fill='%23B68F40' d='M98.7,200h-53.6c-24.9,0-45.1-20.2-45.1-45.1V45.1C0,20.2,20.2,0,45.1,0h53.6c24.9,0,45.1,20.2,45.1,45.1v109.8c0,24.9-20.2,45.1-45.1,45.1ZM45.1,6.1C23.6,6.1,6.1,23.6,6.1,45.1v109.8c0,21.5,17.5,39,39,39h53.6c21.5,0,39-17.5,39-39V45.1c0-21.5-17.5-39-39-39h-53.6Z'/%3E%3Cpath fill='%23B68F40' d='M113.4,163.6l-3.8-1.4-3.4-2.6-3.8-3.9-24.6-27.7.2-2.7,24.5-27.8,3.6-4,3.6-2.3,3.7-1.5,4.8-.6,1.1.2-.2-4.9h-36c0-.1-.2,4.9-.2,4.9h.6c0,.1,7.4,1,7.4,1l2.6,2.7-.4,2-1,2.1-1.2,2-1.3,1.7-11.8,13.6v-17.5c0,0,.1-14.3.1-14.3h7.4c0,.1,14.9-2.2,14.9-2.2l9.8-6,5.4-8.6,1.8-10.1-2-10.3-5.1-8-9.3-4.6-12.9-1.9h-33.3c0,0-.2,5.1-.2,5.1l1.7-.2,3.7.5,3.1,1.1,2.2,2.4.6,4.2.3,33v19.9s-.1,17.5-.1,17.5l-11.8-13.5-1.3-1.8-1.1-2.1-.9-2.1-.5-1.9,2.4-2.7,7.4-.9h.4c0-.1,0-5.2,0-5.2H24.5s.1,5,.1,5l.8.2,4.8.3,3.7,1.5,3.5,2.4,3.7,4,24.8,27.6v2.8c-.1,0-24.8,27.7-24.8,27.7l-3.8,3.9-3.5,2.5-3.7,1.4-4.7.6h-.9s0,5.1,0,5.1l30.1-.3h5.9s22.6,0,22.6,0h8.3s27.7.2,27.7.2v-5.1c.1,0-1,0-1,0l-4.8-.3ZM85.8,36.5l8.5,1.5,5.7,3.5,3.3,6.1.7,8.7-.8,9.6-3.7,6.4-6.3,3.5-9.1,1.2h-6.1c0,.1-.1-40.2-.1-40.2l8-.2ZM65.9,151.4v4c-.1,0-.7,4.5-.7,4.5l-2.3,2.4-3,1.3-2.2.4-4.9-1.1-2.6-2.7.5-2,1.1-2,1.2-2,1.3-1.7,11.5-13.8v11.5c.1,0,.1,1.1.1,1.1ZM90.9,162.9l-5,1.1-2.1-.4-3-1.2-2.1-2.3-.7-4.1-.3-4.6v-1.1s.2-11.5.2-11.5l11.6,13.6,1.5,1.6,1,2.2,1.1,2.1.5,2-2.6,2.7Z'/%3E%3C/svg%3E">
@@ -577,28 +577,96 @@ td b{font-weight:600}
   .panel{max-height:84vh}
   .drawer{width:100%}
 }
+
+/* ===== Roles, professor views, program status, ideas ===== */
+body:not(.is-board) [data-boardonly]{display:none!important}
+body:not(.is-board) #selMode,body:not(.is-board) #dirExport,body:not(.is-board) #dirMissing,body:not(.is-board) .group-h .btn,body:not(.is-board) #health,body:not(.is-board) #copyRowCard{display:none!important}
+#roleBtn.on{border-color:var(--gold);color:var(--gold-ink)}
+#roleBtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.role-err{color:var(--crit);font-size:13px;min-height:18px;margin-top:6px}
+#roleBody label,.ideaform label{display:block;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:12px 0 5px}
+#roleBody,.panel .pbody{padding:18px 20px}
+#roleBody .acts{display:flex;gap:8px;margin-top:14px}
+.txt{font:inherit;color:inherit;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:9px 11px;width:100%;font-size:14px}
+.demobar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;margin-bottom:14px;border-radius:var(--r);background:var(--teal-soft);border-left:3px solid var(--teal);font-size:13.5px}
+.demobar b{color:var(--teal)}
+.demobar button{margin-left:auto}
+:root[data-theme="dark"] .demobar b{color:var(--gold-ink)}
+.hero-me h3{font-family:var(--display);font-size:24px;margin-top:2px}
+.mepick{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.mepick label{font-weight:600;font-size:14px}
+.mepick select{min-width:240px;font-size:14.5px;padding:9px 12px}
+.ck-grp{margin-bottom:6px}
+.ckrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 4px;border-top:1px solid var(--border);cursor:pointer}
+.ckrow.locked{cursor:default}
+.ckrow input{position:absolute;opacity:0;width:1px;height:1px}
+.ckrow .box{width:22px;height:22px;border:2px solid var(--faint);border-radius:6px;display:grid;place-items:center;background:var(--surface)}
+.ckrow input:checked+.box{background:var(--gold);border-color:var(--gold)}
+.ckrow input:checked+.box::after{content:"";width:6px;height:11px;border:solid #1B1A14;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.ckrow input:focus-visible+.box{outline:2px solid var(--gold);outline-offset:2px}
+.ckrow .tx b{display:block;font-weight:600;font-size:14.5px}
+.ckrow .tx small{display:block;color:var(--muted);font-size:13px;margin-top:1px;line-height:1.4}
+.ckrow.done .tx b{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--faint)}
+.nextthing{margin-top:14px;padding:16px 18px;border-radius:var(--r);background:var(--navy);color:var(--on-navy)}
+.nextthing .eyebrow{color:var(--gold)}
+.nextthing .nt-t{font-family:var(--display);font-size:22px;margin-top:4px}
+.nextthing .nt-m{color:var(--on-navy-muted);font-size:14px;margin-top:3px}
+.nextthing .nt-m b{color:var(--on-navy)}
+.nextthing .nt-after{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.12);font-size:13px;color:var(--on-navy-muted)}
+.chipwrap{display:flex;gap:8px;flex-wrap:wrap}
+.tag.big{font-size:13.5px;background:var(--gold-soft);color:var(--gold-ink);padding:4px 12px;border-radius:999px;font-weight:500}
+.rag{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.ragc{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--info);border-radius:var(--r);padding:14px 16px}
+.ragc.good{border-top-color:var(--good)}.ragc.warn{border-top-color:var(--warn)}.ragc.crit{border-top-color:var(--crit)}
+.ragc .l{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.ragc .v{font-family:var(--display);font-size:26px;font-weight:600;margin-top:4px}
+.ragc .bar{height:6px;background:var(--surface-2);border-radius:999px;margin-top:8px;overflow:hidden}
+.ragc .bar i{display:block;height:100%;background:var(--info)}
+.ragc.good .bar i{background:var(--good)}.ragc.warn .bar i{background:var(--warn)}.ragc.crit .bar i{background:var(--crit)}
+.ragc .s{font-size:12.5px;color:var(--muted);margin-top:5px}
+.ideaform{max-width:680px}
+.ideaform .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.steps3 div{font-size:13.5px;color:var(--muted);line-height:1.5}
+.steps3 b{display:block;color:var(--fg);font-size:14px;margin-bottom:2px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--gold);color:#1B1A14;padding:8px 14px;border-radius:var(--r);z-index:100}
+.skip:focus{left:8px}
+@media (max-width:760px){
+  .mepick select{min-width:0;width:100%}
+  .ideaform .row2,.steps3{grid-template-columns:1fr}
+  .rag{grid-template-columns:1fr 1fr}
+  .hero-me h3{font-size:20px}
+  .topActions #roleBtn span{display:inline}
+}
+@media print{#roleBtn,.demobar{display:none!important}}
+body.is-board [data-facultyonly]{display:none!important}
 </style>
 </head>
 <body>
+<a class="skip" href="#mainContent">Skip to content</a>
 <div class="app">
   <aside class="rail">
     <div class="brand">
       <svg viewBox="0 0 143.7 200" aria-hidden="true"><path fill="currentColor" d="M98.7,200h-53.6c-24.9,0-45.1-20.2-45.1-45.1V45.1C0,20.2,20.2,0,45.1,0h53.6c24.9,0,45.1,20.2,45.1,45.1v109.8c0,24.9-20.2,45.1-45.1,45.1ZM45.1,6.1C23.6,6.1,6.1,23.6,6.1,45.1v109.8c0,21.5,17.5,39,39,39h53.6c21.5,0,39-17.5,39-39V45.1c0-21.5-17.5-39-39-39h-53.6Z"/><path fill="currentColor" d="M113.4,163.6l-3.8-1.4-3.4-2.6-3.8-3.9-24.6-27.7.2-2.7,24.5-27.8,3.6-4,3.6-2.3,3.7-1.5,4.8-.6,1.1.2-.2-4.9h-36c0-.1-.2,4.9-.2,4.9h.6c0,.1,7.4,1,7.4,1l2.6,2.7-.4,2-1,2.1-1.2,2-1.3,1.7-11.8,13.6v-17.5c0,0,.1-14.3.1-14.3h7.4c0,.1,14.9-2.2,14.9-2.2l9.8-6,5.4-8.6,1.8-10.1-2-10.3-5.1-8-9.3-4.6-12.9-1.9h-33.3c0,0-.2,5.1-.2,5.1l1.7-.2,3.7.5,3.1,1.1,2.2,2.4.6,4.2.3,33v19.9s-.1,17.5-.1,17.5l-11.8-13.5-1.3-1.8-1.1-2.1-.9-2.1-.5-1.9,2.4-2.7,7.4-.9h.4c0-.1,0-5.2,0-5.2H24.5s.1,5,.1,5l.8.2,4.8.3,3.7,1.5,3.5,2.4,3.7,4,24.8,27.6v2.8c-.1,0-24.8,27.7-24.8,27.7l-3.8,3.9-3.5,2.5-3.7,1.4-4.7.6h-.9s0,5.1,0,5.1l30.1-.3h5.9s22.6,0,22.6,0h8.3s27.7.2,27.7.2v-5.1c.1,0-1,0-1,0l-4.8-.3ZM85.8,36.5l8.5,1.5,5.7,3.5,3.3,6.1.7,8.7-.8,9.6-3.7,6.4-6.3,3.5-9.1,1.2h-6.1c0,.1-.1-40.2-.1-40.2l8-.2ZM65.9,151.4v4c-.1,0-.7,4.5-.7,4.5l-2.3,2.4-3,1.3-2.2.4-4.9-1.1-2.6-2.7.5-2,1.1-2,1.2-2,1.3-1.7,11.5-13.8v11.5c.1,0,.1,1.1.1,1.1ZM90.9,162.9l-5,1.1-2.1-.4-3-1.2-2.1-2.3-.7-4.1-.3-4.6v-1.1s.2-11.5.2-11.5l11.6,13.6,1.5,1.6,1,2.2,1.1,2.1.5,2-2.6,2.7Z"/></svg>
-      <div><div class="word">Praxis</div><div class="sub">Leadership Hub</div></div>
+      <div><div class="word">Praxis</div><div class="sub">Practice Hub</div></div>
     </div>
     <button class="railsearch" id="openPal" type="button" aria-label="Search the hub"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search</span><kbd>⌘K</kbd></button>
     <nav class="nav" id="nav" aria-label="Sections">
-      <button data-view="overview"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>Briefing</button>
+      <button data-view="me"><svg viewBox="0 0 24 24"><path d="m4 12 4 4L20 4"/><path d="M20 12v7H4V5h9"/></svg>My Checklist</button>
+      <button data-view="courses"><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Courses &amp; Schedule</button>
+      <button data-view="overview" data-boardonly><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>Briefing</button>
+      <button data-view="status" data-boardonly><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Program Status</button>
       <button data-view="announcements"><svg viewBox="0 0 24 24"><path d="M3 10v4h3l7 4V6l-7 4H3z"/><path d="M17 9a4 4 0 0 1 0 6"/></svg>Announcements<span class="count" id="c-ann"></span></button>
       <button data-view="directory"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.5a5 5 0 0 1 6 5"/></svg>Directory<span class="count" id="c-people"></span></button>
-      <button data-view="tasks"><svg viewBox="0 0 24 24"><path d="m4 12 4 4L20 4"/><path d="M20 12v7H4V5h9"/></svg>Action Items<span class="count" id="c-tasks"></span></button>
+      <button data-view="tasks" data-boardonly><svg viewBox="0 0 24 24"><path d="m4 12 4 4L20 4"/><path d="M20 12v7H4V5h9"/></svg>Action Items<span class="count" id="c-tasks"></span></button>
       <button data-view="calendar"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendar<span class="count" id="c-cal"></span></button>
-      <button data-view="playbook"><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Playbook</button>
+      <button data-view="playbook" data-boardonly><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Playbook</button>
+      <button data-view="ideas"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Ideas &amp; Updates</button>
     </nav>
     <div class="rail-foot">
       <div class="mission">“Lead well. Finish well.” <br>2 Timothy 4:7–8</div>
       <div class="row">
-        <a id="footSheet" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>Sheet</a>
+        <a id="footSheet" data-boardonly href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>Sheet</a>
         <button class="tb" id="tourBtn" type="button" title="Take the tour">Tour</button>
         <button class="tb" id="helpBtn" type="button" title="Keyboard shortcuts">?</button>
         <button class="tb" id="themeBtn" type="button" title="Switch theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span id="themeLbl">System</span></button>
@@ -610,23 +678,64 @@ td b{font-weight:600}
     <div class="top">
       <div><h1 id="title">Briefing</h1><div class="sub"><span class="dot wait" id="dot"></span><span id="status">Connecting to the data sheet…</span><span id="newline"></span><button class="btn ghost xs" id="health" type="button" hidden style="color:var(--warn)"></button></div></div>
       <div class="topActions">
+        <button class="btn" id="roleBtn" type="button" aria-label="Board sign-in"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="roleLbl">Professor view</span></button>
         <button class="btn ghost" id="refresh" type="button" title="Reload from Google Sheets" aria-label="Reload from Google Sheets"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg></button>
         <div class="menu" id="moreMenu">
           <button class="btn" id="moreBtn" type="button" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg><span>More</span></button>
           <div class="pop" role="menu" hidden>
-            <button class="btn ghost" id="draftBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>New post</span></button>
-            <button class="btn ghost" id="digestBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg><span>Weekly summary</span></button>
-            <button class="btn ghost" id="emailBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span>Email a group</span></button>
-            <button class="btn ghost" id="printBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg><span>Print brief</span></button>
+            <button class="btn ghost" id="draftBtn" data-boardonly type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>New post</span></button>
+            <button class="btn ghost" id="digestBtn" data-boardonly type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg><span>Weekly summary</span></button>
+            <button class="btn ghost" id="emailBtn" data-boardonly type="button" role="menuitem"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span>Email a group</span></button>
+            <button class="btn ghost" id="printBtn" data-boardonly type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg><span>Print brief</span></button>
+            <button class="btn ghost" id="demoBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg><span>Show sample data</span></button>
             <button class="btn ghost" id="shareBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg><span>Share the hub</span></button>
             <button class="btn ghost" id="icsMenu" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/></svg><span>Download dates (.ics)</span></button>
           </div>
         </div>
-        <a class="btn primary" id="editSheet" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>Edit in Google Sheets</span></a>
+        <a class="btn primary" data-boardonly id="editSheet" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg><span>Edit in Google Sheets</span></a>
       </div>
     </div>
-    <div class="content">
+    <div class="content" id="mainContent" tabindex="-1">
+      <div class="demobar" id="demoBar" hidden><span><b>Sample data is on.</b> Names, dates and numbers marked “(sample)” are made up so you can see how the hub looks. Nothing here is real.</span><button class="btn sm" id="demoOff" type="button">Turn off</button></div>
       <div class="notice" id="notice" hidden></div>
+
+      <!-- ===== MY CHECKLIST (professors) ===== -->
+      <section class="view" id="view-me" hidden>
+        <div class="card mepick"><label for="mePick">Who are you?</label><select class="sel" id="mePick"></select><span class="muted" style="font-size:13px">Remembered on this device only.</span></div>
+        <div id="meBody"></div>
+      </section>
+
+      <!-- ===== COURSES & SCHEDULE ===== -->
+      <section class="view" id="view-courses" hidden>
+        <div id="coursesBody"></div>
+      </section>
+
+      <!-- ===== PROGRAM STATUS (board) ===== -->
+      <section class="view" id="view-status" hidden>
+        <div id="statusBody"></div>
+      </section>
+
+      <!-- ===== IDEAS & UPDATES ===== -->
+      <section class="view" id="view-ideas" hidden>
+        <div class="cols">
+          <div class="card">
+            <div class="eyebrow">Share an idea or an update</div>
+            <h3 style="font-family:var(--display);font-size:22px;margin:2px 0 4px">Anyone can send one</h3>
+            <p class="muted" style="font-size:14px;max-width:58ch">Write it below and your email app opens with it ready to send to <b id="ideaTo"></b>. It is read, and the hub is updated if it fits.</p>
+            <form class="ideaform" id="ideaForm" autocomplete="off">
+              <div class="row2"><div><label for="ideaKind">What is it?</label><select class="sel txt" id="ideaKind"><option>Idea</option><option>Update</option><option>Question</option><option>Problem</option><option>Course or schedule change</option></select></div>
+              <div><label for="ideaName">Your name (optional)</label><input class="txt" id="ideaName" type="text"></div></div>
+              <label for="ideaTitle">Short title</label><input class="txt" id="ideaTitle" type="text">
+              <label for="ideaMsg">Details</label><textarea class="txt" id="ideaMsg" style="min-height:140px;resize:vertical" required></textarea>
+              <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn primary" type="submit">Open in my email app</button><button class="btn" id="ideaCopy" type="button">Copy instead</button></div>
+            </form>
+          </div>
+          <div class="card">
+            <div class="eyebrow">What happens next</div>
+            <div class="steps3" style="grid-template-columns:1fr"><div><b>1. You send it</b>It goes to one inbox, so nothing gets lost.</div><div><b>2. It is read</b>Ideas that fit the mission and the plan are worked in.</div><div><b>3. The hub updates</b>Changes show up here and in Announcements.</div></div>
+          </div>
+        </div>
+      </section>
 
       <!-- ===== BRIEFING ===== -->
       <section class="view" id="view-overview">
@@ -704,7 +813,7 @@ td b{font-weight:600}
             <button class="chip" data-group="staff">Staff <span class="n" data-n="staff"></span></button>
             <button class="chip" data-group="music">School of Music <span class="n" data-n="music"></span></button>
             <button class="chip" data-group="courses">By course <span class="n" id="covN"></span></button>
-            <button class="chip" data-group="onboarding">Onboarding <span class="n" id="obN"></span></button>
+            <button class="chip" data-boardonly data-group="onboarding">Onboarding <span class="n" id="obN"></span></button>
           </div>
           <div class="spacer"></div>
           <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="dirSearch" type="search" placeholder="Search name, church, course…" aria-label="Search directory"></div>
@@ -909,12 +1018,15 @@ td b{font-weight:600}
 </div>
 
 <nav class="mobilebar" id="mobilebar" aria-label="Sections">
-  <button data-view="overview"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>Briefing</button>
+  <button data-view="me" data-facultyonly><svg viewBox="0 0 24 24"><path d="m4 12 4 4L20 4"/><path d="M20 12v7H4V5h9"/></svg>Mine</button>
+  <button data-view="courses" data-facultyonly><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Courses</button>
+  <button data-view="overview" data-boardonly><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>Briefing</button>
+  <button data-view="status" data-boardonly><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Status</button>
   <button data-view="announcements"><svg viewBox="0 0 24 24"><path d="M3 10v4h3l7 4V6l-7 4H3z"/><path d="M17 9a4 4 0 0 1 0 6"/></svg>Posts<span class="count" id="mc-ann"></span></button>
   <button data-view="directory"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.5a5 5 0 0 1 6 5"/></svg>People</button>
-  <button data-view="tasks"><svg viewBox="0 0 24 24"><path d="m4 12 4 4L20 4"/><path d="M20 12v7H4V5h9"/></svg>Items<span class="count" id="mc-tasks"></span></button>
+  <button data-view="tasks" data-boardonly><svg viewBox="0 0 24 24"><path d="m4 12 4 4L20 4"/><path d="M20 12v7H4V5h9"/></svg>Items<span class="count" id="mc-tasks"></span></button>
   <button data-view="calendar"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Dates</button>
-  <button data-view="playbook"><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Playbook</button>
+  <button data-view="ideas" data-facultyonly><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Ideas</button>
 </nav>
 
 <!-- command palette -->
@@ -967,7 +1079,7 @@ td b{font-weight:600}
     <div class="body">
       <table style="font-size:14px"><tbody>
         <tr><td><kbd>⌘</kbd> <kbd>K</kbd> or <kbd>/</kbd></td><td>Search people, posts, dates, items and the playbook</td></tr>
-        <tr><td><kbd>1</kbd> – <kbd>6</kbd></td><td>Briefing · Announcements · Directory · Action Items · Calendar · Playbook</td></tr>
+        <tr><td><kbd>1</kbd> – <kbd>9</kbd></td><td>Jump to the sections in the order shown on the left</td></tr>
         <tr><td><kbd>N</kbd></td><td>Draft a new announcement</td></tr>
         <tr><td><kbd>S</kbd></td><td>Weekly summary</td></tr>
         <tr><td><kbd>E</kbd></td><td>Email a group</td></tr>
@@ -1037,6 +1149,19 @@ td b{font-weight:600}
   <button class="btn sm ghost" id="selNone" type="button">Clear</button>
   <button class="btn sm ghost" id="selDone" type="button">Done</button>
 </div>
+<div class="scrim" id="roleScrim" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="roleTitle" style="max-width:480px">
+    <header><h3 id="roleTitle" style="font-size:19px">Who is looking?</h3><button class="x" data-close="roleScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+    <div id="roleBody"></div>
+  </div>
+</div>
+<div class="scrim" id="textScrim" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="textTitle">
+    <header><h3 id="textTitle" style="font-size:19px">Preview</h3><button class="x" data-close="textScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+    <div class="body"><p class="muted" id="textNote" style="font-size:13.5px;margin-bottom:10px"></p><textarea id="textArea" readonly style="width:100%;min-height:300px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:inherit;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r);padding:12px"></textarea></div>
+    <div class="acts"><button class="btn primary" id="textCopy" type="button">Copy</button></div>
+  </div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -1060,8 +1185,11 @@ const STATUS={confirmed:'Confirmed',tentative:'Tentative',prospect:'In conversat
 const AUD={all:'Everyone',board:'Board',faculty:'Faculty',staff:'Staff'};
 const ATYPE={update:'Update',decision:'Decision',request:'Request',prayer:'Prayer',celebration:'Celebration'};
 const ETYPES={intensive:'Intensive',board:'Board meeting',milestone:'Milestone',deadline:'Deadline',other:'Other'};
-const VIEWS={overview:'Briefing',announcements:'Announcements',directory:'Directory',tasks:'Action Items',calendar:'Calendar',playbook:'Playbook'};
-const VIEW_KEYS=Object.keys(VIEWS);
+const VIEWS={me:'My Checklist',courses:'Courses & Schedule',overview:'Briefing',status:'Program Status',announcements:'Announcements',directory:'Directory',tasks:'Action Items',calendar:'Calendar',playbook:'Playbook',ideas:'Ideas & Updates'};
+const BOARD_ONLY=['overview','status','tasks','playbook'];
+const allowed=v=>!!VIEWS[v]&&(isBoard()||BOARD_ONLY.indexOf(v)<0);
+const landing=()=>isBoard()?'overview':'me';
+const navKeys=()=>Object.keys(VIEWS).filter(allowed);
 const S={people:[],ann:[],tasks:[],events:[],resources:[],metrics:[]};
 const RAW={};
 const loaded={people:false,ann:false,tasks:false,events:false,resources:false,metrics:false};
@@ -1152,7 +1280,7 @@ async function fetchTab(key,tab){
   return objs;
 }
 /* paint from the last good copy immediately; the live fetch replaces it */
-function paintCached(){let any=false;Object.keys(TABS).forEach(key=>{const t=recall('csv.'+key);if(!t)return;try{const rows=parseCSV(t);const objs=rowsToObjects(rows);RAW[key]=objs;S[key]=objs.map(MAP[key]).filter(Boolean);loaded[key]=true;any=true;}catch(_){}});return any;}
+function paintCached(){let any=false;Object.keys(TABS).forEach(key=>{const t=recall('csv.'+key);if(!t)return;try{const rows=parseCSV(t);const objs=rowsToObjects(rows);RAW[key]=objs;setRows(key,objs.map(MAP[key]).filter(Boolean));loaded[key]=true;any=true;}catch(_){}});return any;}
 let loading=false;
 async function loadAll(manual){
   if(loading)return;loading=true;
@@ -1160,7 +1288,7 @@ async function loadAll(manual){
   setStatus('wait',manual?'Refreshing from Google Sheets…':'Loading from Google Sheets…');
   const results=await Promise.all(Object.entries(TABS).map(async([key,tab])=>{try{const rows=await fetchTab(key,tab);return [key,rows.map(MAP[key]).filter(Boolean),null];}catch(e){return [key,null,e];}}));
   let firstErr=null,okCount=0;
-  results.forEach(([key,rows,err])=>{if(rows){S[key]=rows;loaded[key]=true;missing[key]=false;okCount++;}else{missing[key]=true;if(OPTIONAL[key]){loaded[key]=true;S[key]=[];}else if(!firstErr)firstErr=err;}});
+  results.forEach(([key,rows,err])=>{if(rows){setRows(key,rows);loaded[key]=true;missing[key]=false;okCount++;}else{missing[key]=true;if(OPTIONAL[key]){loaded[key]=true;setRows(key,[]);}else if(!firstErr)firstErr=err;}});
   loadErr=okCount?null:firstErr;
   if(okCount)lastLoad=Date.now();
   renderAll();
@@ -1198,7 +1326,7 @@ const isNew=a=>lastVisit&&a.createdAt>lastVisit;
 
 /* ---------- navigation ---------- */
 function showView(v,opts={}){
-  if(!VIEWS[v])v='overview';
+  if(!allowed(v))v=landing();
   view=v;
   $$('.view').forEach(s=>s.hidden=s.id!=='view-'+v);
   $$('#nav button,#mobilebar button').forEach(b=>{if(b.dataset.view===v)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
@@ -1227,8 +1355,8 @@ $('#themeBtn').addEventListener('click',()=>{const cur=recall('theme')||'system'
 const emptyBox=(title,hint)=>`<div class="empty"><b>${esc(title)}</b>${esc(hint)}</div>`;
 const skel=()=>'<div class="skels"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>';
 const loadingBox=()=>loadErr?'<div class="empty">Waiting for the data sheet.</div>':skel();
-const sheetHint=tab=>'Add a row to the “'+tab+'” tab of the Google Sheet and press Refresh.';
-const sheetBtn=(tab,label)=>`<a class="btn ghost xs" href="${esc(tabUrl(tab))}" target="_blank" rel="noopener">${esc(label||'Edit in sheet')}</a>`;
+const sheetHint=tab=>isBoard()?'Add a row to the “'+tab+'” tab of the Google Sheet and press Refresh.':'Nothing here yet. Check back soon.';
+const sheetBtn=(tab,label)=>`<a data-boardonly class="btn ghost xs" href="${esc(tabUrl(tab))}" target="_blank" rel="noopener">${esc(label||'Edit in sheet')}</a>`;
 
 function annHTML(a,compact){
   const p=personByName(a.author);const author=a.author||'Praxis Hub';
@@ -1287,7 +1415,7 @@ function renderCoverage(){
   const cv=coverage();
   const pct=cv.total?Math.round(cv.covered/cv.total*100):0;
   return `<div class="card"><div class="card-head"><div class="eyebrow">Course coverage</div>${sheetBtn('People','Assign courses in the sheet')}</div>
-    <div class="cov-sum"><span class="big num">${cv.covered} <span class="muted" style="font-size:15px;font-family:var(--ui);font-weight:500">of ${cv.total} courses have a professor</span></span><span class="bar"><i style="width:${pct}%"></i></span><span class="muted" style="font-size:13px">Add course names to the Courses column on the People tab, separated by commas.</span></div></div>
+    <div class="cov-sum"><span class="big num">${cv.covered} <span class="muted" style="font-size:15px;font-family:var(--ui);font-weight:500">of ${cv.total} courses have a professor</span></span><span class="bar"><i style="width:${pct}%"></i></span><span data-boardonly class="muted" style="font-size:13px">Add course names to the Courses column on the People tab, separated by commas.</span></div></div>
     <div class="cov">${cv.groups.map(([name,list])=>`<div class="card grp"><h4>${esc(name)}</h4>${list.map(c=>`<div class="course${c.who.length?'':' none'}"><span class="n">${esc(c.name)}</span>${c.who.length?`<span class="who">${c.who.map(p=>`<button type="button" data-person="${esc(p.id)}" title="${esc(p.name)}"><i>${esc(initials(p.name))}</i>${esc(p.name.split(' ').slice(-1)[0])}</button>`).join('')}</span>`:'<span class="un">Unassigned</span>'}</div>`).join('')}</div>`).join('')}</div>`;
 }
 
@@ -1607,7 +1735,7 @@ function renderCounts(){
   const nx=upcomingEvents()[0];const dn=nx?daysUntil(nx.date):null;
   $('#c-cal').textContent=nx&&dn<=14?(dn===0?'today':dn+'d'):'';
 }
-function renderAll(){renderStatus();renderHealth();renderOverview();renderAnn();renderDir();renderTasks();renderCal();renderLinks();renderCounts();}
+function renderAll(){renderStatus();renderHealth();renderOverview();renderAnn();renderDir();renderTasks();renderCal();renderLinks();renderCounts();renderMe();renderCourses();renderProgram();renderIdeas();renderRoleUI();}
 
 /* ---------- person drawer ---------- */
 function openDrawer(p){
@@ -1776,11 +1904,17 @@ document.addEventListener('click',e=>{const eb=e.target.closest('.pb-body .card>
 document.addEventListener('click',e=>{const pb=e.target.closest('[data-pb]');if(!pb)return;const c=document.getElementById(pb.dataset.pb);if(c&&c.classList.contains('collapsed')){c.classList.remove('collapsed');state[c.id]=false;remember('pb.collapsed',JSON.stringify(state));}});})();
 
 /* ---------- first-run tour ---------- */
-const TOUR=[
+const TOUR_B=[
   ['One sheet, one hub','Everything on this page comes from the Praxis Hub Data sheet in Google Drive. Change a cell there and the hub updates on its next refresh. Nothing is edited here, so there is nothing to break.'],
   ['Start with the briefing','Needs attention lists what is overdue, waiting on a response or still undated. More → Weekly summary turns the whole page into a short email for the board.'],
   ['Find anything fast','Press ⌘K or / to search people, posts, dates and the playbook. Press ? for every shortcut. Share the hub with More → Share the hub, which includes a QR code for slides.']
 ];
+const TOUR_F=[
+  ['Your checklist','My Checklist shows your courses, what the Praxis office still needs from you, the dates to hold, and a “your next thing is…” card at the bottom. Pick your name once and the hub remembers it on this device.'],
+  ['Courses and schedule','Courses & Schedule shows who is teaching what, and every intensive and deadline. Announcements are the latest news from the office.'],
+  ['Got an idea?','Ideas & Updates opens an email to the office with your note ready to send. Board members can sign in from the top right to see more.']
+];
+let TOUR=TOUR_F;
 let tourI=0;
 function tourShow(){const [t,b]=TOUR[tourI];$('#tourStep').textContent='Welcome · '+(tourI+1)+' of '+TOUR.length;$('#tourTitle').textContent=t;$('#tourBody').textContent=b;$('#tourNext').textContent=tourI===TOUR.length-1?'Done':'Next';}
 function openTour(){tourI=0;tourShow();$('#tourScrim').hidden=false;setTimeout(()=>$('#tourNext').focus(),20);}
@@ -1818,15 +1952,15 @@ function palSearch(q){
   q=q.trim().toLowerCase();const hit=s=>!q||String(s||'').toLowerCase().includes(q);
   const groups=[];
   const add=(name,items)=>{if(items.length)groups.push([name,items]);};
-  add('Sections',VIEW_KEYS.filter(k=>hit(VIEWS[k])).map(k=>({ic:'→',t:VIEWS[k],s:'Go to section',run:()=>showView(k)})));
+  add('Sections',navKeys().filter(k=>hit(VIEWS[k])).map(k=>({ic:'→',t:VIEWS[k],s:'Go to section',run:()=>showView(k)})));
   add('People',S.people.filter(p=>hit([p.name,p.title,p.affiliation,p.courses,p.email].join(' '))).slice(0,q?8:4).map(p=>({ic:initials(p.name),t:p.name,s:[p.title,p.affiliation].filter(Boolean).join(' · ')||GROUPS[p.group],k:GSHORT[p.group],run:()=>{showView('directory');openDrawer(p);}})));
   add('Announcements',sortAnn(S.ann.filter(a=>hit(a.title+' '+a.body+' '+a.author))).slice(0,q?6:3).map(a=>({ic:'A',t:a.title,s:(a.author||'Praxis Hub')+(a.date?' · '+fmtDate(a.date):''),k:AUD[a.audience],run:()=>{annAud='all';annType='';$$('#annFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.aud==='all'));$('#annType').value='';renderAnn();showView('announcements');setTimeout(()=>{const el=document.getElementById(a.id);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('hl');}},60);}})));
   add('Dates',upcomingEvents().filter(e=>hit(e.title+' '+e.location+' '+e.notes)).slice(0,q?6:3).map(e=>({ic:MON[parseISO(e.date).getMonth()].toUpperCase(),t:e.title,s:fmtDate(e.date)+(e.location?' · '+e.location:''),k:relDays(daysUntil(e.date)),run:()=>{calType='all';$$('#calFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.type==='all'));renderCal();showView('calendar');}})));
   add('Action items',S.tasks.filter(t=>t.status!=='done'&&hit(t.title+' '+t.owner+' '+t.notes)).slice(0,q?6:3).map(t=>({ic:'✓',t:t.title,s:(t.owner||'Unassigned')+(t.due?' · due '+fmtDate(t.due):''),run:()=>{taskSt='open';taskOwner='';$$('#taskFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.st==='open'));renderTasks();showView('tasks');}})));
-  add('Playbook',PB.filter(([id,l])=>hit(l)||(q&&(document.getElementById(id).textContent||'').toLowerCase().includes(q))).map(([id,l])=>({ic:'P',t:l,s:'Playbook section',run:()=>{showView('playbook',{keepScroll:true});setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}),30);}})));
-  if(q&&('course coverage professors assigned'.includes(q)||CATALOG.some(([,l])=>l.some(c=>c.toLowerCase().includes(q)))))add('Courses',[{ic:'C',t:'Course coverage',s:'Which courses have a professor assigned',run:()=>{dirGroup='courses';$$('#dirFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.group==='courses'));renderDir();showView('directory');}}]);
+  add('Playbook',(!isBoard()?[]:PB).filter(([id,l])=>hit(l)||(q&&(document.getElementById(id).textContent||'').toLowerCase().includes(q))).map(([id,l])=>({ic:'P',t:l,s:'Playbook section',run:()=>{showView('playbook',{keepScroll:true});setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}),30);}})));
+  if(q&&('course coverage professors assigned'.includes(q)||CATALOG.some(([,l])=>l.some(c=>c.toLowerCase().includes(q)))))add('Courses',[{ic:'C',t:'Course coverage',s:'Which courses have a professor assigned',run:()=>{showView('courses');}}]);
   add('Links',S.resources.filter(r=>hit(r.title+' '+r.category)).slice(0,5).map(r=>({ic:'↗',t:r.title,s:r.url.replace(/^https?:\/\//,''),k:r.category,run:()=>window.open(r.url,'_blank','noopener')})));
-  const cmds=[{ic:'★',t:'Take the tour',s:'Three quick steps',run:openTour},{ic:'✓',t:'Sheet health',s:'Rows the hub could not fully read',run:openHealth},{ic:'⇗',t:'Share the hub',s:'Link and QR code',run:openShare},{ic:'?',t:'Keyboard shortcuts',s:'Everything you can do without the mouse',run:()=>{$('#helpScrim').hidden=false;}},{ic:'+',t:'New announcement',s:'Draft a post and copy the row for the sheet',run:openDraft},{ic:'≡',t:'Weekly summary',s:'Copy or email a plain-text briefing',run:openDigest},{ic:'⎙',t:'Print one-page brief',s:'Briefing, print-ready',run:()=>$('#printBtn').click()},{ic:'✉',t:'Email a group',s:'Opens your mail app with BCC',run:()=>openMail(null,'email')},{ic:'✆',t:'Text a group',s:'Group text from your phone, or a QR to scan',run:()=>openMail(null,'text')},{ic:'◐',t:'Switch theme',s:'System · Light · Dark',run:()=>$('#themeBtn').click()}].filter(c=>hit(c.t+' '+c.s));if(q)add('Actions',cmds);
+  const cmds=[{ic:'★',t:'Take the tour',s:'Three quick steps',run:openTour},{ic:'✓',t:'Sheet health',s:'Rows the hub could not fully read',run:openHealth},{ic:'⇗',t:'Share the hub',s:'Link and QR code',run:openShare},{ic:'?',t:'Keyboard shortcuts',s:'Everything you can do without the mouse',run:()=>{$('#helpScrim').hidden=false;}},{ic:'+',t:'New announcement',s:'Draft a post and copy the row for the sheet',run:openDraft},{ic:'≡',t:'Weekly summary',s:'Copy or email a plain-text briefing',run:openDigest},{ic:'⎙',t:'Print one-page brief',s:'Briefing, print-ready',run:()=>$('#printBtn').click()},{ic:'✉',t:'Email a group',s:'Opens your mail app with BCC',run:()=>openMail(null,'email')},{ic:'✆',t:'Text a group',s:'Group text from your phone, or a QR to scan',run:()=>openMail(null,'text')},{ic:'◐',t:'Switch theme',s:'System · Light · Dark',run:()=>$('#themeBtn').click()}].filter(c=>(isBoard()||['Take the tour','Share the hub','Keyboard shortcuts','Switch theme'].indexOf(c.t)>=0)&&hit(c.t+' '+c.s));if(q)add('Actions',cmds);
   palItems=groups.flatMap(([,items])=>items);palSel=0;
   const res=$('#palRes');
   if(!palItems.length){res.innerHTML='<div class="none">Nothing matches “'+esc(q)+'”.</div>';return;}
@@ -1845,12 +1979,279 @@ document.addEventListener('keydown',e=>{
   if(typing)return;
   if(e.key==='/'){e.preventDefault();openPal();return;}
   if(e.metaKey||e.ctrlKey||e.altKey)return;
-  if(/^[1-6]$/.test(e.key)){showView(VIEW_KEYS[+e.key-1]);return;}
+  if(/^[1-9]$/.test(e.key)){if(+e.key>navKeys().length)return;showView(navKeys()[+e.key-1]);return;}
   const anyOpen=$$('.scrim').some(x=>!x.hidden);if(anyOpen)return;
   const k=e.key.toLowerCase();
   if(e.key==='?'){e.preventDefault();$('#helpScrim').hidden=false;}
-  else if(k==='n')openDraft();else if(k==='s')openDigest();else if(k==='e')openMail(null,'email');else if(k==='x')openMail(null,'text');else if(k==='r')loadAll(true);else if(k==='t')$('#themeBtn').click();
+  else if(!isBoard()&&/[nsex]/.test(k)){}else if(k==='n')openDraft();else if(k==='s')openDigest();else if(k==='e')openMail(null,'email');else if(k==='x')openMail(null,'text');else if(k==='r')loadAll(true);else if(k==='t')$('#themeBtn').click();
 });
+
+/* ===================================================================
+   Roles, professor views, program status, ideas, sample data.
+   Gating here is a convenience, not security: see README "Board sign-in".
+   =================================================================== */
+const CONFIG={
+  /* Where ideas and updates are emailed. Change this one line to move them to the hub's own Gmail address. */
+  IDEAS_EMAIL:'brad@lschurches.com',
+  /* SHA-256 of "praxis-hub:" + the board passcode. Change it with: node tools/set-passcode.js */
+  BOARD_HASH:'912d7d980410336c9c8e9c4e34780b63c12dbf7b82133656ebf26ffd3a82ef7e',
+  SIGNIN_DAYS:30
+};
+const REAL={};          /* rows exactly as the sheet gave them */
+const FULL={people:[],ann:[],tasks:[],events:[],resources:[],metrics:[]};   /* rows plus sample rows, before role filtering */
+let demo=false;
+try{demo=recall('demo')==='1';if(/[?&]demo=1\b/.test(location.search)){demo=true;remember('demo','1');}if(/[?&]demo=0\b/.test(location.search)){demo=false;remember('demo','0');}}catch(_){}
+
+/* ---------- sample data (clearly labelled, never real people) ---------- */
+const addDays=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());};
+function sampleRows(){
+  const P=(i,name,status,courses,ob,aff)=>({id:'demo-p'+i,row:0,name:name+' (sample)',group:'faculty',title:'Professor',status,affiliation:aff||'Sample Church',courses,email:'',phone:'',city:'',photo:'',notes:'',order:900+i,ob});
+  const ob=(c,h,s,b,w)=>({contract:c,handbook:h,syllabus:s,bio:b,w9:w});
+  const E=(i,title,off,len,type,loc,extra)=>Object.assign({id:'demo-e'+i,row:0,title:title+' (sample)',date:addDays(off),endDate:len?addDays(off+len):'',time:'',type,location:loc||'',link:'',agenda:[],minutes:'',tbd:false,notes:''},extra||{});
+  const A=(i,title,body,aud,type,off,extra)=>Object.assign({id:'demo-a'+i,row:0,title:title+' (sample)',body,audience:aud,pinned:false,author:'Sample Office',type,respond:false,respondBy:'',link:'',date:addDays(off),createdAt:parseISO(addDays(off)).getTime()},extra||{});
+  return {
+    people:[
+      P(1,'Sample Professor A','confirmed','Hermeneutics, Church History',ob(true,true,false,true,false)),
+      P(2,'Sample Professor B','confirmed','Preaching Foundations, Doctrinal Preaching',ob(true,true,true,true,true)),
+      P(3,'Sample Professor C','tentative','Counseling',ob(false,false,false,false,false)),
+      P(4,'Sample Professor D','prospect','',ob(false,false,false,false,false))
+    ],
+    events:[
+      E(1,'Fall intensive',42,2,'intensive','Sample venue'),
+      E(2,'Syllabi due to the registrar',28,0,'deadline',''),
+      E(3,'Board meeting',17,0,'board','Video call',{time:'7:00 PM',agenda:['Review enrollment pipeline','Approve fall course assignments','Fundraising update']}),
+      E(4,'Spring intensive',200,2,'intensive','Sample venue')
+    ],
+    ann:[
+      A(1,'Fall course assignments approved','The board approved the fall course assignments as listed.','board','decision',-6),
+      A(2,'Reminder: send your syllabus','Please send your syllabus to the office before the fall trimester begins.','faculty','update',-2),
+      A(3,'Do you have a guest speaker idea?','Reply to the office by the date shown if you want to suggest a chapel speaker.','faculty','request',-1,{respond:true,respondBy:addDays(10)}),
+      A(4,'Budget review is ready for the board','The first-quarter budget review is ready to read before the meeting.','board','update',-3,{respond:true,respondBy:addDays(12)})
+    ],
+    tasks:[
+      {id:'demo-t1',row:0,title:'Confirm venue for the fall intensive (sample)',owner:'Sample Professor A (sample)',due:addDays(14),status:'open',priority:'high',link:'',notes:''},
+      {id:'demo-t2',row:0,title:'Draft the student handbook update (sample)',owner:'',due:addDays(-3),status:'open',priority:'normal',link:'',notes:''},
+      {id:'demo-t3',row:0,title:'Order name tags (sample)',owner:'',due:'',status:'done',priority:'low',link:'',notes:''}
+    ],
+    metrics:[
+      {id:'demo-m1',row:0,label:'Students applied (sample)',value:12,target:30,unit:'',asOf:addDays(-1),note:''},
+      {id:'demo-m2',row:0,label:'Professors contracted (sample)',value:2,target:4,unit:'',asOf:addDays(-1),note:''},
+      {id:'demo-m3',row:0,label:'Funds pledged (sample)',value:180000,target:500000,unit:'$',asOf:addDays(-1),note:''}
+    ],
+    resources:[]
+  };
+}
+
+/* ---------- role scoping: what a professor sees vs. the board ---------- */
+function scopeRows(key,rows){
+  if(isBoard())return rows;
+  if(key==='ann')return rows.filter(a=>a.audience==='all'||a.audience==='faculty');
+  if(key==='events')return rows.filter(e=>e.type!=='board');
+  if(key==='tasks'||key==='metrics')return [];
+  if(key==='people')return rows.map(p=>Object.assign({},p,{phone:'',notes:'',ob:null}));
+  return rows;
+}
+function rescope(){
+  const sm=demo?sampleRows():null;
+  Object.keys(S).forEach(k=>{FULL[k]=(REAL[k]||[]).concat(sm?sm[k]:[]);S[k]=scopeRows(k,FULL[k]);});
+}
+function setRows(key,rows){REAL[key]=rows;rescope();}
+
+/* ---------- sign-in ---------- */
+let role='faculty';
+const isBoard=()=>role==='board';
+async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+(function loadRole(){try{const r=JSON.parse(recall('role')||'null');if(r&&r.r==='board'&&r.h===CONFIG.BOARD_HASH&&r.exp>Date.now())role='board';}catch(_){}})();
+function applyRole(next){
+  role=next;
+  if(next==='board')remember('role',JSON.stringify({r:'board',h:CONFIG.BOARD_HASH,exp:Date.now()+CONFIG.SIGNIN_DAYS*86400000}));else remember('role','');
+  document.body.classList.toggle('is-board',isBoard());
+  TOUR=isBoard()?TOUR_B:TOUR_F;
+  rescope();renderAll();
+  if(!allowed(view))showView(landing(),{silent:true});
+}
+let failedTries=0,lockUntil=0;
+function openRole(){
+  const host=$('#roleBody');
+  if(isBoard()){
+    host.innerHTML=`<p style="font-size:14.5px;line-height:1.55">You are signed in as <b>Board</b>. You can see the Briefing, Program Status, Action Items, the Playbook, board-only posts and board meetings, plus contact and onboarding detail.</p><div class="acts"><button class="btn primary" id="roleOut" type="button">Sign out (back to Professor view)</button></div>`;
+    $('#roleOut').onclick=()=>{applyRole('faculty');closeOverlay($('#roleScrim'));toast('Switched to Professor view');};
+  }else{
+    host.innerHTML=`<p style="font-size:14.5px;line-height:1.55">Professors see courses, schedule, their own checklist, announcements and ideas. Board members enter the board passcode to also see the Briefing, Program Status, Action Items, Playbook, board-only posts and meetings.</p>
+      <form id="roleForm" autocomplete="off"><label for="rolePass">Board passcode</label><input class="txt" id="rolePass" type="password" autocomplete="current-password" required><div class="role-err" id="roleErr" role="alert"></div>
+      <div class="acts"><button class="btn primary" type="submit">Sign in</button></div></form>
+      <p class="muted" style="font-size:12.5px;margin-top:12px">This keeps the page tidy for professors. It is not a security lock; see the README for what a real one needs.</p>`;
+    $('#roleForm').onsubmit=async e=>{
+      e.preventDefault();const err=$('#roleErr');
+      if(Date.now()<lockUntil){err.textContent='Too many tries. Wait a few seconds.';return;}
+      if(!(window.crypto&&crypto.subtle)){err.textContent='Sign-in needs a secure (https) page.';return;}
+      const h=await sha256('praxis-hub:'+$('#rolePass').value.trim());
+      if(h===CONFIG.BOARD_HASH){failedTries=0;applyRole('board');closeOverlay($('#roleScrim'));toast('Signed in as Board');}
+      else{failedTries++;if(failedTries>=5){lockUntil=Date.now()+15000;failedTries=0;}err.textContent='That passcode did not match.';$('#rolePass').select();}
+    };
+  }
+  $('#roleScrim').hidden=false;setTimeout(()=>{const f=$('#rolePass')||$('#roleOut');if(f)f.focus();},30);
+}
+$('#roleBtn').addEventListener('click',openRole);
+function renderRoleUI(){
+  const b=isBoard();
+  $('#roleLbl').textContent=b?'Board':'Professor view';
+  $('#roleBtn').setAttribute('aria-label',b?'Signed in as Board. Open account options':'Professor view. Board sign-in');
+  $('#roleBtn').classList.toggle('on',b);
+  $('#demoBar').hidden=!demo;
+  $('#demoBtn span').textContent=demo?'Hide sample data':'Show sample data';
+}
+$('#demoBtn').addEventListener('click',()=>{demo=!demo;remember('demo',demo?'1':'0');rescope();renderAll();toast(demo?'Sample data on':'Sample data off');$('#moreMenu .pop').hidden=true;});
+$('#demoOff').addEventListener('click',()=>$('#demoBtn').click());
+
+/* ---------- person picker + checklist ("My Checklist") ---------- */
+const pool=()=>FULL.people.filter(p=>p.group==='faculty'||p.group==='music'||/professor/i.test(p.title||'')||String(p.courses||'').trim()).sort((a,b)=>a.name.localeCompare(b.name));
+let meId=recall('me')||'';
+const mePerson=()=>pool().find(p=>p.id===meId||(p.name===recall('meName')))||null;
+const tickKey=(p,id)=>'chk.'+p.name+'.'+id;
+const isTicked=(p,id)=>recall(tickKey(p,id))==='1';
+const firstName=p=>p.name.replace(/\s*\(sample\)/,'').split(/\s+/)[0];
+function nextThings(p){
+  const t=todayISO();
+  const ev=FULL.events.filter(e=>e.type!=='board'&&(e.endDate||e.date)>=t).map(e=>({kind:'event',title:e.title,date:e.date,end:e.endDate,where:e.location,tbd:e.tbd,type:e.type}));
+  const tk=FULL.tasks.filter(x=>x.status!=='done'&&x.due&&ownerIs(x.owner,p)).map(x=>({kind:'task',title:x.title,date:x.due,end:'',where:'',tbd:false,type:'task'}));
+  return ev.concat(tk).sort((a,b)=>a.date.localeCompare(b.date));
+}
+function ownerIs(owner,p){const o=norm(owner);if(!o)return false;const n=norm(p.name.replace(/\s*\(sample\)/,''));return o===n||o.includes(n)||n.includes(o);}
+function whenText(n){const range=n.end&&n.end!==n.date?fmtDate(n.date)+' – '+fmtDate(n.end):fmtDate(n.date);return n.tbd?MONL[parseISO(n.date).getMonth()]+' '+parseISO(n.date).getFullYear()+' (exact date to be confirmed)':range;}
+function checklistFor(p){
+  const items=[];
+  const steps=p.ob?obSteps(p):[];
+  if(steps.length)steps.forEach(s=>items.push({id:'ob-'+s.k,label:s.label,sub:s.done?'Received by the Praxis office':'Still needed. Send it to the Praxis office.',done:s.done,locked:true,group:'Paperwork'}));
+  else ONBOARD.forEach(([k,,label])=>items.push({id:'ob-'+k,label,sub:'Check this off when you have sent it to the Praxis office.',done:isTicked(p,'ob-'+k),locked:false,group:'Paperwork'}));
+  const courses=String(p.courses||'').split(',').map(s=>s.trim()).filter(Boolean);
+  if(!courses.length)items.push({id:'assign',label:'Confirm your course assignment',sub:'No course is listed for you yet. Ask the Dean of Students.',done:isTicked(p,'assign'),locked:false,group:'Teaching'});
+  const t=todayISO();
+  FULL.events.filter(e=>e.type==='intensive'&&(e.endDate||e.date)>=t).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,2).forEach(e=>items.push({id:'ev-'+e.id,label:'Hold the dates: '+e.title,sub:whenText({date:e.date,end:e.endDate,tbd:e.tbd})+(e.location?' · '+e.location:''),done:isTicked(p,'ev-'+e.id),locked:false,group:'Dates'}));
+  FULL.events.filter(e=>e.type==='deadline'&&e.date>=t).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3).forEach(e=>items.push({id:'dl-'+e.id,label:e.title,sub:'Due '+fmtDate(e.date)+' · '+relDays(daysUntil(e.date)).toLowerCase(),done:isTicked(p,'dl-'+e.id),locked:false,group:'Dates'}));
+  FULL.tasks.filter(x=>x.status!=='done'&&ownerIs(x.owner,p)).forEach(x=>items.push({id:'tk-'+x.id,label:x.title,sub:x.due?'Due '+fmtDate(x.due):'Assigned to you',done:false,locked:true,group:'Assigned to you'}));
+  return items;
+}
+function renderMe(){
+  const host=$('#meBody'),sel=$('#mePick');
+  if(!loaded.people){host.innerHTML=loadingBox();return;}
+  const list=pool();
+  sel.innerHTML='<option value="">Choose your name…</option>'+list.map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+  const p=mePerson();if(p)sel.value=p.id;
+  if(!list.length){host.innerHTML=emptyBox('No professors listed yet',sheetHint('People'));return;}
+  if(!p){host.innerHTML=`<div class="card hero-me"><div class="eyebrow">Welcome</div><h3>Find your name to see your checklist</h3><p class="muted" style="font-size:14.5px;max-width:60ch;margin-top:6px">Your checklist shows your courses, what the Praxis office still needs from you, the dates to hold, and what is next for you. Your choice is remembered on this device only.</p></div>`;return;}
+  const items=checklistFor(p),done=items.filter(i=>i.done).length,pct=items.length?Math.round(done/items.length*100):0;
+  const nx=nextThings(p);const first=nx[0],after=nx[1];
+  const courses=String(p.courses||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const groups=[...new Set(items.map(i=>i.group))];
+  host.innerHTML=`<div class="cols">
+    <div class="stack">
+      <div class="card hero-me"><div class="eyebrow">Hello, ${esc(firstName(p))}</div><h3>${done===items.length&&items.length?'You are all caught up':(items.length-done)+' '+(items.length-done===1?'thing':'things')+' left on your list'}</h3>
+        <div class="ob-sum" style="margin-top:8px"><span class="bar"><i style="width:${pct}%"></i></span><span class="muted num" style="font-size:13px">${done} of ${items.length} done</span></div></div>
+      <div class="card"><div class="card-head"><div class="eyebrow">Your checklist</div></div>
+        ${groups.map(g=>`<div class="ck-grp"><div class="sec-h">${esc(g)}</div>${items.filter(i=>i.group===g).map(i=>`<label class="ckrow${i.done?' done':''}${i.locked?' locked':''}"><input type="checkbox" data-tick="${esc(i.id)}" ${i.done?'checked':''} ${i.locked?'disabled':''}><span class="box" aria-hidden="true"></span><span class="tx"><b>${esc(i.label)}</b><small>${esc(i.sub)}</small></span>${i.locked?`<span class="pill ${i.done?'done':'other'}">${i.done?'Done':'Office tracks'}</span>`:''}</label>`).join('')}</div>`).join('')}
+        <div class="nextthing">${first?`<div class="eyebrow">Your next thing is…</div><div class="nt-t">${esc(first.title)}</div><div class="nt-m">${esc(whenText(first))}${first.where?' · '+esc(first.where):''} · <b>${esc(relDays(daysUntil(first.date)).toLowerCase())}</b></div>${after?`<div class="nt-after">Then: ${esc(after.title)} · ${esc(whenText(after))}</div>`:''}`:`<div class="eyebrow">Your next thing is…</div><div class="nt-t">Nothing scheduled yet</div><div class="nt-m">When the next intensive or term is on the calendar it will appear here.</div>`}</div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card"><div class="card-head"><div class="eyebrow">Your courses</div><button class="btn ghost sm" data-go="courses">All courses</button></div>
+        ${courses.length?`<div class="chipwrap">${courses.map(c=>`<span class="tag big">${esc(c)}</span>`).join('')}</div>`:'<div class="empty" style="padding:16px">No course listed for you yet.</div>'}</div>
+      <div class="card"><div class="card-head"><div class="eyebrow">Coming up for you</div><button class="btn ghost sm" data-go="calendar">Calendar</button></div>
+        <div class="events">${nx.slice(0,4).map(n=>`<div class="ev ${esc(n.type==='task'?'other':n.type)}"><div class="d"><b>${n.tbd?'—':parseISO(n.date).getDate()}</b><span>${MON[parseISO(n.date).getMonth()]}</span></div><div style="min-width:0"><div class="t">${esc(n.title)}</div><div class="m">${esc(whenText(n))}${n.where?' · '+esc(n.where):''}</div></div><div class="r"><span class="muted num" style="font-size:13px">${esc(relDays(daysUntil(n.date)))}</span></div></div>`).join('')||emptyBox('Nothing coming up','Dates appear here once they are on the calendar.')}</div></div>
+      <div class="card"><div class="card-head"><div class="eyebrow">Reminder email</div></div>
+        <p class="muted" style="font-size:13.5px;line-height:1.5">Later, the hub can email each professor this same checklist on its own. That is switched off. You can see what it would say.</p>
+        <div style="margin-top:10px"><button class="btn sm" id="remindPreview" type="button">Preview my reminder email</button></div></div>
+    </div></div>`;
+}
+$('#mePick').addEventListener('change',e=>{meId=e.target.value;const p=pool().find(x=>x.id===meId);remember('me',meId);remember('meName',p?p.name:'');renderMe();});
+$('#meBody').addEventListener('change',e=>{const c=e.target.closest('[data-tick]');if(!c)return;const p=mePerson();if(!p)return;remember(tickKey(p,c.dataset.tick),c.checked?'1':'0');renderMe();});
+function reminderText(p){
+  const items=checklistFor(p),open=items.filter(i=>!i.done);const nx=nextThings(p)[0];
+  const L=['Subject: Your Praxis checklist for the week ahead','From: (the hub’s own Gmail address, not set up yet)','To: '+(p.email||'(email not on file)'),'',
+    'Hello '+firstName(p)+',','',open.length?'Here is what is still open for you:':'You have nothing open right now. Thank you.'];
+  open.forEach(i=>L.push('  [ ] '+i.label+' — '+i.sub));
+  L.push('',nx?'Your next thing is: '+nx.title+', '+whenText(nx)+(nx.where?' ('+nx.where+')':'')+' — '+relDays(daysUntil(nx.date)).toLowerCase()+'.':'Your next thing: nothing is on the calendar yet.','','Open the hub: '+HUB_URL,'','— Praxis');
+  return L.join('\n');
+}
+document.addEventListener('click',e=>{
+  if(e.target.closest('#remindPreview')){const p=mePerson();if(!p)return;$('#textTitle').textContent='Reminder email preview';$('#textNote').textContent='Preview only. Nothing is sent, and the hub has no way to send email yet.';$('#textArea').value=reminderText(p);$('#textScrim').hidden=false;setTimeout(()=>$('#textCopy').focus(),20);}
+});
+$('#textCopy').addEventListener('click',()=>copyText($('#textArea').value,'Copied'));
+
+/* ---------- Courses & Schedule ---------- */
+function renderCourses(){
+  const host=$('#coursesBody');
+  if(!(loaded.people&&loaded.events)){host.innerHTML=loadingBox();return;}
+  const cv=coverage();
+  const t=todayISO();
+  const sched=S.events.filter(e=>e.type!=='board'&&(e.endDate||e.date)>=t).sort((a,b)=>a.date.localeCompare(b.date));
+  let html='',lastM='';
+  sched.forEach(e=>{const d=parseISO(e.date);const m=MONL[d.getMonth()]+' '+d.getFullYear();if(m!==lastM){html+=`<div class="sec-h">${esc(m)}</div>`;lastM=m;}html+=evHTML(e,false);});
+  host.innerHTML=`<div class="cols"><div class="stack">${renderCoverage()}</div>
+    <div class="stack"><div class="card"><div class="card-head"><div class="eyebrow">Class and intensive schedule</div><button class="btn ghost sm" id="icsCourses" type="button">Add to calendar (.ics)</button></div><div class="events">${html||emptyBox('No dates yet',sheetHint('Calendar'))}</div></div></div></div>`;
+}
+$('#coursesBody').addEventListener('click',e=>{if(e.target.closest('#icsCourses'))$('#icsMenu').click();});
+
+/* ---------- Program Status (board) ---------- */
+const rag=(v,t)=>t?(v/t>=.8?'good':v/t>=.4?'warn':'crit'):'info';
+function renderProgram(){
+  const host=$('#statusBody');
+  if(!isBoard()){host.innerHTML='';return;}
+  if(!(loaded.people&&loaded.events&&loaded.tasks&&loaded.ann)){host.innerHTML=loadingBox();return;}
+  const fac=S.people.filter(p=>p.group==='faculty'||/professor/i.test(p.title||''));
+  const conf=fac.filter(p=>p.status==='confirmed').length;
+  const cv=coverage(),ob=onboarding();
+  const open=S.tasks.filter(t=>t.status!=='done'),od=open.filter(t=>t.due&&daysUntil(t.due)<0).length;
+  const le=launchEvent(),days=le?Math.max(0,daysUntil(le.date)):null;
+  const openRoles=S.people.filter(p=>p.status==='open').length;
+  const cards=[
+    ['Professors confirmed',conf+' of '+fac.length,rag(conf,fac.length),fac.length?Math.round(conf/Math.max(1,fac.length)*100):0],
+    ['Courses with a professor',cv.covered+' of '+cv.total,rag(cv.covered,cv.total),cv.total?Math.round(cv.covered/cv.total*100):0],
+    ['Professors fully onboarded',ob.rows.length?ob.complete+' of '+ob.rows.length:'Not tracked',ob.rows.length?rag(ob.complete,ob.rows.length):'info',ob.rows.length?Math.round(ob.complete/ob.rows.length*100):0],
+    ['Open action items',String(open.length),od?'crit':open.length?'warn':'good',null,od?od+' overdue':'None overdue'],
+    ['Open staff roles',String(openRoles),openRoles?'warn':'good',null,openRoles?'Still to fill':'All filled'],
+    [le?(/class/i.test(le.title)?'Until first classes':'Until next milestone'):'Next milestone',days===null?'—':days+' days','info',null,le?le.title:'Nothing on the calendar']
+  ];
+  const decisions=sortAnn(S.ann.filter(a=>a.type==='decision')).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,5);
+  const waiting=S.ann.filter(a=>a.respond&&(!a.respondBy||a.respondBy>=todayISO()));
+  const boardPosts=sortAnn(S.ann.filter(a=>a.audience==='board')).slice(0,4);
+  const meeting=upcomingEvents().find(e=>e.type==='board');
+  const attn=attention().filter(i=>i.cls==='crit'||i.cls==='warn').slice(0,6);
+  host.innerHTML=`
+    <div class="rag">${cards.map(([l,v,c,pct,sub])=>`<div class="ragc ${c}"><div class="l">${esc(l)}</div><div class="v num">${esc(v)}</div>${pct!==null&&pct!==undefined?`<div class="bar"><i style="width:${pct}%"></i></div><div class="s">${pct}%</div>`:`<div class="s">${esc(sub||'')}</div>`}</div>`).join('')}</div>
+    <div class="cols"><div class="stack">
+      <div class="card"><div class="card-head"><div class="eyebrow">Launch numbers</div><span class="muted" style="font-size:12.5px">${(S.metrics.map(m=>m.asOf).filter(Boolean).sort().pop())?'as of '+fmtDate(S.metrics.map(m=>m.asOf).filter(Boolean).sort().pop()):''}</span></div><div id="metrics2"></div></div>
+      ${renderOnboarding()}
+      <div class="card"><div class="card-head"><div class="eyebrow">Needs the board’s attention</div></div>${attn.length?`<div class="attn">${attn.map(it=>`<div class="attn-row"><button type="button" data-go="${esc(it.go)}"><span class="ic ${esc(it.cls)}">${ICONS[it.ic]}</span><span style="min-width:0"><span class="t" style="display:block">${esc(it.t)}</span><span class="m">${esc(it.m)}</span></span><span class="go"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span></button></div>`).join('')}</div>`:emptyBox('All clear','Nothing overdue or waiting.')}</div>
+    </div><div class="stack">
+      ${meeting?`<div class="card meeting"><div class="card-head"><div class="eyebrow">Next board meeting</div><span class="muted num" style="font-size:12.5px">${esc(relDays(daysUntil(meeting.date)))}</span></div><div class="when">${esc(meeting.tbd?'Date to be confirmed':fmtDateLong(meeting.date))}</div><div class="muted" style="font-size:14px;margin-top:2px">${esc([meeting.time,meeting.location].filter(Boolean).join(' · ')||meeting.title)}</div>${meeting.agenda.length?`<ul>${meeting.agenda.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}</div>`:''}
+      <div class="card"><div class="card-head"><div class="eyebrow">Decisions log</div><button class="btn ghost sm" data-decisions type="button">All</button></div>${decisions.length?`<div class="attn">${decisions.map(a=>`<button type="button" data-open-post="${esc(a.id)}"><span class="ic gold"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 7"/></svg></span><span style="min-width:0"><span class="t" style="display:block">${esc(a.title)}</span><span class="m">${esc(a.date?fmtDate(a.date):'')}</span></span></button>`).join('')}</div>`:emptyBox('No decisions recorded','Post an announcement with Type “Decision” and it lands here.')}</div>
+      <div class="card"><div class="card-head"><div class="eyebrow">Waiting on a reply</div></div>${waiting.length?`<div class="attn">${waiting.map(a=>`<button type="button" data-open-post="${esc(a.id)}"><span class="ic crit"><svg viewBox="0 0 24 24"><path d="M9 17 4 12l5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg></span><span style="min-width:0"><span class="t" style="display:block">${esc(a.title)}</span><span class="m">${esc(a.respondBy?'By '+fmtDate(a.respondBy):'No deadline')}</span></span></button>`).join('')}</div>`:emptyBox('Nothing waiting','No open requests.')}</div>
+      <div class="card"><div class="card-head"><div class="eyebrow">Latest for the board</div><button class="btn ghost sm" data-go="announcements">All posts</button></div>${boardPosts.length?boardPosts.map(a=>annHTML(a,true)).join(''):emptyBox('No board posts',sheetHint('Announcements'))}</div>
+    </div></div>`;
+  const mh=$('#metrics2');
+  mh.innerHTML=S.metrics.length?'<div class="metrics">'+S.metrics.map(m=>{const has=m.value!==null;const pct=has&&m.target?Math.min(100,m.value/m.target*100):null;return `<div class="metric"><div class="l">${esc(m.label)}</div><div class="v num">${has?esc(fmtNum(m.value,m.unit)):'—'}${m.target!==null?`<small>of ${esc(fmtNum(m.target,m.unit))}${pct!==null?' · '+Math.round(pct)+'%':''}</small>`:''}</div>${m.target!==null?`<div class="bar"><i style="width:${pct===null?0:pct.toFixed(1)}%"></i></div>`:''}</div>`;}).join('')+'</div>':emptyBox('No launch numbers yet','Add a tab named “Metrics” to the sheet (Metric, Value, Target, Unit, As of), or turn on sample data from the More menu to see how it looks.');
+}
+
+/* ---------- Ideas & Updates ---------- */
+function ideaMail(){
+  const kind=$('#ideaKind').value,name=$('#ideaName').value.trim(),title=$('#ideaTitle').value.trim(),msg=$('#ideaMsg').value.trim();
+  const subject='[Praxis Hub] '+kind+(title?': '+title:'');
+  const body=(msg||'')+'\n\n— '+(name||'(name not given)')+'\nSent from the Praxis Hub';
+  return {subject,body,href:'mailto:'+CONFIG.IDEAS_EMAIL+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body)};
+}
+function renderIdeas(){
+  const m=mePerson();const n=$('#ideaName');if(m&&!n.value)n.value=m.name.replace(/\s*\(sample\)/,'');
+  $('#ideaTo').textContent=CONFIG.IDEAS_EMAIL;
+}
+$('#ideaForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  if(!$('#ideaMsg').value.trim()){$('#ideaMsg').focus();return;}
+  const d=ideaMail();
+  window.location.href=d.href;
+  toast('Opening your email app…');
+});
+$('#ideaCopy').addEventListener('click',()=>{const d=ideaMail();copyText('To: '+CONFIG.IDEAS_EMAIL+'\nSubject: '+d.subject+'\n\n'+d.body,'Copied');});
 
 /* ---------- boot ---------- */
 $('#editSheet').href=SHEET_URL;$('#footSheet').href=SHEET_URL;
@@ -1863,10 +2264,11 @@ function openPost(id){annAud='all';annType='';$$('#annFilter .chip').forEach(c=>
 let pendingPost=(location.hash.match(/^#post-(a\d+)$/)||[])[1]||'';
 let pendingPerson=Number((location.hash.match(/^#person-row-(\d+)$/)||[])[1])||0;
 function openPersonRow(row){const p=S.people.find(x=>x.row===row);if(!p){toast('That person is no longer in the sheet');return;}showView('directory',{silent:true});openDrawer(p);}
-function initialView(){const h=(location.hash||'').replace('#','');if(pendingPost)return 'announcements';if(pendingPerson)return 'directory';if(VIEWS[h])return h;const r=recall('view');return VIEWS[r]?r:'overview';}
+function initialView(){const h=(location.hash||'').replace('#','');if(pendingPost)return 'announcements';if(pendingPerson)return 'directory';if(allowed(h))return h;const r=recall('view');return allowed(r)?r:landing();}
+document.body.classList.toggle('is-board',isBoard());TOUR=isBoard()?TOUR_B:TOUR_F;
 showView(initialView(),{silent:true});
 if(paintCached()){renderAll();setStatus('wait','Showing the last copy · refreshing from Google Sheets…');}else renderAll();
-window.addEventListener('hashchange',()=>{const h=(location.hash||'').replace('#','');const pm=h.match(/^post-(a\d+)$/);if(pm){openPost(pm[1]);return;}const pr=h.match(/^person-row-(\d+)$/);if(pr){openPersonRow(Number(pr[1]));return;}if(VIEWS[h]&&h!==view)showView(h,{silent:true});});
+window.addEventListener('hashchange',()=>{const h=(location.hash||'').replace('#','');const pm=h.match(/^post-(a\d+)$/);if(pm){openPost(pm[1]);return;}const pr=h.match(/^person-row-(\d+)$/);if(pr){openPersonRow(Number(pr[1]));return;}if(allowed(h)&&h!==view)showView(h,{silent:true});});
 loadAll(false);
 setInterval(()=>{if(document.visibilityState==='visible')loadAll(false);},REFRESH_MS);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-lastLoad>60000)loadAll(false);});
