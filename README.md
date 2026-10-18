@@ -16,9 +16,42 @@ Praxis Hub for Praxis Theological Seminary. Professors get their courses, schedu
 
 **Sample data.** *More → Show sample data* (or add `?demo=1` to the address) mixes clearly labelled “(sample)” professors, dates, posts and numbers into the hub so the views can be demonstrated. It never touches the sheet. Turn it off the same way.
 
+## Professor onboarding, contracts and the admin view
+
+Asked for by Nicole and Kyle (October 2026). Unlike the rest of the hub, this part is **really private**: it runs through a small Google Apps Script backend (`backend/Code.gs`) that keeps everything in a private spreadsheet and a private Drive folder. None of it is in the public sheet or this public repo.
+
+**For professors (My Praxis → “From the Praxis office”).** A professor picks their name and enters the **last 4 digits of the phone number the office has on file**. That opens their own checklist for a few hours in that browser tab:
+
+- **Sign your contract.** Opening the contract asks for the 4 digits **again, every time**. The contract is streamed from the private Drive folder only after that check and shown in the page; it is never sent as a link. They sign by typing their full name and ticking “I agree”, or upload a signed paper copy. If the office prefers DocuSign or similar, paste the professor's signing link in the admin view and the hub shows a *Sign online* button instead. The signature record keeps the typed name, the time and a fingerprint (SHA-256) of the exact file they signed.
+- **Update your contact information** (name for the website, email, mobile, mailing address, notes), prefilled from what the office has.
+- **Send a photo for the website.** Phone photos and iPhone HEIC are fine; large photos are scaled to 2400 px.
+- **Describe your course in two sentences**, one box per course, with a live sentence count.
+
+Each professor's checklist is their own: the office unticks an item it already has and it disappears for that professor.
+
+**For the office (More → Office admin, or `#admin`).** Kyle and Nicole sign in with the admin password and their name. They see progress tiles, a table of every professor with a mark per item, filters (still to do, complete, no phone on file, no contract uploaded, locked out), and a detail drawer per professor: phone on file, which items apply, mark done or reopen, upload or replace the contract (PDF), view the contract or signed copy, the signature record, contact details and course descriptions with copy buttons, the photo with download, office notes, a copy-or-email reminder listing what is still open, and that professor's recent activity. *Export CSV* gives everything in one spreadsheet for the website team.
+
+**Security, honestly.**
+
+- 4 digits is a modest secret (10,000 combinations). Five wrong tries pause that professor for 15 minutes; ten in a day lock them until the office unlocks them, and the office is emailed. Guessing is therefore impractical, but someone who already knows a professor's phone number could get in. The stronger next step is a one-time code emailed to the professor; the backend is built so that can be added.
+- **Never put phone numbers in the public sheet.** They are the sign-in secret. Enter them in the admin view or the private sheet's *Phone on file* column.
+- The admin password lives in the private sheet's *Settings* tab, not in the page. Sessions are server-side and expire after 6 hours. Every sign-in, wrong try, contract view, signature, upload and admin change is written to the private sheet's *Activity* tab.
+- The private sheet, Drive folder and script are owned by the Google account that ran `setup` (Brad's today). Share the private sheet only with the office, never “anyone with the link”. Moving them to a Praxis Google account later is a matter of transferring ownership of the three items.
+
+**Switching it on (once, by the script owner).** The web app is deployed and wired into the page (`CONFIG.API_URL`). Until it is switched on, professors see “Your onboarding checklist opens soon”. To switch on:
+
+1. Open the [Praxis Hub backend script](https://script.google.com/d/1kBsyO6BkkSTYQYV0FkbQ5yDhaN2vQhWIcmVIscC65b9yi1jj2ItWhHJk/edit), choose **setup** in the function menu, press **Run**, and approve the permissions (Sheets, Drive, send email).
+2. The log shows the private sheet link and the admin password. setup creates the sheet (tabs Professors, Activity, Settings, Read me), the private Drive folder, and one row per professor from the public People tab.
+3. Give Kyle and Nicole the admin password. In *Settings*, put their emails in *Notify emails* to get an email when a professor finishes something, and put their name in *Office contact*.
+4. Add each professor's phone number (admin view, or the *Phone on file* column), upload contracts, and untick anything the office already has.
+
+**Changing the backend.** From `backend/`: `clasp push --force`, then `clasp update-deployment AKfycby_4JeNLfjk_CxK8h3AXV68f7cYTjRStkcrqAs0QfX_amz_L-R28ewyxN_yIKfbQn-_` so the same URL serves the new code. (`.clasp.json` is gitignored; the script ID is `1kBsyO6BkkSTYQYV0FkbQ5yDhaN2vQhWIcmVIscC65b9yi1jj2ItWhHJk`.)
+
+**Trying it locally without touching Google.** `node tools/dev-server.js` runs the real backend code against in-memory stand-ins (`tools/gas-mock.js`), seeded with the professor names from the live People tab, made-up phone numbers and sample contracts. It prints the admin password and which 4 digits each professor uses. Open `http://localhost:8787/?api=http://localhost:8787/exec` (the `?api=` override only works on localhost).
+
 ## Board sign-in: what it is and what it is not
 
-The board passcode hides the board views from professors so the page is tidy. **It is not security.** This is a static site: every visitor's browser downloads the whole page and reads the Google Sheet directly, and the sheet is shared “anyone with the link”. A technical person can open the browser tools and see everything, and the source code in this public repository includes the playbook text. The passcode is stored only as a hash, but a hash of a short passcode can be guessed offline. Do not put anything in the sheet or the page that must stay confidential from professors.
+The board passcode hides the board views from professors so the page is tidy. **It is not security.** This is a static site: every visitor's browser downloads the whole page and reads the Google Sheet directly, and the sheet is shared “anyone with the link”. A technical person can open the browser tools and see everything, and the source code in this public repository includes the playbook text. The passcode is stored only as a hash, but a hash of a short passcode can be guessed offline. Do not put anything in the sheet or the page that must stay confidential from professors. (The professor checklists, contracts and admin view below are different: they are server-checked and kept out of the sheet.)
 
 Change the passcode with `node tools/set-passcode.js "new passcode"`, then commit.
 
@@ -69,4 +102,4 @@ Palette and type follow the Praxis brand sheets and website: rich black `#171A21
 
 ## Tests
 
-`node tests/run.js` checks the CSV parser, date parsing and column mapping against sample rows. No dependencies.
+`node tests/run.js` checks the CSV parser, date parsing and column mapping against sample rows. `node tests/backend.js` runs the backend (`backend/Code.gs`) through 73 checks: sign-in and lockouts, per-professor checklists, contract re-checks and single-use signing grants, chunked uploads, admin actions, notifications and session expiry. No dependencies.

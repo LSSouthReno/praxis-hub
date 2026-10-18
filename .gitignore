@@ -1,1 +1,3 @@
 .board-passcode.txt
+.claude/
+backend/.clasp.json

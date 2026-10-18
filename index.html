@@ -640,6 +640,128 @@ body:not(.is-board) #selMode,body:not(.is-board) #dirExport,body:not(.is-board) 
 }
 @media print{#roleBtn,.demobar{display:none!important}}
 body.is-board [data-facultyonly]{display:none!important}
+/* ---------- Praxis office: professor checklist, contracts, admin ---------- */
+body:not(.is-admin) [data-adminonly]{display:none!important}
+.po h3{font-family:var(--display);font-size:21px;margin:2px 0 6px}
+.po p{font-size:14px;line-height:1.55}
+.po-unlock{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.txt.pin{width:132px;font-size:22px;letter-spacing:.4em;text-align:center;font-variant-numeric:tabular-nums;padding:8px 10px}
+.po-fine{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.5}
+.po-items{margin-top:6px}
+.po-item{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 2px;border-top:1px solid var(--border)}
+.po-item:first-child{border-top:0}
+.po-ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--gold-soft);color:var(--gold-ink)}
+.po-ic svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.po-item.done .po-ic{background:var(--good-soft);color:var(--good)}
+.po-item.wait .po-ic{background:var(--surface-2);color:var(--faint)}
+.po-item .tx b{display:block;font-weight:600;font-size:14.5px}
+.po-item .tx small{display:block;color:var(--muted);font-size:13px;line-height:1.4;margin-top:1px}
+.po-item.done .tx b{color:var(--muted)}
+.po-done{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:var(--r);background:var(--good-soft);color:var(--fg);font-size:14px;margin-top:8px}
+.panel.po-panel{width:min(720px,100%);max-height:88vh}
+.panel.po-panel.wide{width:min(980px,100%)}
+.po-panel .pbody{overflow:auto;padding:16px 20px 20px}
+.po-form label,.adm label.l{display:block;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:12px 0 5px}
+.po-form label:first-child{margin-top:0}
+.po-form .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.po-form textarea.txt{resize:vertical;min-height:64px;line-height:1.5}
+.po-form .acts,.po-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:16px}
+.po-hint{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.45}
+.po-hint.warn{color:var(--warn)}
+.po-hint.good{color:var(--good)}
+.po-tip{font-size:13.5px;line-height:1.55;padding:12px 14px;border-radius:var(--r);background:var(--surface-2);margin-bottom:14px}
+.po-tip b{font-weight:600}
+.po-photo{display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;align-items:start}
+.po-photo .pv{width:160px;aspect-ratio:4/5;border-radius:var(--r);background:var(--surface-2);border:1px dashed var(--border);display:grid;place-items:center;overflow:hidden;color:var(--faint);font-size:12px;text-align:center;padding:6px}
+.po-photo .pv img{width:100%;height:100%;object-fit:cover}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.po-prog{height:6px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin-top:10px}
+.po-prog i{display:block;height:100%;width:0;background:var(--gold);transition:width .2s}
+.po-doc{width:100%;height:56vh;border:1px solid var(--border);border-radius:var(--r);background:#5f6368;overflow:auto;display:grid;place-items:center}
+.po-doc.pages{display:block;padding:12px;text-align:center}
+.po-doc.pages canvas{display:block;margin:0 auto 12px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.35);max-width:100%}
+.po-sign{margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface-2)}
+.po-sign h4{font-family:var(--display);font-size:17px;margin-bottom:4px}
+.po-agree{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.5;margin-top:12px;cursor:pointer}
+.po-form label.po-agree{display:flex;text-transform:none;letter-spacing:0;font-size:14px;font-weight:400;color:var(--fg);margin:12px 0 0}
+.po-agree input{width:18px;height:18px;margin-top:2px;accent-color:var(--gold);flex:none}
+.po-signed{display:flex;gap:10px;align-items:center;font-size:14.5px}
+.po-signed svg{width:20px;height:20px;stroke:var(--good);fill:none;stroke-width:2.4;flex:none}
+.po-or{font-size:13px;color:var(--muted);margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.spin-ic{width:16px;height:16px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;display:inline-block;animation:spin 1s linear infinite;vertical-align:-3px}
+
+/* admin */
+.adm-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.adm-top .who{font-size:14px;color:var(--muted)}
+.adm-top .tools{display:flex;gap:8px;flex-wrap:wrap}
+.adm-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.adm-tile{padding:14px 16px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface)}
+.adm-tile .l{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.adm-tile .v{font-family:var(--display);font-size:26px;font-weight:600;margin-top:2px}
+.adm-tile .v small{font-family:var(--ui);font-size:13px;color:var(--muted);font-weight:500;margin-left:4px}
+.adm-tile .bar{height:5px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin-top:8px}
+.adm-tile .bar i{display:block;height:100%;background:var(--gold)}
+.adm-tile.warn{border-color:var(--warn);background:var(--warn-soft)}
+.adm-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.adm-bar .txt{max-width:260px}
+.adm-tbl{width:100%;border-collapse:collapse;font-size:14px}
+.adm-tbl th{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+.adm-tbl th.c,.adm-tbl td.c{text-align:center}
+.adm-tbl td{padding:10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.adm-tbl tr[data-adm-open]{cursor:pointer}
+.adm-tbl tr[data-adm-open]:hover td{background:var(--surface-2)}
+.adm-tbl .nm b{display:block;font-weight:600}
+.adm-tbl .nm small{display:block;color:var(--muted);font-size:12.5px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm-tbl .flags{display:flex;gap:6px;flex-wrap:wrap;margin-top:3px}
+.adm-wrap{overflow-x:auto;margin:0 -4px}
+.st{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;font-size:13px;font-weight:700}
+.st svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.st.ok{background:var(--good-soft);color:var(--good)}
+.st.open{background:var(--surface-2);color:var(--muted);border:1.5px solid var(--faint)}
+.st.warn{background:var(--warn-soft);color:var(--warn)}
+.st.na{color:var(--faint)}
+.adm-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:12px}
+.adm-legend span{display:inline-flex;gap:6px;align-items:center}
+.adm-legend .st{width:20px;height:20px}
+.drawer.adm{width:min(600px,100%)}
+.adm .sec{margin-top:4px}
+.adm .blk{border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+.adm .krow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--border)}
+.adm .krow:first-child{border-top:0;padding-top:0}
+.adm .krow .k{font-size:14px;font-weight:600}
+.adm .krow .k small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+.adm .krow .r{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.adm .tog{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;color:var(--muted);cursor:pointer}
+.adm .tog input{accent-color:var(--gold);width:16px;height:16px}
+.adm .inl{display:flex;gap:8px;align-items:center}
+.adm .inl .txt{flex:1;min-width:0}
+.adm .kv{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:6px 10px;font-size:14px;align-items:start}
+.adm .kv .k{color:var(--muted);font-size:12.5px;padding-top:2px}
+.adm .kv .v{white-space:pre-wrap;overflow-wrap:anywhere}
+.adm .desc{padding:10px 0;border-top:1px solid var(--border);font-size:14px;line-height:1.55}
+.adm .desc:first-child{border-top:0;padding-top:0}
+.adm .desc b{display:block;font-size:12.5px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.adm .ph{display:flex;gap:14px;align-items:flex-start}
+.adm .ph .pv{width:120px;aspect-ratio:4/5;border-radius:var(--r);background:var(--surface-2);overflow:hidden;display:grid;place-items:center;color:var(--faint);font-size:12px;flex:none}
+.adm .ph .pv img{width:100%;height:100%;object-fit:cover}
+.adm .act{font-size:13px;display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;padding:6px 0;border-top:1px solid var(--border)}
+.adm .act:first-child{border-top:0}
+.adm .act .w{color:var(--muted);font-size:12px}
+.adm .act small{display:block;color:var(--muted)}
+.adm .sig{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.5}
+#docScrim{z-index:60}
+.docv{width:100%;height:68vh;border:1px solid var(--border);border-radius:var(--r);background:#fff}
+.docv-img{max-width:100%;max-height:68vh;display:block;margin:0 auto;border-radius:var(--r)}
+@media (max-width:760px){
+  .po-form .row2,.po-photo{grid-template-columns:1fr}
+  .po-photo .pv{width:140px}
+  .po-item{grid-template-columns:30px minmax(0,1fr)}
+  .po-item .btn{grid-column:2;justify-self:start}
+  .adm .kv{grid-template-columns:1fr}
+  .adm-tbl .hide-sm{display:none}
+  .po-doc{height:48vh}
+}
 </style>
 </head>
 <body>
@@ -662,6 +784,7 @@ body.is-board [data-facultyonly]{display:none!important}
       <button data-view="calendar"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendar<span class="count" id="c-cal"></span></button>
       <button data-view="playbook" data-boardonly><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Playbook</button>
       <button data-view="ideas"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Ideas &amp; Updates</button>
+      <button data-view="admin" data-adminonly><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>Office admin</button>
     </nav>
     <div class="rail-foot">
       <div class="mission">“Lead well. Finish well.” <br>2 Timothy 4:7–8</div>
@@ -687,6 +810,7 @@ body.is-board [data-facultyonly]{display:none!important}
             <button class="btn ghost" id="digestBtn" data-boardonly type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg><span>Weekly summary</span></button>
             <button class="btn ghost" id="emailBtn" data-boardonly type="button" role="menuitem"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span>Email a group</span></button>
             <button class="btn ghost" id="printBtn" data-boardonly type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg><span>Print brief</span></button>
+            <button class="btn ghost" id="adminBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z"/></svg><span>Office admin</span></button>
             <button class="btn ghost" id="demoBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg><span>Show sample data</span></button>
             <button class="btn ghost" id="shareBtn" type="button" role="menuitem"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg><span>Share the hub</span></button>
             <button class="btn ghost" id="icsMenu" type="button" role="menuitem"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/></svg><span>Download dates (.ics)</span></button>
@@ -735,6 +859,11 @@ body.is-board [data-facultyonly]{display:none!important}
             <div class="steps3" style="grid-template-columns:1fr"><div><b>1. You send it</b>It goes to one inbox, so nothing gets lost.</div><div><b>2. It is read</b>Ideas that fit the mission and the plan are worked in.</div><div><b>3. The hub updates</b>Changes show up here and in Announcements.</div></div>
           </div>
         </div>
+      </section>
+
+      <!-- ===== OFFICE ADMIN ===== -->
+      <section class="view" id="view-admin" hidden>
+        <div id="adminBody"></div>
       </section>
 
       <!-- ===== BRIEFING ===== -->
@@ -1162,6 +1291,21 @@ body.is-board [data-facultyonly]{display:none!important}
     <div class="acts"><button class="btn primary" id="textCopy" type="button">Copy</button></div>
   </div>
 </div>
+<div class="scrim" id="poScrim" hidden>
+  <div class="panel po-panel" id="poPanel" role="dialog" aria-modal="true" aria-labelledby="poTitle">
+    <header><h3 id="poTitle" style="font-size:19px">Your checklist</h3><button class="x" data-close="poScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+    <div class="pbody" id="poBody"></div>
+  </div>
+</div>
+<div class="scrim" id="docScrim" hidden>
+  <div class="panel po-panel wide" role="dialog" aria-modal="true" aria-labelledby="docTitle">
+    <header><h3 id="docTitle" style="font-size:19px">Document</h3><button class="x" data-close="docScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+    <div class="pbody" id="docBody"></div>
+  </div>
+</div>
+<div class="scrim right" id="admScrim" hidden>
+  <div class="drawer adm" role="dialog" aria-modal="true" aria-labelledby="admName" id="admDrawer"></div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -1185,11 +1329,11 @@ const STATUS={confirmed:'Confirmed',tentative:'Tentative',prospect:'In conversat
 const AUD={all:'Everyone',board:'Board',faculty:'Faculty',staff:'Staff'};
 const ATYPE={update:'Update',decision:'Decision',request:'Request',prayer:'Prayer',celebration:'Celebration'};
 const ETYPES={intensive:'Intensive',board:'Board meeting',milestone:'Milestone',deadline:'Deadline',other:'Other'};
-const VIEWS={me:'My Praxis',courses:'Courses & Schedule',overview:'Briefing',status:'Program Status',announcements:'Announcements',directory:'Directory',tasks:'Action Items',calendar:'Calendar',playbook:'Playbook',ideas:'Ideas & Updates'};
+const VIEWS={me:'My Praxis',courses:'Courses & Schedule',overview:'Briefing',status:'Program Status',announcements:'Announcements',directory:'Directory',tasks:'Action Items',calendar:'Calendar',playbook:'Playbook',ideas:'Ideas & Updates',admin:'Office admin'};
 const BOARD_ONLY=['overview','status','tasks','playbook'];
 const allowed=v=>!!VIEWS[v]&&(isBoard()||BOARD_ONLY.indexOf(v)<0);
 const landing=()=>isBoard()?'overview':'me';
-const navKeys=()=>Object.keys(VIEWS).filter(allowed);
+const navKeys=()=>Object.keys(VIEWS).filter(v=>allowed(v)&&(v!=='admin'||isAdmin()));
 const S={people:[],ann:[],tasks:[],events:[],resources:[],metrics:[]};
 const RAW={};
 const loaded={people:false,ann:false,tasks:false,events:false,resources:false,metrics:false};
@@ -1335,6 +1479,7 @@ function showView(v,opts={}){
   if(!opts.silent){try{history.replaceState(null,'','#'+v);}catch(_){}}
   if(!opts.keepScroll)window.scrollTo({top:0});
   if(typeof renderSelbar==='function')renderSelbar();
+  if(v==='admin')renderAdmin();
 }
 document.addEventListener('click',e=>{
   const nb=e.target.closest('#nav button[data-view],#mobilebar button[data-view]');if(nb){showView(nb.dataset.view);return;}
@@ -1995,7 +2140,9 @@ const CONFIG={
   IDEAS_EMAIL:'brad@lschurches.com',
   /* SHA-256 of "praxis-hub:" + the board passcode. Change it with: node tools/set-passcode.js */
   BOARD_HASH:'912d7d980410336c9c8e9c4e34780b63c12dbf7b82133656ebf26ffd3a82ef7e',
-  SIGNIN_DAYS:30
+  SIGNIN_DAYS:30,
+  /* The private backend (backend/Code.gs) that holds checklists, contracts and the admin view. Blank = those features stay hidden. */
+  API_URL:'https://script.google.com/macros/s/AKfycby_4JeNLfjk_CxK8h3AXV68f7cYTjRStkcrqAs0QfX_amz_L-R28ewyxN_yIKfbQn-_/exec'
 };
 const REAL={};          /* rows exactly as the sheet gave them */
 const FULL={people:[],ann:[],tasks:[],events:[],resources:[],metrics:[]};   /* rows plus sample rows, before role filtering */
@@ -2130,6 +2277,8 @@ function checklistFor(p){
   FULL.events.filter(e=>e.type==='intensive'&&(e.endDate||e.date)>=t).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,2).forEach(e=>items.push({id:'ev-'+e.id,label:'Hold the dates: '+e.title,sub:whenText({date:e.date,end:e.endDate,tbd:e.tbd})+(e.location?' · '+e.location:''),done:isTicked(p,'ev-'+e.id),locked:false,group:'Dates'}));
   FULL.events.filter(e=>e.type==='deadline'&&e.date>=t).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3).forEach(e=>items.push({id:'dl-'+e.id,label:e.title,sub:'Due '+fmtDate(e.date)+' · '+relDays(daysUntil(e.date)).toLowerCase(),done:isTicked(p,'dl-'+e.id),locked:false,group:'Dates'}));
   FULL.tasks.filter(x=>x.status!=='done'&&ownerIs(x.owner,p)).forEach(x=>items.push({id:'tk-'+x.id,label:x.title,sub:x.due?'Due '+fmtDate(x.due):'Assigned to you',done:false,locked:true,group:'Assigned to you'}));
+  /* Contract and photo are handled in the office checklist once it is open. */
+  if(poFor(p))return items.filter(i=>i.id!=='ob-contract'&&i.id!=='ob-bio');
   return items;
 }
 function renderMe(){
@@ -2140,14 +2289,16 @@ function renderMe(){
   const p=mePerson();if(p)sel.value=p.id;
   if(!list.length){host.innerHTML=emptyBox('No professors listed yet',sheetHint('People'));return;}
   if(!p){host.innerHTML=`<div class="card hero-me"><div class="eyebrow">Welcome</div><h3>Find your name to see your checklist</h3><p class="muted" style="font-size:14.5px;max-width:60ch;margin-top:6px">Your checklist shows your courses, what the Praxis office still needs from you, the dates to hold, and what is next for you. Your choice is remembered on this device only.</p></div>`;return;}
-  const items=checklistFor(p),done=items.filter(i=>i.done).length,pct=items.length?Math.round(done/items.length*100):0;
+  if(apiState==='checking')checkApi();
+  const items=checklistFor(p),offi=poFor(p)?poNeeded(poFor(p).me):[],tot=items.length+offi.length,done=items.filter(i=>i.done).length+offi.filter(i=>i.done).length,pct=tot?Math.round(done/tot*100):0;
   const nx=nextThings(p);const first=nx[0],after=nx[1];
   const courses=String(p.courses||'').split(',').map(s=>s.trim()).filter(Boolean);
   const groups=[...new Set(items.map(i=>i.group))];
   host.innerHTML=`<div class="cols">
     <div class="stack">
-      <div class="card hero-me"><div class="eyebrow">Hello, ${esc(firstName(p))}</div><h3>${done===items.length&&items.length?'You are all caught up':(items.length-done)+' '+(items.length-done===1?'thing':'things')+' left on your list'}</h3>
-        <div class="ob-sum" style="margin-top:8px"><span class="bar"><i style="width:${pct}%"></i></span><span class="muted num" style="font-size:13px">${done} of ${items.length} done</span></div></div>
+      <div class="card hero-me"><div class="eyebrow">Hello, ${esc(firstName(p))}</div><h3>${done===tot&&tot?'You are all caught up':(tot-done)+' '+(tot-done===1?'thing':'things')+' left on your list'}</h3>
+        <div class="ob-sum" style="margin-top:8px"><span class="bar"><i style="width:${pct}%"></i></span><span class="muted num" style="font-size:13px">${done} of ${tot} done</span></div></div>
+      ${poCardHTML(p)}
       <div class="card"><div class="card-head"><div class="eyebrow">Your checklist</div></div>
         ${groups.map(g=>`<div class="ck-grp"><div class="sec-h">${esc(g)}</div>${items.filter(i=>i.group===g).map(i=>`<label class="ckrow${i.done?' done':''}${i.locked?' locked':''}"><input type="checkbox" data-tick="${esc(i.id)}" ${i.done?'checked':''} ${i.locked?'disabled':''}><span class="box" aria-hidden="true"></span><span class="tx"><b>${esc(i.label)}</b><small>${esc(i.sub)}</small></span>${i.locked?`<span class="pill ${i.done?'done':'other'}">${i.done?'Done':'Office tracks'}</span>`:''}</label>`).join('')}</div>`).join('')}
         <div class="nextthing">${first?`<div class="eyebrow">Your next thing is…</div><div class="nt-t">${esc(first.title)}</div><div class="nt-m">${esc(whenText(first))}${first.where?' · '+esc(first.where):''} · <b>${esc(relDays(daysUntil(first.date)).toLowerCase())}</b></div>${after?`<div class="nt-after">Then: ${esc(after.title)} · ${esc(whenText(after))}</div>`:''}`:`<div class="eyebrow">Your next thing is…</div><div class="nt-t">Nothing scheduled yet</div><div class="nt-m">When the next intensive or term is on the calendar it will appear here.</div>`}</div>
@@ -2252,6 +2403,529 @@ $('#ideaForm').addEventListener('submit',e=>{
   toast('Opening your email app…');
 });
 $('#ideaCopy').addEventListener('click',()=>{const d=ideaMail();copyText('To: '+CONFIG.IDEAS_EMAIL+'\nSubject: '+d.subject+'\n\n'+d.body,'Copied');});
+
+/* ===================================================================
+   Praxis office: each professor's onboarding checklist, contracts, and
+   the admin view for the office. Everything private (phone numbers,
+   contracts, photos, what professors send) lives behind the Apps Script
+   backend in backend/Code.gs, in a private sheet and Drive folder. This
+   page keeps only a short-lived session in sessionStorage.
+   =================================================================== */
+const API_URL=(()=>{try{const q=new URLSearchParams(location.search).get('api');if(q&&/^(localhost|127\.0\.0\.1)$/.test(location.hostname))return q;}catch(_){}return CONFIG.API_URL||'';})();
+const sess={get:k=>{try{return JSON.parse(sessionStorage.getItem('praxis.'+k)||'null');}catch(_){return null;}},set:(k,v)=>{try{if(v==null)sessionStorage.removeItem('praxis.'+k);else sessionStorage.setItem('praxis.'+k,JSON.stringify(v));}catch(_){}}};
+const nm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\(sample\)/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+const ICO={
+  contract:'<svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 17c1.5-2 2.5-2 3.5 0s2 2 3.5 0"/></svg>',
+  contact:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16a3.4 3.4 0 0 1 6.4 0M14 10h4M14 14h3"/></svg>',
+  photo:'<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  desc:'<svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10M4 18h7"/></svg>',
+  check:'<svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg>',
+  lock:'<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  dot:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"/></svg>',
+  warn:'<svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5v.5"/></svg>'
+};
+const shortDate=iso=>{if(!iso)return '';const d=new Date(iso);if(isNaN(d))return String(iso);return MON[d.getMonth()]+' '+d.getDate()+(d.getFullYear()!==new Date().getFullYear()?', '+d.getFullYear():'');};
+const btnBusy=(b,on,label)=>{if(!b)return;if(on){b.dataset.label=b.innerHTML;b.disabled=true;b.innerHTML='<span class="spin-ic"></span> '+esc(label||'Working…');}else{b.disabled=false;if(b.dataset.label)b.innerHTML=b.dataset.label;}};
+
+/* ---------- transport ---------- */
+function apiErr(code,message,data){const e=new Error(message);e.code=code;e.data=data;return e;}
+async function api(action,body,opt={}){
+  if(!API_URL)throw apiErr('off','The office checklist is not switched on yet.');
+  const json=JSON.stringify(body||{});
+  const getUrl=API_URL+(API_URL.includes('?')?'&':'?')+'action='+encodeURIComponent(action)+'&p='+encodeURIComponent(json);
+  let last=null;
+  for(let t=0;t<(opt.tries||2);t++){
+    const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),opt.timeout||45000);
+    try{
+      const r=(!opt.post&&getUrl.length<=7500)
+        ?await fetch(getUrl,{signal:ctl.signal,cache:'no-store'})
+        :await fetch(API_URL,{method:'POST',body:JSON.stringify(Object.assign({action},body||{})),headers:{'Content-Type':'text/plain;charset=utf-8'},signal:ctl.signal});
+      const txt=await r.text();let d;
+      try{d=JSON.parse(txt);}catch(_){last=apiErr('unreachable','The hub could not reach the Praxis office records. Try again in a minute.');continue;}
+      if(d.for!==action){last=apiErr('dropped','The request did not arrive. Try again.');continue;}
+      if(!d.ok)throw apiErr(d.error||'server',d.message||'Something went wrong. Try again in a minute.',d);
+      return d;
+    }catch(e){
+      if(e&&e.code&&!['dropped','unreachable'].includes(e.code))throw e;
+      last=e&&e.code?e:apiErr('network','Could not connect. Check your internet connection and try again.');
+    }finally{clearTimeout(tm);}
+  }
+  throw last;
+}
+/* Files go up in one POST. Some browsers signed in to Google lose a POST body on
+   the Apps Script redirect; then the file is sent again in small GET chunks. */
+async function apiUpload(action,body,b64,onProg){
+  try{onProg&&onProg(.15);const d=await api(action,Object.assign({},body,{data:b64}),{post:true,tries:1,timeout:150000});onProg&&onProg(1);return d;}
+  catch(e){if(!['dropped','network','unreachable'].includes(e.code))throw e;}
+  const uid=((crypto.randomUUID&&crypto.randomUUID())||(String(Math.random()).slice(2)+Date.now())).replace(/[^a-z0-9]/gi,'').slice(0,24);
+  const size=6000,n=Math.ceil(b64.length/size),auth=body.tok?{tok:body.tok}:{adm:body.adm},queue=[...Array(n).keys()];let done=0;
+  const worker=async()=>{while(queue.length){const i=queue.shift();await api('chunk',Object.assign({uid,i,d:b64.slice(i*size,(i+1)*size)},auth),{tries:3,timeout:30000});done++;onProg&&onProg(done/n*.95);}};
+  await Promise.all([worker(),worker(),worker(),worker()]);
+  const d=await api(action,Object.assign({},body,{uid,n}),{tries:2,timeout:120000});onProg&&onProg(1);return d;
+}
+const fileB64=blob=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).replace(/^data:[^,]*,/,''));r.onerror=()=>rej(apiErr('bad_file','That file could not be read.'));r.readAsDataURL(blob);});
+/* Contracts render page by page with PDF.js, so they read the same on iPhone, Android and desktop
+   (phones often show only page one, or nothing, in a frame). Falls back to the browser's viewer. */
+const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+async function renderPdf(host,url){
+  try{
+    if(!window.pdfjsLib){await loadScript(PDFJS+'pdf.min.js');window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+'pdf.worker.min.js';}
+    const buf=await (await fetch(url)).arrayBuffer();
+    const doc=await window.pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
+    host.innerHTML='';host.classList.add('pages');
+    const w=Math.max(260,host.clientWidth-26),dpr=Math.min(2,window.devicePixelRatio||1);
+    for(let i=1;i<=doc.numPages;i++){
+      if(!document.contains(host))return;
+      const pg=await doc.getPage(i),v1=pg.getViewport({scale:1}),vp=pg.getViewport({scale:w/v1.width*dpr});
+      const c=document.createElement('canvas');c.width=Math.floor(vp.width);c.height=Math.floor(vp.height);c.style.width=Math.floor(vp.width/dpr)+'px';c.setAttribute('aria-label','Page '+i+' of '+doc.numPages);
+      host.appendChild(c);await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+    }
+  }catch(e){if(document.contains(host)){host.classList.remove('pages');host.innerHTML=`<iframe src="${url}" title="Document" style="width:100%;height:100%;border:0"></iframe>`;}}
+}
+function b64Blob(b64,mime){const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:mime||'application/octet-stream'});}
+
+/* Scale big photos down to 2400 px on the long edge (plenty for a website, and
+   keeps uploads quick). Files the browser cannot decode go up as they are. */
+async function prepPhoto(file){
+  const ok=/^image\/(jpeg|png|webp|heic|heif)$/i.test(file.type)||/\.(heic|heif)$/i.test(file.name);
+  if(!ok)throw apiErr('bad_type','Choose a JPG, PNG or iPhone (HEIC) photo.');
+  let bmp=null;
+  try{bmp=await createImageBitmap(file);}catch(_){
+    try{bmp=await new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);res(im);};im.onerror=()=>{URL.revokeObjectURL(u);rej();};im.src=u;});}catch(__){bmp=null;}
+  }
+  if(!bmp){if(file.size>12*1024*1024)throw apiErr('too_big','That photo is too large. Keep it under 12 MB.');return {blob:file,mime:(file.type||'image/heic').toLowerCase(),w:0,h:0,url:''};}
+  const w0=bmp.width||bmp.naturalWidth,h0=bmp.height||bmp.naturalHeight,k=Math.min(1,2400/Math.max(w0,h0));
+  const w=Math.round(w0*k),h=Math.round(h0*k),c=document.createElement('canvas');c.width=w;c.height=h;
+  const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(bmp,0,0,w,h);
+  const blob=await new Promise(res=>c.toBlob(res,'image/jpeg',.9));
+  return {blob,mime:'image/jpeg',w,h,url:URL.createObjectURL(blob),small:Math.min(w0,h0)<800};
+}
+
+/* ---------- is the backend there? ---------- */
+let apiState=API_URL?'checking':'off';   /* off · checking · ready · notready */
+let apiChecking=false;
+async function checkApi(force){
+  if(!API_URL||apiChecking)return;
+  if(!force&&apiState!=='checking')return;
+  apiChecking=true;
+  try{const d=await api('ping',{},{tries:2,timeout:15000});apiState=d.ready?'ready':'notready';}catch(_){apiState='notready';}
+  apiChecking=false;
+  renderMe();if(view==='admin')renderAdmin();
+}
+
+/* ---------- document viewer (contracts, signed copies) ---------- */
+let docUrl='';
+function showDoc({title,mime,data,filename,note}){
+  if(docUrl)URL.revokeObjectURL(docUrl);
+  const blob=b64Blob(data,mime);docUrl=URL.createObjectURL(blob);
+  const isPdf=/pdf/i.test(mime),isImg=/^image\//i.test(mime)&&!/hei[cf]/i.test(mime);
+  $('#docTitle').textContent=title||'Document';
+  $('#docBody').innerHTML=(note?`<p class="po-hint" style="margin:0 0 10px">${esc(note)}</p>`:'')+
+    (isPdf?`<div class="docv po-doc" id="docPdf"><span class="spin-ic"></span></div>`:isImg?`<img class="docv-img" src="${docUrl}" alt="">`:`<div class="empty"><b>This file opens in its own app</b>Use Download below.</div>`)+
+    `<div class="po-acts"><a class="btn primary" href="${docUrl}" download="${esc(filename||'document')}">Download</a>${isPdf||isImg?`<a class="btn" href="${docUrl}" target="_blank" rel="noopener">Open in a new tab</a>`:''}</div>`;
+  $('#docScrim').hidden=false;
+  if(isPdf)renderPdf($('#docPdf'),docUrl);
+}
+function clearDoc(){if(docUrl){URL.revokeObjectURL(docUrl);docUrl='';}$('#docBody').innerHTML='';}
+
+/* ===================================================================
+   Professor side (inside My Praxis)
+   =================================================================== */
+let PO=sess.get('po');   /* {name, tok, me} for this browser tab only */
+const poFor=p=>PO&&p&&nm(PO.name)===nm(p.name)?PO:null;
+const poNeeded=me=>(me&&me.items||[]).filter(i=>i.needed);
+function poSet(next){PO=next;sess.set('po',next);}
+function poExpired(msg){poSet(null);closeOverlay($('#poScrim'));renderMe();toast(msg||'For your privacy the checklist locked itself. Enter your 4 digits again.');}
+function poCatch(e,errEl){
+  if(e.code==='bad_token'){poExpired();return;}
+  if(errEl){errEl.textContent=e.message;return;}
+  toast(e.message);
+}
+const PO_TEXT={
+  contract:(i,me)=>i.done?['Signed '+shortDate(i.at)+(me.contract.signedAs&&me.contract.signedAs!=='Uploaded a signed copy'?' as '+me.contract.signedAs:''),'View']:me.contract.ready?['Ready for you to read and sign.','Read & sign']:['Your contract is being prepared. The office will let you know when it is ready.',''],
+  contact:i=>i.done?['Updated '+shortDate(i.at),'Edit']:['Check your phone, email and mailing address.','Update'],
+  photo:i=>i.done?['Received '+shortDate(i.at)+'. Thank you.','Replace']:['A clear head-and-shoulders photo for the Praxis website.','Upload'],
+  desc:i=>i.done?['Received '+shortDate(i.at),'Edit']:['Two sentences about each course you will teach, for the website and catalog.','Write']
+};
+function poCardHTML(p){
+  if(apiState==='off'||!p)return '';
+  const po=poFor(p);
+  const head=`<div class="card-head"><div class="eyebrow">From the Praxis office</div>${po?`<button class="btn ghost xs" id="poLock" type="button" title="Lock your checklist on this device">${ICO.lock}Lock</button>`:''}</div>`;
+  if(apiState==='checking')return `<div class="card po">${head}<p class="muted"><span class="spin-ic"></span> Loading your onboarding checklist…</p></div>`;
+  if(apiState==='notready')return `<div class="card po">${head}<h3>Your onboarding checklist opens soon</h3><p class="muted">Signing your contract, updating your contact details, sending a photo and describing your course will all happen here. The office is finishing the setup.</p><div class="po-acts"><button class="btn sm" id="poRetry" type="button">Check again</button></div></div>`;
+  if(!po)return `<div class="card po">${head}<h3>Your onboarding checklist</h3>
+    <p class="muted">Sign your contract, update your contact details, send a photo and describe your course. To keep your information private, confirm it is you with the <b>last 4 digits of your phone number</b>.</p>
+    <form class="po-unlock" id="poUnlock" autocomplete="off"><input class="txt pin" id="poPin" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" aria-label="Last 4 digits of your phone number" autocomplete="off"><button class="btn primary" type="submit">Open my checklist</button></form>
+    <div class="role-err" id="poErr" role="alert"></div>
+    <p class="po-fine">Only you and the Praxis office see what you send here. It stays open in this browser tab for a few hours, then locks again.</p></div>`;
+  const me=po.me,need=poNeeded(me),done=need.filter(i=>i.done).length,pct=need.length?Math.round(done/need.length*100):100;
+  const rows=need.map(i=>{const [sub,act]=PO_TEXT[i.key](i,me);const wait=!i.done&&i.key==='contract'&&!me.contract.ready;
+    return `<div class="po-item${i.done?' done':''}${wait?' wait':''}"><span class="po-ic">${i.done?ICO.check:ICO[i.key]}</span><span class="tx"><b>${esc(i.label)}</b><small>${esc(sub)}</small></span>${act?`<button class="btn sm${i.done?'':' primary'}" type="button" data-po="${i.key}">${esc(act)}</button>`:'<span></span>'}</div>`;}).join('');
+  return `<div class="card po">${head}
+    <h3>${need.length?(done===need.length?'All done. Thank you, '+esc(firstName(p))+'!':(need.length-done)+' of '+need.length+' still to do'):'Nothing needed from you right now'}</h3>
+    ${need.length?`<div class="ob-sum"><span class="bar"><i style="width:${pct}%"></i></span><span class="muted num" style="font-size:13px">${done} of ${need.length} done</span></div>`:''}
+    <div class="po-items">${rows||`<p class="muted" style="font-size:14px">The office already has everything it needs from you. If that changes, it will show up here.</p>`}</div></div>`;
+}
+
+$('#meBody').addEventListener('submit',async e=>{
+  if(e.target.id!=='poUnlock')return;
+  e.preventDefault();
+  const p=mePerson();if(!p)return;
+  const pin=$('#poPin').value.replace(/\D/g,''),err=$('#poErr'),b=e.target.querySelector('button');
+  if(pin.length!==4){err.textContent='Enter the last 4 digits of your phone number.';$('#poPin').focus();return;}
+  btnBusy(b,true,'Checking…');err.textContent='';
+  try{const d=await api('prof_verify',{name:p.name.replace(/\s*\(sample\)/,''),pin});poSet({name:d.me.name,tok:d.tok,me:d.me});renderMe();toast('Checklist open');}
+  catch(x){btnBusy(b,false);err.textContent=x.code==='no_phone'?x.message+' Ask '+((x.data&&x.data.office)||'the Praxis office')+' to add it.':x.code==='no_match'?'Your name is not in the office records yet. Ask the Praxis office to add you.':x.message;$('#poPin').select();}
+});
+$('#meBody').addEventListener('click',e=>{
+  if(e.target.closest('#poRetry')){apiState='checking';renderMe();checkApi(true);return;}
+  if(e.target.closest('#poLock')){const t=PO&&PO.tok;poSet(null);renderMe();toast('Checklist locked');if(t)api('prof_signout',{tok:t}).catch(()=>{});return;}
+  const b=e.target.closest('[data-po]');if(b)poOpen(b.dataset.po);
+});
+$('#meBody').addEventListener('input',e=>{if(e.target.id==='poPin')e.target.value=e.target.value.replace(/\D/g,'').slice(0,4);});
+
+function poPanel(title,html,wide){
+  $('#poTitle').textContent=title;
+  $('#poPanel').classList.toggle('wide',!!wide);
+  $('#poBody').innerHTML=html;
+  $('#poScrim').hidden=false;
+  setTimeout(()=>{const f=$('#poBody input:not([type=file]):not([type=checkbox]),#poBody textarea');if(f&&!f.value)f.focus();},40);
+}
+function poUpdated(d,msg){if(!PO)return;PO.me=d.me;poSet(PO);renderMe();if(msg)toast(msg);}
+function poOpen(key){
+  if(!PO)return;
+  const me=PO.me;
+  if(key==='contact')return poContact(me);
+  if(key==='photo')return poPhoto(me);
+  if(key==='desc')return poDesc(me);
+  if(key==='contract')return poContractPin(me);
+}
+
+function poContact(me){
+  const c=me.contact||{};
+  poPanel('Your contact information',`<form class="po-form" id="poContactF" autocomplete="on">
+    <label for="pcName">Your name as it should appear on the website</label><input class="txt" id="pcName" value="${esc(c.preferredName)}" placeholder="e.g. Dr. Jane Smith" autocomplete="name">
+    <div class="row2"><div><label for="pcEmail">Email</label><input class="txt" id="pcEmail" type="email" value="${esc(c.email)}" autocomplete="email"></div>
+    <div><label for="pcPhone">Mobile phone</label><input class="txt" id="pcPhone" type="tel" value="${esc(c.phone)}" autocomplete="tel"></div></div>
+    <div class="po-hint" id="pcPhoneHint" hidden>You will keep signing in with the old number’s last 4 digits until the office updates your record.</div>
+    <label for="pcAddr">Mailing address</label><textarea class="txt" id="pcAddr" rows="3" autocomplete="street-address">${esc(c.address)}</textarea>
+    <label for="pcNotes">Anything else the office should know (optional)</label><textarea class="txt" id="pcNotes" rows="2" placeholder="Preferred way to reach you, assistant’s email, etc.">${esc(c.notes)}</textarea>
+    <div class="role-err" id="pcErr" role="alert"></div>
+    <div class="acts"><button class="btn primary" type="submit">Save my contact information</button><button class="btn ghost" type="button" data-close="poScrim">Cancel</button></div></form>`);
+  const orig=String(c.phone||'').replace(/\D/g,'');
+  $('#pcPhone').addEventListener('input',e=>{$('#pcPhoneHint').hidden=!orig||e.target.value.replace(/\D/g,'').slice(-4)===orig.slice(-4);});
+  $('#poContactF').onsubmit=async e=>{
+    e.preventDefault();const b=e.target.querySelector('button[type=submit]'),err=$('#pcErr');err.textContent='';
+    const contact={preferredName:$('#pcName').value,email:$('#pcEmail').value,phone:$('#pcPhone').value,address:$('#pcAddr').value,notes:$('#pcNotes').value};
+    if(!contact.email.trim()&&!contact.phone.trim()){err.textContent='Add at least an email address or a phone number.';return;}
+    btnBusy(b,true,'Saving…');
+    try{const d=await api('prof_contact',{tok:PO.tok,contact},{post:JSON.stringify(contact).length>1500});closeOverlay($('#poScrim'));poUpdated(d,'Contact information saved');}
+    catch(x){btnBusy(b,false);poCatch(x,err);}
+  };
+}
+
+function poPhoto(me){
+  let prepared=null;
+  poPanel('A photo for the website',`<div class="po-tip"><b>What works best:</b> a recent head-and-shoulders photo, facing the camera, in good light, against a plain background. A phone photo is fine. Larger is better; we scale it for the site.</div>
+    <div class="po-photo"><div class="pv" id="ppPv">${me.photo&&me.photo.at?'We have your photo from '+esc(shortDate(me.photo.at))+'. Choose a new one to replace it.':'No photo chosen yet'}</div>
+    <div><span class="btn filebtn"><svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v4h16v-4"/></svg>Choose a photo<input type="file" id="ppFile" accept="image/*,.heic,.heif"></span>
+      <div class="po-hint" id="ppInfo"></div>
+      <div class="po-prog" id="ppProg" hidden><i></i></div>
+      <div class="role-err" id="ppErr" role="alert"></div>
+      <div class="po-acts"><button class="btn primary" id="ppSend" type="button" disabled>Send this photo</button><button class="btn ghost" type="button" data-close="poScrim">Cancel</button></div></div></div>`);
+  $('#ppFile').onchange=async e=>{
+    const f=e.target.files&&e.target.files[0];if(!f)return;
+    $('#ppErr').textContent='';$('#ppInfo').textContent='Preparing…';$('#ppSend').disabled=true;
+    try{
+      if(prepared&&prepared.url)URL.revokeObjectURL(prepared.url);
+      prepared=await prepPhoto(f);
+      $('#ppPv').innerHTML=prepared.url?`<img src="${prepared.url}" alt="Your photo">`:'Preview not available for this file type, but it can still be sent.';
+      $('#ppInfo').className='po-hint'+(prepared.small?' warn':'');
+      $('#ppInfo').textContent=(prepared.w?prepared.w+' × '+prepared.h+' px · ':'')+Math.round(prepared.blob.size/1024)+' KB'+(prepared.small?' · this is quite small; a larger photo will look sharper on the website':'');
+      $('#ppSend').disabled=false;
+    }catch(x){$('#ppInfo').textContent='';$('#ppErr').textContent=x.message||'That photo could not be read.';}
+  };
+  $('#ppSend').onclick=async()=>{
+    if(!prepared)return;const b=$('#ppSend'),bar=$('#ppProg');btnBusy(b,true,'Sending…');bar.hidden=false;
+    try{
+      const b64=await fileB64(prepared.blob);
+      const d=await apiUpload('prof_photo',{tok:PO.tok,mime:prepared.mime,w:prepared.w,h:prepared.h},b64,f=>{bar.firstChild.style.width=Math.round(f*100)+'%';});
+      if(prepared.url)URL.revokeObjectURL(prepared.url);
+      closeOverlay($('#poScrim'));poUpdated(d,'Photo sent. Thank you!');
+    }catch(x){btnBusy(b,false);bar.hidden=true;poCatch(x,$('#ppErr'));}
+  };
+}
+
+const sentences=t=>(String(t).trim().match(/[^.!?]+[.!?]+(?=\s|$)|[^.!?]+$/g)||[]).filter(s=>s.trim().length>2).length;
+function poDesc(me,draft){
+  const have=draft||me.descriptions||[];
+  const free=!(me.courses||[]).length;
+  let blocks;
+  if(free)blocks=(have.length?have:[{course:'',text:''}]).map(d=>({course:d.course||'',text:d.text||''}));
+  else{blocks=me.courses.map(c=>({course:c,text:(have.find(d=>nm(d.course)===nm(c))||{}).text||''}));have.forEach(d=>{if(d.course&&!blocks.some(b=>nm(b.course)===nm(d.course)))blocks.push({course:d.course,text:d.text});});}
+  const courses=blocks.map(b=>b.course);
+  const block=(b,i)=>`<div class="pd-b" data-i="${i}">${free?`<label for="pdC${i}">Course title</label><input class="txt" id="pdC${i}" value="${esc(b.course)}" placeholder="e.g. Introduction to Hermeneutics">`:`<label for="pdT${i}">${esc(b.course)}</label>`}
+      ${free?`<label for="pdT${i}">Description</label>`:''}<textarea class="txt" id="pdT${i}" rows="4" maxlength="1200">${esc(b.text)}</textarea><div class="po-hint" id="pdH${i}"></div></div>`;
+  poPanel('Describe your course',`<div class="po-tip"><b>Two sentences per course.</b> The first says what the course covers; the second says what students will be able to do afterwards. This is used on the website and in the course catalog.<br><span class="muted">Example: “This course surveys the history of the church from Pentecost to the Reformation. Students will learn to trace how doctrine and practice developed and why it matters for ministry today.”</span></div>
+    <form class="po-form" id="pdF">${blocks.map(block).join('')}
+    ${free&&blocks.length<6?'<div style="margin-top:10px"><button class="btn sm ghost" type="button" id="pdAdd">+ Add another course</button></div>':''}
+    <div class="role-err" id="pdErr" role="alert"></div>
+    <div class="acts"><button class="btn primary" type="submit">Save</button><button class="btn ghost" type="button" data-close="poScrim">Cancel</button></div></form>`);
+  const cur=()=>courses.map((c,i)=>({course:free?$('#pdC'+i).value.trim():c,text:$('#pdT'+i).value.trim()}));
+  if($('#pdAdd'))$('#pdAdd').onclick=()=>{poDesc(me,cur().concat([{course:'',text:''}]));const t=$('#pdC'+courses.length);if(t)t.focus();};
+  const hint=i=>{const t=$('#pdT'+i).value,n=sentences(t),h=$('#pdH'+i);h.className='po-hint'+(!t.trim()?'':n===2?' good':' warn');h.textContent=!t.trim()?'':n+' sentence'+(n===1?'':'s')+' · '+t.trim().length+' characters'+(n===2?' ✓':n<2?' · aim for two':' · try to keep it to two');};
+  courses.forEach((_,i)=>{hint(i);$('#pdT'+i).addEventListener('input',()=>hint(i));});
+  $('#pdF').onsubmit=async e=>{
+    e.preventDefault();const err=$('#pdErr'),b=e.target.querySelector('button[type=submit]');err.textContent='';
+    const items=cur().filter(x=>x.text);
+    if(!items.length){err.textContent='Write at least one description.';return;}
+    btnBusy(b,true,'Saving…');
+    try{const d=await api('prof_desc',{tok:PO.tok,items},{post:JSON.stringify(items).length>1800});closeOverlay($('#poScrim'));poUpdated(d,'Course description saved');}
+    catch(x){btnBusy(b,false);poCatch(x,err);}
+  };
+}
+
+/* Contract: the 4 digits are asked again every time it is opened. */
+let poGrant=null;
+function poContractPin(me){
+  poGrant=null;
+  poPanel('Your contract',`<p style="font-size:14.5px;line-height:1.55">Your contract includes compensation details, so it is protected separately. Enter the <b>last 4 digits of your phone number</b> again to open it.</p>
+    <form class="po-unlock" id="pkF" autocomplete="off"><input class="txt pin" id="pkPin" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" aria-label="Last 4 digits of your phone number" autocomplete="off"><button class="btn primary" type="submit">Open my contract</button></form>
+    <div class="role-err" id="pkErr" role="alert"></div>
+    <p class="po-fine">The contract is shown only here. It is never sent by link, and each time it is opened the office’s records note it.</p>`);
+  $('#pkPin').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,4);});
+  $('#pkF').onsubmit=async e=>{
+    e.preventDefault();const pin=$('#pkPin').value,err=$('#pkErr'),b=e.target.querySelector('button');
+    if(pin.length!==4){err.textContent='Enter 4 digits.';return;}
+    btnBusy(b,true,'Opening…');err.textContent='';
+    try{const d=await api('prof_contract',{tok:PO.tok,pin},{timeout:90000});poContractView(d);}
+    catch(x){btnBusy(b,false);if(x.code==='bad_token')return poExpired();err.textContent=x.message;$('#pkPin').select();if(x.code==='hard_locked'){PO.me=null;poSet(null);renderMe();}}
+  };
+}
+function poContractView(d){
+  if(docUrl)URL.revokeObjectURL(docUrl);
+  docUrl=URL.createObjectURL(b64Blob(d.data,d.mime));poGrant=d.grant;
+  const isPdf=/pdf/i.test(d.mime),signed=!!d.signedAt;
+  const signHTML=signed
+    ?`<div class="po-signed">${ICO.check}<span>Signed ${esc(shortDate(d.signedAt))}${d.signedAs&&d.signedAs!=='Uploaded a signed copy'?' as <b>'+esc(d.signedAs)+'</b>':' (signed copy received)'}. Thank you.</span></div>`
+    :d.signingUrl
+      ?`<h4>Sign your contract</h4><p class="po-hint">The office uses an e-signature service for contracts. Read it above, then sign there.</p><div class="po-acts"><a class="btn primary" href="${esc(d.signingUrl)}" target="_blank" rel="noopener">Sign online</a></div><p class="po-fine">This item is checked off when the office receives your signature.</p>`
+      :`<h4>Sign your contract</h4>
+        <form class="po-form" id="psF" autocomplete="off"><label for="psName">Type your full legal name</label><input class="txt" id="psName" autocomplete="name" style="max-width:420px;font-family:var(--display);font-size:18px">
+        <label class="po-agree"><input type="checkbox" id="psAgree"><span>I have read this contract and agree to its terms. Typing my name above is my electronic signature, with the same effect as signing on paper.</span></label>
+        <div class="role-err" id="psErr" role="alert"></div>
+        <div class="acts"><button class="btn primary" type="submit">Sign contract</button></div></form>
+        <div class="po-or">Prefer to sign on paper? Print it, sign it, then <span class="btn sm filebtn" style="vertical-align:middle">upload the signed copy<input type="file" id="psFile" accept="application/pdf,image/jpeg,image/png,.heic"></span> (PDF or a clear photo).<div class="po-prog" id="psProg" hidden><i></i></div></div>`;
+  poPanel('Your contract',`${isPdf?`<div class="po-doc" id="pcPdf" role="document" aria-label="Your contract"><span class="spin-ic"></span></div>`:`<div class="empty"><b>Your contract is ready</b>Download it to read it.</div>`}
+    <div class="po-acts"><a class="btn sm" href="${docUrl}" download="${esc(d.filename||'Praxis contract.pdf')}">Download</a>${isPdf?`<a class="btn sm" href="${docUrl}" target="_blank" rel="noopener">Open full screen</a>`:''}</div>
+    <div class="po-sign">${signHTML}</div>`,true);
+  if(isPdf)renderPdf($('#pcPdf'),docUrl);
+  const f=$('#psF');
+  if(f)f.addEventListener('input',()=>{$('#psErr').textContent='';});
+  if(f)f.onsubmit=async e=>{
+    e.preventDefault();const err=$('#psErr'),b=f.querySelector('button[type=submit]'),typed=$('#psName').value.trim();err.textContent='';
+    if(typed.split(/\s+/).length<2){err.textContent='Type your full name, first and last.';$('#psName').focus();return;}
+    if(!$('#psAgree').checked){err.textContent='Tick the box to agree before signing.';return;}
+    btnBusy(b,true,'Signing…');
+    try{const r=await api('prof_sign',{tok:PO.tok,grant:poGrant,typedName:typed,agree:true,agent:navigator.userAgent.slice(0,200)});closeOverlay($('#poScrim'));poUpdated(r,'Contract signed. Thank you!');}
+    catch(x){btnBusy(b,false);if(x.code==='bad_grant'){toast(x.message);return poContractPin(PO.me);}poCatch(x,err);}
+  };
+  const fi=$('#psFile');
+  if(fi)fi.onchange=async e=>{
+    const file=e.target.files&&e.target.files[0];if(!file)return;
+    const mime=(file.type||(/\.heic$/i.test(file.name)?'image/heic':'')).toLowerCase();
+    if(!/^(application\/pdf|image\/(jpeg|png|heic))$/.test(mime)){toast('Choose a PDF or a photo (JPG, PNG, HEIC).');return;}
+    if(file.size>12*1024*1024){toast('That file is too large. Keep it under 12 MB.');return;}
+    const bar=$('#psProg');bar.hidden=false;
+    try{const b64=await fileB64(file);const r=await apiUpload('prof_signed_copy',{tok:PO.tok,grant:poGrant,mime},b64,p=>{bar.firstChild.style.width=Math.round(p*100)+'%';});closeOverlay($('#poScrim'));poUpdated(r,'Signed copy received. Thank you!');}
+    catch(x){bar.hidden=true;if(x.code==='bad_grant'){toast(x.message);return poContractPin(PO.me);}poCatch(x);}
+  };
+}
+/* Clear the contract from memory as soon as the panel closes. */
+new MutationObserver(()=>{if($('#poScrim').hidden){poGrant=null;if(docUrl&&$('#docScrim').hidden){URL.revokeObjectURL(docUrl);docUrl='';}$('#poBody').innerHTML='';}}).observe($('#poScrim'),{attributes:true,attributeFilter:['hidden']});
+new MutationObserver(()=>{if($('#docScrim').hidden)clearDoc();}).observe($('#docScrim'),{attributes:true,attributeFilter:['hidden']});
+/* Refresh the professor's checklist when they come back to the tab, so items the office changed show up. */
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&PO&&view==='me'&&$('#poScrim').hidden&&Date.now()-(poMeAt||0)>120000)poRefresh();});
+let poMeAt=Date.now();
+async function poRefresh(){if(!PO)return;poMeAt=Date.now();try{const d=await api('prof_me',{tok:PO.tok});PO.me=d.me;poSet(PO);renderMe();}catch(x){if(x.code==='bad_token')poExpired('Your checklist locked itself after a few hours. Enter your 4 digits to open it again.');}}
+
+/* ===================================================================
+   Admin view (Praxis office: Kyle and Nicole)
+   =================================================================== */
+let ADM=sess.get('adm');   /* {tok, who} */
+const isAdmin=()=>!!(ADM&&ADM.tok);
+let admData=null,admLoading=false,admFilter='open',admQ='',admOpenName='';
+const ITEM_KEYS=['contract','contact','photo','desc'];
+const ITEM_SHORT={contract:'Contract',contact:'Contact',photo:'Photo',desc:'Course description'};
+function admSet(next){ADM=next;sess.set('adm',next);document.body.classList.toggle('is-admin',isAdmin());}
+document.body.classList.toggle('is-admin',isAdmin());
+function admCatch(e){if(e.code==='bad_admin'){admSet(null);admData=null;closeOverlay($('#admScrim'));renderAdmin();toast('Admin session ended. Sign in again.');return;}toast(e.message);}
+async function admLoad(){
+  if(!isAdmin()||admLoading)return;admLoading=true;
+  try{admData=await api('adm_list',{adm:ADM.tok});}catch(e){admLoading=false;admCatch(e);return;}
+  admLoading=false;renderAdmin();if(admOpenName&&!$('#admScrim').hidden)admDrawer(admOpenName);
+}
+const profDone=p=>p.items.every(i=>!i.needed||i.done);
+const profOpenItems=p=>p.items.filter(i=>i.needed&&!i.done);
+function admMatches(p){
+  const q=nm(admQ);if(q&&!nm(p.name+' '+p.courses).includes(q))return false;
+  switch(admFilter){
+    case 'open':return !profDone(p);
+    case 'done':return profDone(p);
+    case 'nophone':return !p.phoneOk;
+    case 'nocontract':return p.items[0].needed&&!p.items[0].done&&!p.contractFile&&!p.signingUrl;
+    case 'locked':return !!p.lock;
+    default:return true;
+  }
+}
+function stCell(p,i){
+  if(!i.needed)return '<span class="st na" title="Not needed">–</span>';
+  if(i.done)return `<span class="st ok" title="Done ${esc(shortDate(i.at))}">${ICO.check}</span>`;
+  if(i.key==='contract'&&!p.contractFile&&!p.signingUrl)return '<span class="st warn" title="No contract uploaded yet">!</span>';
+  return '<span class="st open" title="Waiting on the professor"></span>';
+}
+function renderAdmin(){
+  const host=$('#adminBody');if(!host)return;
+  if(apiState==='off'){host.innerHTML=`<div class="card"><div class="eyebrow">Praxis office</div><h3 style="font-family:var(--display);font-size:22px;margin:2px 0 6px">The admin view is not connected yet</h3><p class="muted" style="font-size:14px">It needs the hub’s private records (an Apps Script web app). See the README.</p></div>`;return;}
+  if(apiState==='checking'){host.innerHTML=loadingBox();checkApi();return;}
+  if(apiState==='notready'){host.innerHTML=`<div class="card"><div class="eyebrow">Praxis office</div><h3 style="font-family:var(--display);font-size:22px;margin:2px 0 6px">Almost ready</h3><p class="muted" style="font-size:14px;max-width:62ch">The private records need a one-time switch-on by the hub’s owner (open the Apps Script project, run <b>setup</b>, approve). After that, sign in here with the admin password from the private sheet’s Settings tab.</p><div class="po-acts"><button class="btn sm" id="admRetry" type="button">Check again</button></div></div>`;return;}
+  if(!isAdmin()){
+    const who=recall('admWho')||'';
+    host.innerHTML=`<div class="card" style="max-width:520px"><div class="eyebrow">Praxis office</div><h3 style="font-family:var(--display);font-size:22px;margin:2px 0 6px">Admin sign-in</h3>
+      <p class="muted" style="font-size:14px;line-height:1.55">See each professor’s checklist, what they have sent, and their contracts. For the Praxis office only.</p>
+      <form class="po-form" id="admLoginF" autocomplete="on" style="margin-top:12px"><label for="admWho">Your name</label><input class="txt" id="admWho" value="${esc(who)}" autocomplete="name" placeholder="e.g. Nicole">
+      <label for="admPw">Admin password</label><input class="txt" id="admPw" type="password" autocomplete="current-password" required>
+      <div class="role-err" id="admErr" role="alert"></div>
+      <div class="acts"><button class="btn primary" type="submit">Sign in</button></div></form>
+      <p class="po-fine">The password is in the Settings tab of the private professor-records sheet. Your session lasts a few hours in this browser tab.</p></div>`;
+    setTimeout(()=>{const f=who?$('#admPw'):$('#admWho');if(f&&view==='admin')f.focus();},30);
+    return;
+  }
+  if(!admData){host.innerHTML=loadingBox();admLoad();return;}
+  const P=admData.profs,needN=k=>P.filter(p=>p.items.find(i=>i.key===k).needed),doneN=k=>needN(k).filter(p=>p.items.find(i=>i.key===k).done);
+  const complete=P.filter(profDone).length,noPhone=P.filter(p=>!p.phoneOk).length,locked=P.filter(p=>p.lock).length,noContract=P.filter(p=>p.items[0].needed&&!p.items[0].done&&!p.contractFile&&!p.signingUrl).length;
+  const tile=(l,a,b,cls)=>`<div class="adm-tile ${cls||''}"><div class="l">${esc(l)}</div><div class="v num">${a}${b!==undefined?`<small>of ${b}</small>`:''}</div>${b!==undefined?`<div class="bar"><i style="width:${b?Math.round(a/b*100):100}%"></i></div>`:''}</div>`;
+  const list=P.filter(admMatches).sort((a,b)=>profOpenItems(b).length-profOpenItems(a).length||a.name.localeCompare(b.name));
+  const chips=[['open','Still to do'],['done','Complete'],['all','Everyone'],['nophone','No phone on file',noPhone],['nocontract','No contract uploaded',noContract],['locked','Locked out',locked]];
+  host.innerHTML=`<div class="adm-top"><div class="who">Signed in as <b>${esc(ADM.who||'Admin')}</b> · Praxis office</div>
+    <div class="tools"><button class="btn sm" id="admRefresh" type="button">Refresh</button><button class="btn sm" id="admSync" type="button" title="Add anyone new from the People tab of the hub sheet">Add new professors</button><button class="btn sm" id="admCsv" type="button">Export CSV</button><button class="btn sm" id="admActivity" type="button">Activity</button>${admData.sheetUrl?`<a class="btn sm" href="${esc(admData.sheetUrl)}" target="_blank" rel="noopener">Private sheet</a>`:''}<button class="btn sm ghost" id="admOut" type="button">Sign out</button></div></div>
+    <div class="adm-tiles">${tile('Fully complete',complete,P.length)}${tile('Contracts signed',doneN('contract').length,needN('contract').length)}${tile('Contact info',doneN('contact').length,needN('contact').length)}${tile('Photos',doneN('photo').length,needN('photo').length)}${tile('Course descriptions',doneN('desc').length,needN('desc').length)}${noPhone?tile('Cannot sign in yet',noPhone,undefined,'warn'):''}</div>
+    ${noPhone?`<div class="notice" style="margin-bottom:14px"><b>${noPhone} ${noPhone===1?'professor has':'professors have'} no phone number on file</b>, so ${noPhone===1?'they':'they'} cannot open their checklist yet. Open each one below and add a number, or fill the “Phone on file” column in the private sheet.</div>`:''}
+    <div class="card"><div class="adm-bar"><div class="chips">${chips.filter(c=>c[2]===undefined||c[2]>0||admFilter===c[0]).map(([k,l,n])=>`<button class="chip" type="button" data-admf="${k}" aria-pressed="${admFilter===k}">${esc(l)}${n?` <span class="num">${n}</span>`:''}</button>`).join('')}</div><input class="txt" id="admQ" type="search" placeholder="Search name or course" value="${esc(admQ)}"></div>
+    <div class="adm-wrap"><table class="adm-tbl"><thead><tr><th>Professor</th>${ITEM_KEYS.map(k=>`<th class="c">${esc(ITEM_SHORT[k])}</th>`).join('')}<th class="hide-sm">Last activity</th></tr></thead><tbody>
+    ${list.map(p=>`<tr data-adm-open="${esc(p.name)}" tabindex="0"><td class="nm"><b>${esc(p.name)}</b>${p.courses?`<small>${esc(p.courses)}</small>`:''}${(!p.phoneOk||p.lock)?`<span class="flags">${!p.phoneOk?'<span class="pill tentative">No phone</span>':''}${p.lock?`<span class="pill open">${p.lock==='hard'?'Locked':'Paused'}</span>`:''}</span>`:''}</td>${p.items.map(i=>`<td class="c">${stCell(p,i)}</td>`).join('')}<td class="hide-sm muted" style="font-size:13px;white-space:nowrap">${esc(p.last?fmtWhen(new Date(p.last).getTime()):'—')}</td></tr>`).join('')||`<tr><td colspan="6"><div class="empty" style="margin:8px 0">Nobody here${admQ?' matches “'+esc(admQ)+'”':''}.</div></td></tr>`}
+    </tbody></table></div>
+    <div class="adm-legend"><span><span class="st ok">${ICO.check}</span>Done</span><span><span class="st open"></span>Waiting on the professor</span><span><span class="st warn">!</span>Office needs to upload the contract</span><span><span class="st na">–</span>Not needed for this professor</span></div></div>`;
+}
+document.addEventListener('click',async e=>{
+  if(e.target.closest('#adminBtn')){$('#moreMenu .pop').hidden=true;showView('admin');return;}
+  if(!e.target.closest('#view-admin'))return;
+  if(e.target.closest('#admRetry')){apiState='checking';renderAdmin();checkApi(true);return;}
+  const f=e.target.closest('[data-admf]');if(f){admFilter=f.dataset.admf;renderAdmin();return;}
+  if(e.target.closest('#admRefresh')){const b=e.target.closest('button');btnBusy(b,true,'Refreshing…');await admLoad();return;}
+  if(e.target.closest('#admOut')){const t=ADM&&ADM.tok;admSet(null);admData=null;renderAdmin();toast('Signed out of admin');if(t)api('adm_signout',{adm:t}).catch(()=>{});return;}
+  if(e.target.closest('#admCsv')){admCsv();return;}
+  if(e.target.closest('#admActivity')){admActivity();return;}
+  if(e.target.closest('#admSync')){const b=e.target.closest('button');btnBusy(b,true,'Checking…');try{const d=await api('adm_sync',{adm:ADM.tok});toast(d.added.length?'Added '+d.added.join(', '):'Everyone on the People tab is already here');await admLoad();}catch(x){btnBusy(b,false);admCatch(x);}return;}
+  const r=e.target.closest('[data-adm-open]');if(r)admDrawer(r.dataset.admOpen);
+});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest&&e.target.closest('[data-adm-open]');if(r)admDrawer(r.dataset.admOpen);}});
+document.addEventListener('input',e=>{if(e.target.id==='admQ'){admQ=e.target.value;const pos=e.target.selectionStart;renderAdmin();const q=$('#admQ');q.focus();try{q.setSelectionRange(pos,pos);}catch(_){}}});
+document.addEventListener('submit',async e=>{
+  if(e.target.id!=='admLoginF')return;
+  e.preventDefault();const b=e.target.querySelector('button'),err=$('#admErr'),who=$('#admWho').value.trim();
+  btnBusy(b,true,'Signing in…');err.textContent='';remember('admWho',who);
+  try{const d=await api('adm_login',{password:$('#admPw').value,who});admSet({tok:d.adm,who:d.who});admData=null;renderAdmin();toast('Signed in');}
+  catch(x){btnBusy(b,false);err.textContent=x.message;$('#admPw').select();}
+});
+
+function admReplace(prof){if(!admData)return;const i=admData.profs.findIndex(p=>p.name===prof.name);if(i>=0)admData.profs[i]=prof;renderAdmin();admDrawer(prof.name);}
+async function admPatch(name,patch,btn,msg){btnBusy(btn,true,'Saving…');try{const d=await api('adm_update',{adm:ADM.tok,name,patch},{post:JSON.stringify(patch).length>1500});admReplace(d.prof);toast(msg||'Saved');}catch(x){btnBusy(btn,false);admCatch(x);}}
+let admPhotoUrl='';
+function admDrawer(name){
+  const p=admData&&admData.profs.find(x=>x.name===name);if(!p)return;
+  admOpenName=name;
+  const c=p.contact,phoneDiff=c&&c.phone&&c.phone.replace(/\D/g,'').slice(-4)!==String(p.phone).replace(/\D/g,'').slice(-4);
+  const open=profOpenItems(p);
+  const itemRow=i=>`<div class="krow"><div class="k">${esc(ITEM_SHORT[i.key])}<small>${!i.needed?'Not needed (office already has it)':i.done?'Done '+esc(shortDate(i.at)):i.key==='contract'&&!p.contractFile&&!p.signingUrl?'Upload the contract below first':'Waiting on '+esc(p.name.split(' ')[0])}</small></div>
+    <div class="r"><label class="tog"><input type="checkbox" data-need="${i.key}" ${i.needed?'checked':''}> Needed</label>${i.needed?`<button class="btn xs" type="button" data-mark="${i.key}" data-v="${i.done?0:1}">${i.done?'Reopen':'Mark done'}</button>`:''}</div></div>`;
+  const sigs=(p.signatures||[]).filter(s=>s.method==='typed').slice(-1)[0];
+  $('#admDrawer').innerHTML=`<header><div class="eyebrow">Praxis office · professor</div><button class="x" data-close="admScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+  <div class="body">
+    <div><h3 id="admName">${esc(p.name)}</h3><div class="sub">${esc(p.courses||'No course listed')} · ${open.length?open.length+' still to do':'Complete'}</div></div>
+    ${p.lock?`<div class="notice">${p.lock==='hard'?'<b>Locked out</b> after '+p.fails+' wrong tries today. If this was them, unlock it.':'<b>Paused for 15 minutes</b> after 5 wrong tries.'} <button class="btn xs" type="button" id="admUnlock" style="margin-left:6px">Unlock</button></div>`:''}
+    <div><div class="sec">Sign-in</div><div class="blk"><label class="l" for="admPhone" style="margin-top:0">Phone on file</label><div class="inl"><input class="txt" id="admPhone" type="tel" value="${esc(p.phone)}" placeholder="Add a phone number"><button class="btn sm" type="button" id="admPhoneSave">Save</button></div>
+      <div class="po-hint">${p.phoneOk?'They sign in with the last 4 digits of this number.':'<b style="color:var(--warn)">No number yet, so they cannot open their checklist.</b>'}</div>
+      ${phoneDiff?`<div class="po-hint warn">They sent a different number: ${esc(c.phone)}. <button class="btn xs" type="button" id="admUsePhone">Use it for sign-in</button></div>`:''}</div></div>
+    <div><div class="sec">Checklist</div><div class="blk">${p.items.map(itemRow).join('')}</div></div>
+    <div><div class="sec">Contract</div><div class="blk">
+      <div class="krow"><div class="k">${p.contractFile?'Contract on file':'No contract uploaded'}<small>${p.contractFile?'Only this professor (after their 4 digits) and the office can open it.':'Upload a PDF. It stays private in the office’s Drive.'}</small></div>
+        <div class="r">${p.contractFile?'<button class="btn xs" type="button" data-file="contract">View</button>':''}<span class="btn xs filebtn">${p.contractFile?'Replace':'Upload PDF'}<input type="file" id="admContractFile" accept="application/pdf"></span></div></div>
+      ${p.items[0].done?`<div class="krow"><div class="k">Signed ${esc(shortDate(p.items[0].at))}<small>${sigs?'Typed “'+esc(sigs.typedName)+'” · document fingerprint '+esc(String(sigs.sha256||'').slice(0,12))+'…':p.signedAs?esc(p.signedAs):'Marked done by the office'}</small></div><div class="r">${p.signedCopy?'<button class="btn xs" type="button" data-file="signed">Signed copy</button>':''}</div></div>`:''}
+      <div class="po-prog" id="admCProg" hidden><i></i></div>
+      <label class="l" for="admSignUrl">E-signature link (optional)</label><div class="inl"><input class="txt" id="admSignUrl" value="${esc(p.signingUrl)}" placeholder="https://… DocuSign, Adobe Sign, etc."><button class="btn sm" type="button" id="admSignSave">Save</button></div>
+      <div class="po-hint">Leave blank to have them sign in the hub by typing their name. Replacing the contract after they sign asks them to sign again.</div></div></div>
+    <div><div class="sec">Contact information</div><div class="blk">${c?`<div class="kv">${[['Name for website',c.preferredName],['Email',c.email],['Mobile',c.phone],['Mailing address',c.address],['Notes',c.notes]].filter(x=>x[1]).map(([k,v])=>`<span class="k">${esc(k)}</span><span class="v">${esc(v)}</span><button class="btn xs ghost" type="button" data-cp="${esc(v)}">Copy</button>`).join('')}</div>`:`<div class="muted" style="font-size:14px">Not sent yet.${p.email?' Email on file: '+esc(p.email):''}</div>`}</div></div>
+    <div><div class="sec">Photo</div><div class="blk"><div class="ph"><div class="pv" id="admPv">${p.photo?'<span class="spin-ic"></span>':'Not sent yet'}</div><div>${p.photo?`<div style="font-size:14px">Received ${esc(shortDate(p.photoAt))}</div><div class="po-acts" style="margin-top:8px"><a class="btn sm" id="admPhotoDl" href="#" download="${esc(p.name)} · photo.jpg" hidden>Download</a></div>`:''}</div></div></div></div>
+    <div><div class="sec">Course description${p.descriptions.length>1?'s':''}</div><div class="blk">${p.descriptions.length?p.descriptions.map(d=>`<div class="desc">${d.course?`<b>${esc(d.course)}</b>`:''}${esc(d.text)} <button class="btn xs ghost" type="button" data-cp="${esc(d.text)}">Copy</button></div>`).join(''):'<div class="muted" style="font-size:14px">Not sent yet.</div>'}</div></div>
+    <div><div class="sec">Office notes</div><textarea class="txt" id="admNotes" rows="3" placeholder="Private to the office">${esc(p.notes)}</textarea><div class="po-acts" style="margin-top:8px"><button class="btn sm" type="button" id="admNotesSave">Save notes</button></div></div>
+    <div><div class="sec">Nudge</div><div class="blk"><div style="font-size:14px">${open.length?'Copy a friendly reminder listing what is still open.':'Nothing is open.'}</div>${open.length?`<div class="po-acts" style="margin-top:8px"><button class="btn sm" type="button" id="admNudge">Copy reminder</button>${p.email||(c&&c.email)?`<a class="btn sm" id="admNudgeMail" href="#">Email it</a>`:''}</div>`:''}</div></div>
+    <div><div class="sec">Recent activity</div><div class="blk" id="admAct"><span class="spin-ic"></span></div></div>
+  </div>`;
+  $('#admScrim').hidden=false;
+  /* photo preview + activity load lazily */
+  if(admPhotoUrl){URL.revokeObjectURL(admPhotoUrl);admPhotoUrl='';}
+  if(p.photo)api('adm_file',{adm:ADM.tok,name,kind:'photo'},{timeout:60000}).then(d=>{if(admOpenName!==name)return;admPhotoUrl=URL.createObjectURL(b64Blob(d.data,d.mime));const pv=$('#admPv');if(pv)pv.innerHTML=/hei[cf]/i.test(d.mime)?'HEIC photo (download to view)':`<img src="${admPhotoUrl}" alt="">`;const dl=$('#admPhotoDl');if(dl){dl.href=admPhotoUrl;dl.download=d.filename||dl.download;dl.hidden=false;}}).catch(x=>{const pv=$('#admPv');if(pv)pv.textContent='Could not load';if(x.code==='bad_admin')admCatch(x);});
+  api('adm_log',{adm:ADM.tok,name,limit:15}).then(d=>{if(admOpenName!==name)return;const h=$('#admAct');if(h)h.innerHTML=d.rows.length?d.rows.map(r=>`<div class="act"><span class="w">${esc(fmtWhen(new Date(r.at).getTime()))}</span><span>${esc(r.what)}${r.detail?`<small>${esc(r.detail)}</small>`:''}</span></div>`).join(''):'<span class="muted" style="font-size:14px">Nothing yet.</span>';}).catch(()=>{const h=$('#admAct');if(h)h.textContent='Could not load activity.';});
+}
+function nudgeText(p){
+  const first=(p.contact&&p.contact.preferredName||p.name).replace(/^(dr|rev|prof)\.?\s+/i,'').split(/\s+/)[0];
+  const L=['Hi '+first+',','','When you have a few minutes, could you finish these on the Praxis Hub?',''];
+  profOpenItems(p).forEach(i=>L.push('• '+({contract:'Read and sign your contract',contact:'Update your contact information',photo:'Send a photo for the website',desc:'Describe your course in two sentences'})[i.key]));
+  L.push('','Open '+HUB_URL+'#me, choose your name, and enter the last 4 digits of your phone number.','','Thank you!',ADM&&ADM.who?ADM.who:'The Praxis office');
+  return L.join('\n');
+}
+$('#admScrim').addEventListener('click',async e=>{
+  const name=admOpenName,p=admData&&admData.profs.find(x=>x.name===name);if(!p)return;
+  const cp=e.target.closest('[data-cp]');if(cp){copyText(cp.dataset.cp,'Copied');return;}
+  const nd=e.target.closest('[data-need]');if(nd&&e.target.tagName==='INPUT'){const k=nd.dataset.need;await admPatch(name,{needs:{[k]:nd.checked}},null,nd.checked?ITEM_SHORT[k]+' added to their checklist':ITEM_SHORT[k]+' removed from their checklist');return;}
+  const mk=e.target.closest('[data-mark]');if(mk){const k=mk.dataset.mark,v=mk.dataset.v==='1';await admPatch(name,{done:{[k]:v}},mk,v?'Marked done':'Reopened');return;}
+  const fl=e.target.closest('[data-file]');if(fl){btnBusy(fl,true,'Opening…');try{const d=await api('adm_file',{adm:ADM.tok,name,kind:fl.dataset.file},{timeout:90000});showDoc({title:(fl.dataset.file==='signed'?'Signed contract · ':'Contract · ')+name,mime:d.mime,data:d.data,filename:d.filename});}catch(x){admCatch(x);}btnBusy(fl,false);return;}
+  if(e.target.closest('#admPhoneSave'))return admPatch(name,{phone:$('#admPhone').value},e.target.closest('button'),'Phone saved');
+  if(e.target.closest('#admUsePhone'))return admPatch(name,{phone:p.contact.phone},e.target.closest('button'),'They now sign in with the new number');
+  if(e.target.closest('#admSignSave'))return admPatch(name,{signingUrl:$('#admSignUrl').value.trim()},e.target.closest('button'),'Signing link saved');
+  if(e.target.closest('#admNotesSave'))return admPatch(name,{notes:$('#admNotes').value},e.target.closest('button'),'Notes saved');
+  if(e.target.closest('#admUnlock')){const b=e.target.closest('button');btnBusy(b,true,'Unlocking…');try{const d=await api('adm_unlock',{adm:ADM.tok,name});admReplace(d.prof);toast('Unlocked');}catch(x){btnBusy(b,false);admCatch(x);}return;}
+  if(e.target.closest('#admNudge')){copyText(nudgeText(p),'Reminder copied');return;}
+  const nm2=e.target.closest('#admNudgeMail');if(nm2){e.preventDefault();const to=(p.contact&&p.contact.email)||p.email;location.href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent('Your Praxis Hub checklist')+'&body='+encodeURIComponent(nudgeText(p));return;}
+});
+$('#admScrim').addEventListener('change',async e=>{
+  if(e.target.id!=='admContractFile')return;
+  const file=e.target.files&&e.target.files[0];if(!file)return;
+  if(!/pdf$/i.test(file.type)&&!/\.pdf$/i.test(file.name)){toast('Upload the contract as a PDF.');return;}
+  if(file.size>12*1024*1024){toast('That file is too large. Keep it under 12 MB.');return;}
+  const bar=$('#admCProg');bar.hidden=false;
+  try{const b64=await fileB64(file);const d=await apiUpload('adm_contract',{adm:ADM.tok,name:admOpenName,mime:'application/pdf'},b64,f=>{bar.firstChild.style.width=Math.round(f*100)+'%';});admReplace(d.prof);toast('Contract uploaded');}
+  catch(x){bar.hidden=true;admCatch(x);}
+});
+new MutationObserver(()=>{if($('#admScrim').hidden){admOpenName='';if(admPhotoUrl){URL.revokeObjectURL(admPhotoUrl);admPhotoUrl='';}}}).observe($('#admScrim'),{attributes:true,attributeFilter:['hidden']});
+
+function admCsv(){
+  if(!admData)return;
+  const q=v=>{const s=String(v==null?'':v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+  const st=(p,k)=>{const i=p.items.find(x=>x.key===k);return !i.needed?'not needed':i.done?'done '+String(i.at).slice(0,10):'open';};
+  const rows=[['Name','Name for website','Email','Mobile','Mailing address','Courses','Course descriptions','Contract','Contact','Photo','Course description','Signed as','Office notes']];
+  admData.profs.forEach(p=>{const c=p.contact||{};rows.push([p.name,c.preferredName||'',c.email||p.email||'',c.phone||'',c.address||'',p.courses,(p.descriptions||[]).map(d=>(d.course?d.course+': ':'')+d.text).join('\n\n'),st(p,'contract'),st(p,'contact'),st(p,'photo'),st(p,'desc'),p.signedAs,p.notes]);});
+  const blob=new Blob(['﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Praxis professors '+todayISO()+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+  toast('CSV downloaded');
+}
+async function admActivity(){
+  $('#textTitle').textContent='Recent activity';$('#textNote').textContent='Newest first. The full log is the Activity tab of the private sheet.';$('#textArea').value='Loading…';$('#textScrim').hidden=false;
+  try{const d=await api('adm_log',{adm:ADM.tok,limit:120});$('#textArea').value=d.rows.map(r=>new Date(r.at).toLocaleString()+'  ·  '+(r.prof?r.prof+'  ·  ':'')+r.what+(r.detail?'  ('+r.detail+')':'')).join('\n')||'Nothing yet.';}
+  catch(x){$('#textArea').value=x.message;if(x.code==='bad_admin')admCatch(x);}
+}
+$('#mePick').addEventListener('change',()=>{if(PO&&!poFor(mePerson())){const t=PO.tok;poSet(null);renderMe();api('prof_signout',{tok:t}).catch(()=>{});}});
 
 /* ---------- boot ---------- */
 $('#editSheet').href=SHEET_URL;$('#footSheet').href=SHEET_URL;
