@@ -157,6 +157,15 @@ clock += 7 * 3600 * 1000;
 eq(call('prof_me', { tok }).error, 'bad_token', 'professor session expires');
 eq(call('adm_list', { adm }).error, 'bad_admin', 'admin session expires');
 
+/* rows with no name (old checkbox pre-fill) are cleaned up on sync */
+const ps = priv.getSheetByName('Professors');
+const cnt = ps.getLastRow();
+ps.rows.splice(1, 0, ['', '', '', '', false, false, false, false], ['', '', '', '', false, false, false, false]);
+eq(ps.getLastRow(), cnt + 2, 'blank checkbox rows count as data');
+const A2 = call('adm_login', { password: pw, who: 'Nicole' });
+call('adm_sync', { adm: A2.adm });
+eq([ps.getLastRow(), ps.toObjects()[0].Name], [cnt, 'Ana Núñez'], 'sync removes blank rows so names start at row 2');
+
 /* transport */
 const g = JSON.parse(env.ctx.doGet({ parameter: {} }).getContent());
 eq([g.service, g.for], ['praxis-hub', ''], 'bare GET answers');

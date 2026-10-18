@@ -26,6 +26,7 @@ class Sheet {
   getLastColumn() { return this.rows.reduce((m, r) => { let n = r.length; while (n > 0 && (r[n - 1] === '' || r[n - 1] === undefined)) n--; return Math.max(m, n); }, 0); }
   getRange(r, c, nr, nc) { return new Range(this, r, c, nr, nc); }
   getDataRange() { return new Range(this, 1, 1, Math.max(1, this.getLastRow()), Math.max(1, this.getLastColumn())); }
+  deleteRows(r, n) { this.rows.splice(r - 1, n); return this; }
   appendRow(v) { const r = this.getLastRow() + 1; v.forEach((x, j) => this.set(r, j + 1, x)); return this; }
   toObjects() { const v = this.getDataRange().getValues(); return v.slice(1).map(r => Object.fromEntries(v[0].map((h, i) => [h, r[i]]))); }
 }

@@ -109,10 +109,6 @@ function ensureTabs_(ss) {
       sh.setColumnWidth(1, 200);
       ['Course descriptions', 'Mailing address', 'Office notes'].forEach(function (c) { sh.setColumnWidth(COLS.indexOf(c) + 1, 320); });
       sh.hideColumns(COLS.indexOf('_data') + 1);
-      var rule = SpreadsheetApp.newDataValidation().requireCheckbox().build();
-      ['Needs contract', 'Needs contact info', 'Needs photo', 'Needs course description'].forEach(function (c) {
-        sh.getRange(2, COLS.indexOf(c) + 1, 200, 1).setDataValidation(rule);
-      });
       sh.getRange(2, COLS.indexOf('Phone on file') + 1, 200, 1).setNumberFormat('@');
     });
   }
@@ -162,8 +158,34 @@ function randomPassword_() {
   return a + '-' + b + '-' + (1000 + parseInt(u.slice(4, 8), 16) % 9000);
 }
 
+/* Removes rows with no name (left by earlier versions that pre-filled checkboxes). */
+function compactProfs_() {
+  var sh = profSheet_();
+  var n = sh.getLastRow();
+  if (n < 2) return 0;
+  var names = sh.getRange(2, 1, n - 1, 1).getValues();
+  var removed = 0;
+  for (var i = names.length - 1; i >= 0; i--) {
+    if (String(names[i][0]).trim()) continue;
+    var end = i;
+    while (i > 0 && !String(names[i - 1][0]).trim()) i--;
+    sh.deleteRows(i + 2, end - i + 1);
+    removed += end - i + 1;
+  }
+  return removed;
+}
+
+function checkboxes_(sh, hdr, startRow, count) {
+  if (count < 1) return;
+  cosmetic_(function () {
+    var rule = SpreadsheetApp.newDataValidation().requireCheckbox().build();
+    ITEMS.forEach(function (it) { sh.getRange(startRow, hdr.indexOf(it.need) + 1, count, 1).setDataValidation(rule); });
+  });
+}
+
 /* Adds a row for every professor on the public People tab who is not here yet. */
 function syncRoster_() {
+  compactProfs_();
   var pub = SpreadsheetApp.openById(PH.PUBLIC_SHEET_ID).getSheetByName('People');
   if (!pub) return [];
   var v = pub.getDataRange().getValues();
@@ -192,9 +214,11 @@ function syncRoster_() {
   if (add.length) {
     var sh = profSheet_();
     var hdr = headers_(sh);
-    sh.getRange(sh.getLastRow() + 1, 1, add.length, hdr.length).setValues(add.map(function (r) {
+    var start = sh.getLastRow() + 1;
+    sh.getRange(start, 1, add.length, hdr.length).setValues(add.map(function (r) {
       return hdr.map(function (c) { return r[c] === undefined ? '' : r[c]; });
     }));
+    checkboxes_(sh, hdr, start, add.length);
   }
   return add.map(function (r) { return r.Name; });
 }
