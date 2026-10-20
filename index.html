@@ -463,6 +463,21 @@ td b{font-weight:600}
 .copyrow{display:flex;gap:8px;flex-wrap:wrap}
 
 /* ---------- overlays ---------- */
+#loginGate{position:fixed;inset:0;z-index:200;background:#171A21;display:flex;align-items:center;justify-content:center;padding:20px;color:#F8F7FF;font-family:inherit}
+#loginGate[hidden]{display:none}
+body.gated{overflow:hidden}
+#loginGate .gbox{width:100%;max-width:400px}
+#loginGate .gmark{letter-spacing:.3em;font-size:12px;color:#B68F40;margin-bottom:14px}
+#loginGate h1{font-family:'Droid Serif','Noto Serif',serif;font-weight:600;font-size:26px;margin:0 0 12px}
+#loginGate p{font-size:15px;line-height:1.55;color:#c9ccd6;margin:0 0 18px}
+#loginGate label{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9aa0ad;margin-bottom:6px}
+#loginGate input{width:100%;box-sizing:border-box;font:inherit;font-size:20px;padding:13px 14px;border-radius:10px;border:1px solid #3a4050;background:#0f1218;color:#fff}
+#loginGate input:focus{outline:2px solid #B68F40;border-color:#B68F40}
+#loginGate .gbtn{margin-top:14px;width:100%;font:inherit;font-size:16px;font-weight:600;padding:13px;border:0;border-radius:10px;background:#B68F40;color:#171A21;cursor:pointer}
+#loginGate .gbtn:disabled{opacity:.6}
+#loginGate .glink{margin-top:14px;background:none;border:0;color:#B68F40;font:inherit;font-size:14px;cursor:pointer;padding:4px 0}
+#loginGate .gmsg{margin-top:16px;font-size:14px;line-height:1.5;color:#c9ccd6;min-height:1em}
+#loginGate .gmsg.bad{color:#ff9b8f}
 .scrim{position:fixed;inset:0;background:rgba(23,26,33,.55);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:12vh 16px 16px}
 .scrim[hidden]{display:none}
 .scrim.right{align-items:stretch;justify-content:flex-end;padding:0}
@@ -1149,6 +1164,18 @@ body.is-board [data-facultyonly]{display:none!important}
   <button class="btn sm ghost" id="selNone" type="button">Clear</button>
   <button class="btn sm ghost" id="selDone" type="button">Done</button>
 </div>
+<div id="loginGate" hidden role="dialog" aria-modal="true" aria-labelledby="gTitle">
+  <div class="gbox">
+    <div class="gmark">PRAXIS</div>
+    <h1 id="gTitle">Welcome to Praxis Hub</h1>
+    <div id="gStep1"><p>Enter the mobile number Praxis has for you. We will text you a code. No password to remember.</p>
+      <form id="gForm1"><label for="gPhone">Mobile number</label><input id="gPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(775) 555-0123" required><button class="gbtn" id="gSend" type="submit">Text me a code</button></form></div>
+    <div id="gStep2" hidden><p>Type the 6-digit code from the text message.</p>
+      <form id="gForm2"><label for="gCode">Code</label><input id="gCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456" required><button class="gbtn" id="gGo" type="submit">Sign in</button></form>
+      <button class="glink" id="gBack" type="button">Use a different number</button></div>
+    <div class="gmsg" id="gMsg" role="status" aria-live="polite"></div>
+  </div>
+</div>
 <div class="scrim" id="roleScrim" hidden>
   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="roleTitle" style="max-width:480px">
     <header><h3 id="roleTitle" style="font-size:19px">Who is looking?</h3><button class="x" data-close="roleScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
@@ -1266,12 +1293,18 @@ const MAP={
    (Google serves the first tab when a named tab does not exist). */
 const REQUIRED={people:['name'],ann:['title','message','announcement'],tasks:['item','task','actionitem'],events:['date'],resources:['url','link'],metrics:['metric','measure']};
 async function fetchTab(key,tab){
+  let t;
+  if(AUTH){
+    if(AUTHERR)throw AUTHERR;
+    t=AUTHTABS[tab];if(t===undefined)throw new Error('no-tab');
+  }else{
   const sel=GIDS[tab]!==undefined?'gid='+GIDS[tab]:'sheet='+encodeURIComponent(tab);
   const url='https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:csv&'+sel+'&headers=1&_='+Date.now();
   const r=await fetch(url,{cache:'no-store',credentials:'omit'});
   if(!r.ok)throw new Error('HTTP '+r.status);
-  const t=await r.text();
+  t=await r.text();
   if(/^\s*</.test(t))throw new Error('not-shared');
+  }
   const rows=parseCSV(t);
   const heads=(rows[0]||[]).map(norm);
   if(!REQUIRED[key].some(h=>heads.includes(h)))throw new Error('no-tab');
@@ -1286,6 +1319,7 @@ async function loadAll(manual){
   if(loading)return;loading=true;
   const btn=$('#refresh');btn.classList.add('spin');btn.disabled=true;
   setStatus('wait',manual?'Refreshing from Google Sheets…':'Loading from Google Sheets…');
+  if(AUTH){AUTHERR=null;try{await authFetch();}catch(e){AUTHERR=e;}}
   const results=await Promise.all(Object.entries(TABS).map(async([key,tab])=>{try{const rows=await fetchTab(key,tab);return [key,rows.map(MAP[key]).filter(Boolean),null];}catch(e){return [key,null,e];}}));
   let firstErr=null,okCount=0;
   results.forEach(([key,rows,err])=>{if(rows){setRows(key,rows);loaded[key]=true;missing[key]=false;okCount++;}else{missing[key]=true;if(OPTIONAL[key]){loaded[key]=true;setRows(key,[]);}else if(!firstErr)firstErr=err;}});
@@ -1570,7 +1604,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-ics]');if(
 $('#icsAll').addEventListener('click',()=>{const l=upcomingEvents();if(!l.length){toast('No upcoming dates to export');return;}download('praxis-seminary-dates.ics',icsFor(l),'text/calendar');toast('Downloaded '+l.length+' dates');});
 
 function renderLinks(){
-  const host=$('#linkList');$('#editLinks').href=tabUrl('Links');
+  const host=$('#linkList');if(!host)return;   /* the Playbook (and this list) arrives after sign-in, board only */
+  $('#editLinks').href=tabUrl('Links');
   if(!loaded.resources){host.innerHTML=loadingBox();return;}
   const l=[...S.resources].sort((a,b)=>String(a.category||'').localeCompare(String(b.category||''))||String(a.title).localeCompare(b.title));
   host.innerHTML=l.length?l.map(r=>`<div class="link"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg><div style="min-width:0"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>${r.desc?`<div class="desc">${esc(r.desc)}</div>`:''}</div><span class="c">${esc(r.category||'')}</span></div>`).join(''):emptyBox('No links yet',sheetHint('Links'));
@@ -1957,7 +1992,7 @@ function palSearch(q){
   add('Announcements',sortAnn(S.ann.filter(a=>hit(a.title+' '+a.body+' '+a.author))).slice(0,q?6:3).map(a=>({ic:'A',t:a.title,s:(a.author||'Praxis Hub')+(a.date?' · '+fmtDate(a.date):''),k:AUD[a.audience],run:()=>{annAud='all';annType='';$$('#annFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.aud==='all'));$('#annType').value='';renderAnn();showView('announcements');setTimeout(()=>{const el=document.getElementById(a.id);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('hl');}},60);}})));
   add('Dates',upcomingEvents().filter(e=>hit(e.title+' '+e.location+' '+e.notes)).slice(0,q?6:3).map(e=>({ic:MON[parseISO(e.date).getMonth()].toUpperCase(),t:e.title,s:fmtDate(e.date)+(e.location?' · '+e.location:''),k:relDays(daysUntil(e.date)),run:()=>{calType='all';$$('#calFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.type==='all'));renderCal();showView('calendar');}})));
   add('Action items',S.tasks.filter(t=>t.status!=='done'&&hit(t.title+' '+t.owner+' '+t.notes)).slice(0,q?6:3).map(t=>({ic:'✓',t:t.title,s:(t.owner||'Unassigned')+(t.due?' · due '+fmtDate(t.due):''),run:()=>{taskSt='open';taskOwner='';$$('#taskFilter .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.st==='open'));renderTasks();showView('tasks');}})));
-  add('Playbook',(!isBoard()?[]:PB).filter(([id,l])=>hit(l)||(q&&(document.getElementById(id).textContent||'').toLowerCase().includes(q))).map(([id,l])=>({ic:'P',t:l,s:'Playbook section',run:()=>{showView('playbook',{keepScroll:true});setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}),30);}})));
+  add('Playbook',(!isBoard()?[]:PB).filter(([id,l])=>hit(l)||(q&&((document.getElementById(id)||{}).textContent||'').toLowerCase().includes(q))).map(([id,l])=>({ic:'P',t:l,s:'Playbook section',run:()=>{showView('playbook',{keepScroll:true});setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}),30);}})));
   if(q&&('course coverage professors assigned'.includes(q)||CATALOG.some(([,l])=>l.some(c=>c.toLowerCase().includes(q)))))add('Courses',[{ic:'C',t:'Course coverage',s:'Which courses have a professor assigned',run:()=>{showView('courses');}}]);
   add('Links',S.resources.filter(r=>hit(r.title+' '+r.category)).slice(0,5).map(r=>({ic:'↗',t:r.title,s:r.url.replace(/^https?:\/\//,''),k:r.category,run:()=>window.open(r.url,'_blank','noopener')})));
   const cmds=[{ic:'★',t:'Take the tour',s:'Three quick steps',run:openTour},{ic:'✓',t:'Sheet health',s:'Rows the hub could not fully read',run:openHealth},{ic:'⇗',t:'Share the hub',s:'Link and QR code',run:openShare},{ic:'?',t:'Keyboard shortcuts',s:'Everything you can do without the mouse',run:()=>{$('#helpScrim').hidden=false;}},{ic:'+',t:'New announcement',s:'Draft a post and copy the row for the sheet',run:openDraft},{ic:'≡',t:'Weekly summary',s:'Copy or email a plain-text briefing',run:openDigest},{ic:'⎙',t:'Print one-page brief',s:'Briefing, print-ready',run:()=>$('#printBtn').click()},{ic:'✉',t:'Email a group',s:'Opens your mail app with BCC',run:()=>openMail(null,'email')},{ic:'✆',t:'Text a group',s:'Group text from your phone, or a QR to scan',run:()=>openMail(null,'text')},{ic:'◐',t:'Switch theme',s:'System · Light · Dark',run:()=>$('#themeBtn').click()}].filter(c=>(isBoard()||['Take the tour','Share the hub','Keyboard shortcuts','Switch theme'].indexOf(c.t)>=0)&&hit(c.t+' '+c.s));if(q)add('Actions',cmds);
@@ -1995,12 +2030,17 @@ const CONFIG={
   IDEAS_EMAIL:'brad@lschurches.com',
   /* SHA-256 of "praxis-hub:" + the board passcode. Change it with: node tools/set-passcode.js */
   BOARD_HASH:'912d7d980410336c9c8e9c4e34780b63c12dbf7b82133656ebf26ffd3a82ef7e',
-  SIGNIN_DAYS:30
+  SIGNIN_DAYS:30,
+  /* Phone-number sign-in. Empty = off (the page works exactly as before). To turn on, paste the Apps Script web app address here;
+     see docs/PHONE-LOGIN.md. When on, the Google Sheet must be private: data then comes only from that script, filtered per role. */
+  AUTH_URL:''
 };
+const AUTH=!!CONFIG.AUTH_URL;
 const REAL={};          /* rows exactly as the sheet gave them */
 const FULL={people:[],ann:[],tasks:[],events:[],resources:[],metrics:[]};   /* rows plus sample rows, before role filtering */
 let demo=false;
 try{demo=recall('demo')==='1';if(/[?&]demo=1\b/.test(location.search)){demo=true;remember('demo','1');}if(/[?&]demo=0\b/.test(location.search)){demo=false;remember('demo','0');}}catch(_){}
+if(AUTH)demo=false;   /* sample rows would bypass the per-role filtering */
 
 /* ---------- sample data (clearly labelled, never real people) ---------- */
 const addDays=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());};
@@ -2044,7 +2084,7 @@ function sampleRows(){
 
 /* ---------- role scoping: what a professor sees vs. the board ---------- */
 function scopeRows(key,rows){
-  if(isBoard())return rows;
+  if(AUTH||isBoard())return rows;   /* signed-in mode: the server already sent only what this role may see */
   if(key==='ann')return rows.filter(a=>a.audience==='all'||a.audience==='faculty');
   if(key==='events')return rows.filter(e=>e.type!=='board');
   if(key==='tasks'||key==='metrics')return [];
@@ -2057,11 +2097,54 @@ function rescope(){
 }
 function setRows(key,rows){REAL[key]=rows;rescope();}
 
+/* ---------- phone sign-in (only when CONFIG.AUTH_URL is set) ---------- */
+const ROLE_WORDS={admin:'Admin',board:'Board',professor:'Professor',music:'Professor',staff:'Staff'};
+let AUTHTABS={},AUTHERR=null,AUTHROLE='',AUTHNAME='',pbLoaded=false;
+const authToken=()=>recall('session')||'';
+async function authCall(body){const r=await fetch(CONFIG.AUTH_URL,{method:'POST',headers:{'content-type':'text/plain;charset=utf-8'},body:JSON.stringify(body),credentials:'omit'});return r.json();}
+/* Everything this device kept about the signed-in person goes when they sign out or the session ends. */
+function clearPrivate(){try{Object.keys(localStorage).filter(k=>/^praxis\.(csv\.|session|role|me$|meName|snapshot|view)/.test(k)).forEach(k=>localStorage.removeItem(k));}catch(_){}}
+function signOutAuth(){clearPrivate();location.reload();}
+async function authFetch(){
+  const j=await authCall({action:'data',token:authToken()});
+  if(!j.ok){if(j.error==='session'){clearPrivate();location.reload();}throw new Error(j.error||'auth');}
+  AUTHTABS=j.tabs||{};AUTHROLE=j.role;AUTHNAME=j.name;
+  role=(j.role==='board'||j.role==='admin')?'board':'faculty';
+  document.body.classList.toggle('is-board',isBoard());TOUR=isBoard()?TOUR_B:TOUR_F;
+  if(recall('meName')!==j.name){remember('meName',j.name);remember('me','');}
+  if(isBoard()&&!pbLoaded)loadPlaybook();
+  renderRoleUI();
+}
+/* The playbook text is not in this page; it is fetched after sign-in, and only board and admin are given it. */
+async function loadPlaybook(){
+  const sec=document.getElementById('view-playbook');if(!sec||sec.querySelector('.pb')){pbLoaded=true;return;}
+  try{const j=await authCall({action:'playbook',token:authToken()});if(j.ok&&j.html){sec.innerHTML=j.html;pbLoaded=true;renderAll();}}catch(_){}
+}
+function showGate(){
+  const g=$('#loginGate');g.hidden=false;document.body.classList.add('gated');
+  const ph=$('#gPhone'),cd=$('#gCode'),msg=$('#gMsg'),s1=$('#gStep1'),s2=$('#gStep2');let phone='';
+  const say=(t,bad)=>{msg.textContent=t||'';msg.className='gmsg'+(bad?' bad':'');};
+  $('#gForm1').onsubmit=async e=>{e.preventDefault();say('');phone=ph.value.trim();const b=$('#gSend');b.disabled=true;
+    try{const j=await authCall({action:'requestCode',phone});
+      if(j.ok){s1.hidden=true;s2.hidden=false;say('If that number is on the Praxis list, a code is on its way by text. If nothing arrives in a minute, your number may not be on the list yet. Ask Brad to add it.');cd.value='';cd.focus();}
+      else say(j.error==='badphone'?'That does not look like a phone number. Please include the area code.':j.error==='toomany'?'That was a few too many tries. Please wait 15 minutes and try again.':'Sign-in is busy right now. Please try again in a little while.',true);
+    }catch(_){say('Could not reach the sign-in service. Check your connection and try again.',true);}
+    b.disabled=false;};
+  $('#gForm2').onsubmit=async e=>{e.preventDefault();say('');const b=$('#gGo');b.disabled=true;
+    try{const j=await authCall({action:'verifyCode',phone,code:cd.value});
+      if(j.ok&&j.token){clearPrivate();remember('session',j.token);location.reload();return;}
+      say('That code did not work, or it has expired. Check the text, or go back and ask for a new code.',true);cd.select();
+    }catch(_){say('Could not reach the sign-in service. Check your connection and try again.',true);}
+    b.disabled=false;};
+  $('#gBack').onclick=()=>{s2.hidden=true;s1.hidden=false;say('');ph.focus();};
+  setTimeout(()=>ph.focus(),50);
+}
+
 /* ---------- sign-in ---------- */
 let role='faculty';
 const isBoard=()=>role==='board';
 async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
-(function loadRole(){try{const r=JSON.parse(recall('role')||'null');if(r&&r.r==='board'&&r.h===CONFIG.BOARD_HASH&&r.exp>Date.now())role='board';}catch(_){}})();
+(function loadRole(){if(AUTH)return;try{const r=JSON.parse(recall('role')||'null');if(r&&r.r==='board'&&r.h===CONFIG.BOARD_HASH&&r.exp>Date.now())role='board';}catch(_){}})();
 function applyRole(next){
   role=next;
   if(next==='board')remember('role',JSON.stringify({r:'board',h:CONFIG.BOARD_HASH,exp:Date.now()+CONFIG.SIGNIN_DAYS*86400000}));else remember('role','');
@@ -2073,6 +2156,11 @@ function applyRole(next){
 let failedTries=0,lockUntil=0;
 function openRole(){
   const host=$('#roleBody');
+  if(AUTH){
+    host.innerHTML=`<p style="font-size:14.5px;line-height:1.55">You are signed in as <b>${esc(AUTHNAME)}</b> (${esc(ROLE_WORDS[AUTHROLE]||'')}). ${isBoard()?'You can see everything in the hub, including the Briefing, Program Status, Action Items and the Playbook.':'You can see what is meant for your role: courses, schedule, your own checklist, announcements and the directory.'}</p><div class="acts"><button class="btn primary" id="roleOut" type="button">Sign out</button></div>`;
+    $('#roleOut').onclick=signOutAuth;
+    $('#roleScrim').hidden=false;return;
+  }
   if(isBoard()){
     host.innerHTML=`<p style="font-size:14.5px;line-height:1.55">You are signed in as <b>Board</b>. You can see the Briefing, Program Status, Action Items, the Playbook, board-only posts and board meetings, plus contact and onboarding detail.</p><div class="acts"><button class="btn primary" id="roleOut" type="button">Sign out (back to Professor view)</button></div>`;
     $('#roleOut').onclick=()=>{applyRole('faculty');closeOverlay($('#roleScrim'));toast('Switched to Professor view');};
@@ -2095,13 +2183,13 @@ function openRole(){
 $('#roleBtn').addEventListener('click',openRole);
 function renderRoleUI(){
   const b=isBoard();
-  $('#roleLbl').textContent=b?'Board':'Professor view';
+  $('#roleLbl').textContent=AUTH?(AUTHNAME?AUTHNAME.split(' ')[0]+' · '+ROLE_WORDS[AUTHROLE]:'Sign in'):b?'Board':'Professor view';
   $('#roleBtn').setAttribute('aria-label',b?'Signed in as Board. Open account options':'Professor view. Board sign-in');
   $('#roleBtn').classList.toggle('on',b);
   $('#demoBar').hidden=!demo;
   $('#demoBtn span').textContent=demo?'Hide sample data':'Show sample data';
 }
-$('#demoBtn').addEventListener('click',()=>{demo=!demo;remember('demo',demo?'1':'0');rescope();renderAll();toast(demo?'Sample data on':'Sample data off');$('#moreMenu .pop').hidden=true;});
+$('#demoBtn').addEventListener('click',()=>{if(AUTH)return;demo=!demo;remember('demo',demo?'1':'0');rescope();renderAll();toast(demo?'Sample data on':'Sample data off');$('#moreMenu .pop').hidden=true;});
 $('#demoOff').addEventListener('click',()=>$('#demoBtn').click());
 
 /* ---------- person picker + checklist ("My Praxis") ---------- */
@@ -2267,11 +2355,12 @@ function openPersonRow(row){const p=S.people.find(x=>x.row===row);if(!p){toast('
 function initialView(){const h=(location.hash||'').replace('#','');if(pendingPost)return 'announcements';if(pendingPerson)return 'directory';if(allowed(h))return h;const r=recall('view');return allowed(r)?r:landing();}
 document.body.classList.toggle('is-board',isBoard());TOUR=isBoard()?TOUR_B:TOUR_F;
 showView(initialView(),{silent:true});
-if(paintCached()){renderAll();setStatus('wait','Showing the last copy · refreshing from Google Sheets…');}else renderAll();
+if(AUTH&&!authToken()){renderAll();showGate();}
+else if(paintCached()){renderAll();setStatus('wait','Showing the last copy · refreshing from Google Sheets…');}else renderAll();
 window.addEventListener('hashchange',()=>{const h=(location.hash||'').replace('#','');const pm=h.match(/^post-(a\d+)$/);if(pm){openPost(pm[1]);return;}const pr=h.match(/^person-row-(\d+)$/);if(pr){openPersonRow(Number(pr[1]));return;}if(allowed(h)&&h!==view)showView(h,{silent:true});});
-loadAll(false);
-setInterval(()=>{if(document.visibilityState==='visible')loadAll(false);},REFRESH_MS);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-lastLoad>60000)loadAll(false);});
+if(!(AUTH&&!authToken()))loadAll(false);
+setInterval(()=>{if(document.visibilityState==='visible'&&!(AUTH&&!authToken()))loadAll(false);},REFRESH_MS);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-lastLoad>60000&&!(AUTH&&!authToken()))loadAll(false);});
 let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(renderTimeline,150);});
 })();
 </script>

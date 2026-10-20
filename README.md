@@ -16,6 +16,10 @@ Praxis Hub for Praxis Theological Seminary. Professors get their courses, schedu
 
 **Sample data.** *More → Show sample data* (or add `?demo=1` to the address) mixes clearly labelled “(sample)” professors, dates, posts and numbers into the hub so the views can be demonstrated. It never touches the sheet. Turn it off the same way.
 
+## Phone sign-in (built, off)
+
+A phone-number text-code sign-in with real per-role data filtering is built on the `phone-login` branch and documented in `docs/PHONE-LOGIN.md`. It replaces the passcode below once switched on.
+
 ## Board sign-in: what it is and what it is not
 
 The board passcode hides the board views from professors so the page is tidy. **It is not security.** This is a static site: every visitor's browser downloads the whole page and reads the Google Sheet directly, and the sheet is shared “anyone with the link”. A technical person can open the browser tools and see everything, and the source code in this public repository includes the playbook text. The passcode is stored only as a hash, but a hash of a short passcode can be guessed offline. Do not put anything in the sheet or the page that must stay confidential from professors.
