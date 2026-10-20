@@ -7,8 +7,7 @@ const url = process.argv[2];
 if (!/^https:\/\/[\w.-]+(:\d+)?\/praxis$/.test(url || '')) { console.error('Give the Atlas Praxis address (https://.../praxis).'); process.exit(1); }
 const root = path.join(__dirname, '..'), out = path.join(root, 'secure-build');
 let html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-if (!html.includes("AUTH_URL:''")) { console.error('index.html already has an AUTH_URL set.'); process.exit(1); }
-html = html.replace("AUTH_URL:''", "AUTH_URL:'" + url + "'");
+html = html.replace(/AUTH_URL:'[^']*'/, "AUTH_URL:'" + url + "'");
 const open = '<section class="view" id="view-playbook" hidden>', a = html.indexOf(open), b = html.indexOf('</section>', a);
 if (a < 0 || b < 0) { console.error('Could not find the Playbook section.'); process.exit(1); }
 const inner = html.slice(a + open.length, b);

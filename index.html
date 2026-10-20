@@ -693,7 +693,7 @@ body.is-board [data-facultyonly]{display:none!important}
     <div class="top">
       <div><h1 id="title">Briefing</h1><div class="sub"><span class="dot wait" id="dot"></span><span id="status">Connecting to the data sheet…</span><span id="newline"></span><button class="btn ghost xs" id="health" type="button" hidden style="color:var(--warn)"></button></div></div>
       <div class="topActions">
-        <button class="btn" id="roleBtn" type="button" aria-label="Board sign-in"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="roleLbl">Professor view</span></button>
+        <button class="btn" id="roleBtn" type="button" aria-label="Account"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="roleLbl">Sign in</span></button>
         <button class="btn ghost" id="refresh" type="button" title="Reload from Google Sheets" aria-label="Reload from Google Sheets"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg></button>
         <div class="menu" id="moreMenu">
           <button class="btn" id="moreBtn" type="button" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg><span>More</span></button>
@@ -1178,7 +1178,7 @@ body.is-board [data-facultyonly]{display:none!important}
 </div>
 <div class="scrim" id="roleScrim" hidden>
   <div class="panel" role="dialog" aria-modal="true" aria-labelledby="roleTitle" style="max-width:480px">
-    <header><h3 id="roleTitle" style="font-size:19px">Who is looking?</h3><button class="x" data-close="roleScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+    <header><h3 id="roleTitle" style="font-size:19px">Your account</h3><button class="x" data-close="roleScrim" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
     <div id="roleBody"></div>
   </div>
 </div>
@@ -2028,12 +2028,8 @@ document.addEventListener('keydown',e=>{
 const CONFIG={
   /* Where ideas and updates are emailed. Change this one line to move them to the hub's own Gmail address. */
   IDEAS_EMAIL:'brad@lschurches.com',
-  /* SHA-256 of "praxis-hub:" + the board passcode. Change it with: node tools/set-passcode.js */
-  BOARD_HASH:'912d7d980410336c9c8e9c4e34780b63c12dbf7b82133656ebf26ffd3a82ef7e',
-  SIGNIN_DAYS:30,
-  /* Phone-number sign-in. Empty = off (the page works exactly as before). To turn on, paste the Apps Script web app address here;
-     see docs/PHONE-LOGIN.md. When on, the Google Sheet must be private: data then comes only from that script, filtered per role. */
-  AUTH_URL:''
+  /* Phone-number sign-in is the only way in: the page asks Atlas's Praxis server, which sends each person only what their role may see. */
+    AUTH_URL:'https://atlas.taila89b12.ts.net:8443/praxis'
 };
 const AUTH=!!CONFIG.AUTH_URL;
 const REAL={};          /* rows exactly as the sheet gave them */
@@ -2143,48 +2139,17 @@ function showGate(){
 /* ---------- sign-in ---------- */
 let role='faculty';
 const isBoard=()=>role==='board';
-async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
-(function loadRole(){if(AUTH)return;try{const r=JSON.parse(recall('role')||'null');if(r&&r.r==='board'&&r.h===CONFIG.BOARD_HASH&&r.exp>Date.now())role='board';}catch(_){}})();
-function applyRole(next){
-  role=next;
-  if(next==='board')remember('role',JSON.stringify({r:'board',h:CONFIG.BOARD_HASH,exp:Date.now()+CONFIG.SIGNIN_DAYS*86400000}));else remember('role','');
-  document.body.classList.toggle('is-board',isBoard());
-  TOUR=isBoard()?TOUR_B:TOUR_F;
-  rescope();renderAll();
-  if(!allowed(view))showView(landing(),{silent:true});
-}
-let failedTries=0,lockUntil=0;
 function openRole(){
   const host=$('#roleBody');
-  if(AUTH){
-    host.innerHTML=`<p style="font-size:14.5px;line-height:1.55">You are signed in as <b>${esc(AUTHNAME)}</b> (${esc(ROLE_WORDS[AUTHROLE]||'')}). ${isBoard()?'You can see everything in the hub, including the Briefing, Program Status, Action Items and the Playbook.':'You can see what is meant for your role: courses, schedule, your own checklist, announcements and the directory.'}</p><div class="acts"><button class="btn primary" id="roleOut" type="button">Sign out</button></div>`;
-    $('#roleOut').onclick=signOutAuth;
-    $('#roleScrim').hidden=false;return;
-  }
-  if(isBoard()){
-    host.innerHTML=`<p style="font-size:14.5px;line-height:1.55">You are signed in as <b>Board</b>. You can see the Briefing, Program Status, Action Items, the Playbook, board-only posts and board meetings, plus contact and onboarding detail.</p><div class="acts"><button class="btn primary" id="roleOut" type="button">Sign out (back to Professor view)</button></div>`;
-    $('#roleOut').onclick=()=>{applyRole('faculty');closeOverlay($('#roleScrim'));toast('Switched to Professor view');};
-  }else{
-    host.innerHTML=`<p style="font-size:14.5px;line-height:1.55">Professors see courses, schedule, their own checklist, announcements and ideas. Board members enter the board passcode to also see the Briefing, Program Status, Action Items, Playbook, board-only posts and meetings.</p>
-      <form id="roleForm" autocomplete="off"><label for="rolePass">Board passcode</label><input class="txt" id="rolePass" type="password" autocomplete="current-password" required><div class="role-err" id="roleErr" role="alert"></div>
-      <div class="acts"><button class="btn primary" type="submit">Sign in</button></div></form>
-      <p class="muted" style="font-size:12.5px;margin-top:12px">This keeps the page tidy for professors. It is not a security lock; see the README for what a real one needs.</p>`;
-    $('#roleForm').onsubmit=async e=>{
-      e.preventDefault();const err=$('#roleErr');
-      if(Date.now()<lockUntil){err.textContent='Too many tries. Wait a few seconds.';return;}
-      if(!(window.crypto&&crypto.subtle)){err.textContent='Sign-in needs a secure (https) page.';return;}
-      const h=await sha256('praxis-hub:'+$('#rolePass').value.trim());
-      if(h===CONFIG.BOARD_HASH){failedTries=0;applyRole('board');closeOverlay($('#roleScrim'));toast('Signed in as Board');}
-      else{failedTries++;if(failedTries>=5){lockUntil=Date.now()+15000;failedTries=0;}err.textContent='That passcode did not match.';$('#rolePass').select();}
-    };
-  }
-  $('#roleScrim').hidden=false;setTimeout(()=>{const f=$('#rolePass')||$('#roleOut');if(f)f.focus();},30);
+  host.innerHTML=`<p style="font-size:14.5px;line-height:1.55">You are signed in as <b>${esc(AUTHNAME)}</b> (${esc(ROLE_WORDS[AUTHROLE]||'')}). ${isBoard()?'You can see everything in the hub, including the Briefing, Program Status, Action Items and the Playbook.':'You can see what is meant for your role: courses, schedule, your own checklist, announcements and the directory.'}</p><div class="acts"><button class="btn primary" id="roleOut" type="button">Sign out</button></div>`;
+  $('#roleOut').onclick=signOutAuth;
+  $('#roleScrim').hidden=false;setTimeout(()=>{const f=$('#roleOut');if(f)f.focus();},30);
 }
 $('#roleBtn').addEventListener('click',openRole);
 function renderRoleUI(){
   const b=isBoard();
-  $('#roleLbl').textContent=AUTH?(AUTHNAME?AUTHNAME.split(' ')[0]+' · '+ROLE_WORDS[AUTHROLE]:'Sign in'):b?'Board':'Professor view';
-  $('#roleBtn').setAttribute('aria-label',b?'Signed in as Board. Open account options':'Professor view. Board sign-in');
+  $('#roleLbl').textContent=AUTHNAME?AUTHNAME.split(' ')[0]+' · '+ROLE_WORDS[AUTHROLE]:'Sign in';
+  $('#roleBtn').setAttribute('aria-label','Signed in as '+(AUTHNAME||'you')+'. Open account options');
   $('#roleBtn').classList.toggle('on',b);
   $('#demoBar').hidden=!demo;
   $('#demoBtn span').textContent=demo?'Hide sample data':'Show sample data';
