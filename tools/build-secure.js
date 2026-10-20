@@ -1,10 +1,10 @@
-// Builds the signed-in version of the hub:  node tools/build-secure.js "https://script.google.com/macros/s/XXXX/exec"
-//   secure-build/index.html   the page with sign-in turned on and the Playbook text taken OUT (it is served only to board/admin)
-//   secure-build/Playbook.html  the Playbook text, to paste into the Apps Script project as a file named Playbook
+// Builds the signed-in version of the hub:  node tools/build-secure.js "https://atlas.taila89b12.ts.net:8443/praxis"
+//   secure-build/index.html   the page with sign-in turned on (pointing at Atlas's Praxis server) and the Playbook text taken OUT (Atlas serves it only to board/admin)
+//   secure-build/Playbook.html  a copy of the Playbook text (Atlas already holds its own copy from the import)
 // Nothing here is pushed anywhere. See docs/PHONE-LOGIN.md for the ship steps.
 const fs = require('fs'), path = require('path');
 const url = process.argv[2];
-if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(url || '')) { console.error('Give the Apps Script web app address (ends in /exec).'); process.exit(1); }
+if (!/^https:\/\/[\w.-]+(:\d+)?\/praxis$/.test(url || '')) { console.error('Give the Atlas Praxis address (https://.../praxis).'); process.exit(1); }
 const root = path.join(__dirname, '..'), out = path.join(root, 'secure-build');
 let html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 if (!html.includes("AUTH_URL:''")) { console.error('index.html already has an AUTH_URL set.'); process.exit(1); }

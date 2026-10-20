@@ -18,7 +18,7 @@ Praxis Hub for Praxis Theological Seminary. Professors get their courses, schedu
 
 ## Phone sign-in (built, off)
 
-A phone-number text-code sign-in with real per-role data filtering is built on the `phone-login` branch and documented in `docs/PHONE-LOGIN.md`. It replaces the passcode below once switched on.
+A phone-number text-code sign-in with real per-role data filtering is built on the `phone-login` branch (served by Atlas's own database, no Google script) and documented in `docs/PHONE-LOGIN.md`. It replaces the passcode below once switched on.
 
 ## Board sign-in: what it is and what it is not
 
