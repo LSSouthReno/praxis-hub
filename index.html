@@ -646,6 +646,10 @@ body:not(.is-admin) [data-adminonly]{display:none!important}
 .po p{font-size:14px;line-height:1.55}
 .po-unlock{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
 .txt.pin{width:132px;font-size:22px;letter-spacing:.4em;text-align:center;font-variant-numeric:tabular-nums;padding:8px 10px}
+.txt.pin.code{width:186px}
+.txt.tel{width:220px;max-width:100%}
+.po-links{display:flex;gap:4px 14px;flex-wrap:wrap;margin-top:8px;font-size:13px}
+.po-links button{background:none;border:0;padding:0;color:var(--gold-ink);font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .po-fine{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.5}
 .po-items{margin-top:6px}
 .po-item{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 2px;border-top:1px solid var(--border)}
@@ -2503,12 +2507,12 @@ async function prepPhoto(file){
 
 /* ---------- is the backend there? ---------- */
 let apiState=API_URL?'checking':'off';   /* off · checking · ready · notready */
-let apiChecking=false;
+let apiChecking=false,apiSms=false;
 async function checkApi(force){
   if(!API_URL||apiChecking)return;
   if(!force&&apiState!=='checking')return;
   apiChecking=true;
-  try{const d=await api('ping',{},{tries:2,timeout:15000});apiState=d.ready?'ready':'notready';}catch(_){apiState='notready';}
+  try{const d=await api('ping',{},{tries:2,timeout:15000});apiState=d.ready?'ready':'notready';apiSms=!!d.sms;}catch(_){apiState='notready';}
   apiChecking=false;
   renderMe();if(view==='admin')renderAdmin();
 }
@@ -2535,7 +2539,11 @@ let PO=sess.get('po');   /* {name, tok, me} for this browser tab only */
 const poFor=p=>PO&&p&&nm(PO.name)===nm(p.name)?PO:null;
 const poNeeded=me=>(me&&me.items||[]).filter(i=>i.needed);
 function poSet(next){PO=next;sess.set('po',next);}
-function poExpired(msg){poSet(null);closeOverlay($('#poScrim'));renderMe();toast(msg||'For your privacy the checklist locked itself. Enter your 4 digits again.');}
+function poExpired(msg){poSet(null);poStep=null;closeOverlay($('#poScrim'));renderMe();toast(msg||'For your privacy the checklist locked itself. Sign in again with a new code.');}
+/* Sign-in step: null = ask for the mobile number; {cid,ch,to,fallback,name} = waiting for the 6-digit code. */
+let poStep=null;
+const codeInput=(id,label)=>`<input class="txt pin code" id="${id}" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="••••••" aria-label="${esc(label||'6-digit code')}" autocomplete="one-time-code">`;
+const sentTo=st=>(st.ch==='sms'?'We texted a 6-digit code to <b>'+esc(st.to)+'</b>.':'We emailed a 6-digit code to <b>'+esc(st.to)+'</b>.')+(st.fallback&&apiSms?' Texting did not go through, so it went to your email.':'')+' It works for 10 minutes.';
 function poCatch(e,errEl){
   if(e.code==='bad_token'){poExpired();return;}
   if(errEl){errEl.textContent=e.message;return;}
@@ -2553,11 +2561,24 @@ function poCardHTML(p){
   const head=`<div class="card-head"><div class="eyebrow">From the Praxis office</div>${po?`<button class="btn ghost xs" id="poLock" type="button" title="Lock your checklist on this device">${ICO.lock}Lock</button>`:''}</div>`;
   if(apiState==='checking')return `<div class="card po">${head}<p class="muted"><span class="spin-ic"></span> Loading your onboarding checklist…</p></div>`;
   if(apiState==='notready')return `<div class="card po">${head}<h3>Your onboarding checklist opens soon</h3><p class="muted">Signing your contract, updating your contact details, sending a photo and describing your course will all happen here. The office is finishing the setup.</p><div class="po-acts"><button class="btn sm" id="poRetry" type="button">Check again</button></div></div>`;
-  if(!po)return `<div class="card po">${head}<h3>Your onboarding checklist</h3>
-    <p class="muted">Sign your contract, update your contact details, send a photo and describe your course. To keep your information private, confirm it is you with the <b>last 4 digits of your phone number</b>.</p>
-    <form class="po-unlock" id="poUnlock" autocomplete="off"><input class="txt pin" id="poPin" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" aria-label="Last 4 digits of your phone number" autocomplete="off"><button class="btn primary" type="submit">Open my checklist</button></form>
-    <div class="role-err" id="poErr" role="alert"></div>
+  if(!po){
+    const st=poStep&&nm(poStep.name)===nm(p.name)?poStep:null;
+    const body=st
+      ?`<p class="muted">${sentTo(st)}</p>
+        <form class="po-unlock" id="poCodeF" autocomplete="on">${codeInput('poCode')}<button class="btn primary" type="submit">Open my checklist</button></form>
+        <div class="role-err" id="poErr" role="alert"></div>
+        <div class="po-links"><button type="button" data-po-send="${st.ch==='sms'?'sms':'email'}">Send a new code</button>${st.ch==='sms'?'<button type="button" data-po-send="email">Email it to me instead</button>':''}<button type="button" id="poBack">Start over</button></div>`
+      :apiSms
+        ?`<p class="muted">Sign your contract, update your contact details, send a photo and describe your course. To keep your information private, enter your <b>mobile number</b> and we will text you a 6-digit code.</p>
+          <form class="po-unlock" id="poPhoneF" autocomplete="on"><input class="txt tel" id="poPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(775) 555-0123" aria-label="Your mobile number"><button class="btn primary" type="submit">Text me a code</button></form>
+          <div class="role-err" id="poErr" role="alert"></div>
+          <div class="po-links"><button type="button" data-po-send="email">No mobile on file? Email me a code</button></div>`
+        :`<p class="muted">Sign your contract, update your contact details, send a photo and describe your course. To keep your information private, we will email a 6-digit code to the address the Praxis office has for you.</p>
+          <div class="po-unlock"><button class="btn primary" type="button" data-po-send="email">Email me a code</button></div>
+          <div class="role-err" id="poErr" role="alert"></div>`;
+    return `<div class="card po">${head}<h3>Your onboarding checklist</h3>${body}
     <p class="po-fine">Only you and the Praxis office see what you send here. It stays open in this browser tab for a few hours, then locks again.</p></div>`;
+  }
   const me=po.me,need=poNeeded(me),done=need.filter(i=>i.done).length,pct=need.length?Math.round(done/need.length*100):100;
   const rows=need.map(i=>{const [sub,act]=PO_TEXT[i.key](i,me);const wait=!i.done&&i.key==='contract'&&!me.contract.ready;
     return `<div class="po-item${i.done?' done':''}${wait?' wait':''}"><span class="po-ic">${i.done?ICO.check:ICO[i.key]}</span><span class="tx"><b>${esc(i.label)}</b><small>${esc(sub)}</small></span>${act?`<button class="btn sm${i.done?'':' primary'}" type="button" data-po="${i.key}">${esc(act)}</button>`:'<span></span>'}</div>`;}).join('');
@@ -2567,22 +2588,44 @@ function poCardHTML(p){
     <div class="po-items">${rows||`<p class="muted" style="font-size:14px">The office already has everything it needs from you. If that changes, it will show up here.</p>`}</div></div>`;
 }
 
-$('#meBody').addEventListener('submit',async e=>{
-  if(e.target.id!=='poUnlock')return;
-  e.preventDefault();
+/* Ask for a code: by text (the typed number must match the office's) or by email. */
+async function poSendCode(via,btn){
   const p=mePerson();if(!p)return;
-  const pin=$('#poPin').value.replace(/\D/g,''),err=$('#poErr'),b=e.target.querySelector('button');
-  if(pin.length!==4){err.textContent='Enter the last 4 digits of your phone number.';$('#poPin').focus();return;}
+  const name=p.name.replace(/\s*\(sample\)/,''),err=$('#poErr');
+  const phone=$('#poPhone')?$('#poPhone').value:'';
+  if(via==='sms'&&!phone&&!(poStep&&poStep.phone)){err.textContent='Enter your mobile number.';$('#poPhone').focus();return;}
+  btnBusy(btn,true,'Sending…');if(err)err.textContent='';
+  try{
+    const d=await api('prof_code',via==='email'?{name,via:'email'}:{name,phone:phone||poStep.phone});
+    poStep={name,cid:d.cid,ch:d.ch,to:d.to,fallback:d.fallback,phone:phone||(poStep&&poStep.phone)||''};renderMe();
+    const f=$('#poCode');if(f)f.focus();toast(d.ch==='sms'?'Code sent by text':'Code sent by email');
+  }catch(x){
+    btnBusy(btn,false);
+    const office=(x.data&&x.data.office)||'the Praxis office';
+    const msg=x.code==='no_phone'?(x.data&&x.data.email?'The Praxis office does not have a mobile number for you yet. Use “Email me a code” below.':x.message+' Ask '+office+' to add it.')
+      :x.code==='no_email'?x.message+' Ask '+office+' to add it.'
+      :x.code==='no_match'?'Your name is not in the office records yet. Ask the Praxis office to add you.':x.message;
+    const e2=$('#poErr');if(e2)e2.textContent=msg;else toast(msg);
+  }
+}
+$('#meBody').addEventListener('submit',async e=>{
+  if(e.target.id==='poPhoneF'){e.preventDefault();return poSendCode('sms',e.target.querySelector('button'));}
+  if(e.target.id!=='poCodeF')return;
+  e.preventDefault();
+  const code=$('#poCode').value.replace(/\D/g,''),err=$('#poErr'),b=e.target.querySelector('button');
+  if(code.length!==6){err.textContent='Enter the 6-digit code.';$('#poCode').focus();return;}
   btnBusy(b,true,'Checking…');err.textContent='';
-  try{const d=await api('prof_verify',{name:p.name.replace(/\s*\(sample\)/,''),pin});poSet({name:d.me.name,tok:d.tok,me:d.me});renderMe();toast('Checklist open');}
-  catch(x){btnBusy(b,false);err.textContent=x.code==='no_phone'?x.message+' Ask '+((x.data&&x.data.office)||'the Praxis office')+' to add it.':x.code==='no_match'?'Your name is not in the office records yet. Ask the Praxis office to add you.':x.message;$('#poPin').select();}
+  try{const d=await api('prof_verify',{cid:poStep.cid,code});poStep=null;poSet({name:d.me.name,tok:d.tok,me:d.me});renderMe();toast('Checklist open');}
+  catch(x){btnBusy(b,false);err.textContent=x.message;if(x.code==='code_expired'||x.code==='hard_locked'){$('#poCode').value='';}else $('#poCode').select();}
 });
 $('#meBody').addEventListener('click',e=>{
   if(e.target.closest('#poRetry')){apiState='checking';renderMe();checkApi(true);return;}
-  if(e.target.closest('#poLock')){const t=PO&&PO.tok;poSet(null);renderMe();toast('Checklist locked');if(t)api('prof_signout',{tok:t}).catch(()=>{});return;}
+  const snd=e.target.closest('[data-po-send]');if(snd){poSendCode(snd.dataset.poSend,snd);return;}
+  if(e.target.closest('#poBack')){poStep=null;renderMe();return;}
+  if(e.target.closest('#poLock')){const t=PO&&PO.tok;poSet(null);poStep=null;renderMe();toast('Checklist locked');if(t)api('prof_signout',{tok:t}).catch(()=>{});return;}
   const b=e.target.closest('[data-po]');if(b)poOpen(b.dataset.po);
 });
-$('#meBody').addEventListener('input',e=>{if(e.target.id==='poPin')e.target.value=e.target.value.replace(/\D/g,'').slice(0,4);});
+$('#meBody').addEventListener('input',e=>{if(e.target.id==='poCode'){e.target.value=e.target.value.replace(/\D/g,'').slice(0,6);if(e.target.value.length===6)e.target.form.requestSubmit();}});
 
 function poPanel(title,html,wide){
   $('#poTitle').textContent=title;
@@ -2598,7 +2641,7 @@ function poOpen(key){
   if(key==='contact')return poContact(me);
   if(key==='photo')return poPhoto(me);
   if(key==='desc')return poDesc(me);
-  if(key==='contract')return poContractPin(me);
+  if(key==='contract')return poContractOpen();
 }
 
 function poContact(me){
@@ -2607,13 +2650,13 @@ function poContact(me){
     <label for="pcName">Your name as it should appear on the website</label><input class="txt" id="pcName" value="${esc(c.preferredName)}" placeholder="e.g. Dr. Jane Smith" autocomplete="name">
     <div class="row2"><div><label for="pcEmail">Email</label><input class="txt" id="pcEmail" type="email" value="${esc(c.email)}" autocomplete="email"></div>
     <div><label for="pcPhone">Mobile phone</label><input class="txt" id="pcPhone" type="tel" value="${esc(c.phone)}" autocomplete="tel"></div></div>
-    <div class="po-hint" id="pcPhoneHint" hidden>You will keep signing in with the old number’s last 4 digits until the office updates your record.</div>
+    <div class="po-hint" id="pcPhoneHint" hidden>Sign-in codes keep going to your old number until the office updates your record.</div>
     <label for="pcAddr">Mailing address</label><textarea class="txt" id="pcAddr" rows="3" autocomplete="street-address">${esc(c.address)}</textarea>
     <label for="pcNotes">Anything else the office should know (optional)</label><textarea class="txt" id="pcNotes" rows="2" placeholder="Preferred way to reach you, assistant’s email, etc.">${esc(c.notes)}</textarea>
     <div class="role-err" id="pcErr" role="alert"></div>
     <div class="acts"><button class="btn primary" type="submit">Save my contact information</button><button class="btn ghost" type="button" data-close="poScrim">Cancel</button></div></form>`);
   const orig=String(c.phone||'').replace(/\D/g,'');
-  $('#pcPhone').addEventListener('input',e=>{$('#pcPhoneHint').hidden=!orig||e.target.value.replace(/\D/g,'').slice(-4)===orig.slice(-4);});
+  $('#pcPhone').addEventListener('input',e=>{$('#pcPhoneHint').hidden=!orig||e.target.value.replace(/\D/g,'').slice(-10)===orig.slice(-10);});
   $('#poContactF').onsubmit=async e=>{
     e.preventDefault();const b=e.target.querySelector('button[type=submit]'),err=$('#pcErr');err.textContent='';
     const contact={preferredName:$('#pcName').value,email:$('#pcEmail').value,phone:$('#pcPhone').value,address:$('#pcAddr').value,notes:$('#pcNotes').value};
@@ -2685,21 +2728,33 @@ function poDesc(me,draft){
   };
 }
 
-/* Contract: the 4 digits are asked again every time it is opened. */
+/* Contract: opens within 10 minutes of a code; after that it asks for a fresh code. */
 let poGrant=null;
-function poContractPin(me){
+async function poContractOpen(){
   poGrant=null;
-  poPanel('Your contract',`<p style="font-size:14.5px;line-height:1.55">Your contract includes compensation details, so it is protected separately. Enter the <b>last 4 digits of your phone number</b> again to open it.</p>
-    <form class="po-unlock" id="pkF" autocomplete="off"><input class="txt pin" id="pkPin" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="••••" aria-label="Last 4 digits of your phone number" autocomplete="off"><button class="btn primary" type="submit">Open my contract</button></form>
-    <div class="role-err" id="pkErr" role="alert"></div>
-    <p class="po-fine">The contract is shown only here. It is never sent by link, and each time it is opened the office’s records note it.</p>`);
-  $('#pkPin').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,4);});
-  $('#pkF').onsubmit=async e=>{
-    e.preventDefault();const pin=$('#pkPin').value,err=$('#pkErr'),b=e.target.querySelector('button');
-    if(pin.length!==4){err.textContent='Enter 4 digits.';return;}
-    btnBusy(b,true,'Opening…');err.textContent='';
-    try{const d=await api('prof_contract',{tok:PO.tok,pin},{timeout:90000});poContractView(d);}
-    catch(x){btnBusy(b,false);if(x.code==='bad_token')return poExpired();err.textContent=x.message;$('#pkPin').select();if(x.code==='hard_locked'){PO.me=null;poSet(null);renderMe();}}
+  poPanel('Your contract',`<p class="muted"><span class="spin-ic"></span> Opening your contract…</p>`);
+  try{const d=await api('prof_contract',{tok:PO.tok},{timeout:90000});poContractView(d);}
+  catch(x){if(x.code==='need_code')return poContractCode();if(x.code==='bad_token')return poExpired();poPanel('Your contract',`<div class="role-err" role="alert">${esc(x.message)}</div>`);}
+}
+function poContractCode(){
+  const fine=`<p class="po-fine">The contract is shown only here. It is never sent by link, and each time it is opened the office’s records note it.</p>`;
+  poPanel('Your contract',`<p style="font-size:14.5px;line-height:1.55">Your contract includes compensation details, so it is protected separately. We will send you a new 6-digit code to open it.</p>
+    <div class="po-unlock"><button class="btn primary" type="button" id="pkSend">Send my code</button></div><div class="role-err" id="pkErr" role="alert"></div>${fine}`);
+  $('#pkSend').onclick=async e=>{
+    const b=e.currentTarget,err=$('#pkErr');btnBusy(b,true,'Sending…');err.textContent='';
+    let st;try{st=await api('prof_code',{tok:PO.tok});}catch(x){btnBusy(b,false);if(x.code==='bad_token')return poExpired();err.textContent=x.message;return;}
+    poPanel('Your contract',`<p style="font-size:14.5px;line-height:1.55">${sentTo(st)}</p>
+      <form class="po-unlock" id="pkF" autocomplete="on">${codeInput('pkCode')}<button class="btn primary" type="submit">Open my contract</button></form>
+      <div class="role-err" id="pkErr" role="alert"></div><div class="po-links"><button type="button" id="pkAgain">Send a new code</button></div>${fine}`);
+    $('#pkAgain').onclick=poContractCode;
+    $('#pkCode').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,6);if(e.target.value.length===6)e.target.form.requestSubmit();});
+    $('#pkF').onsubmit=async e=>{
+      e.preventDefault();const code=$('#pkCode').value,err=$('#pkErr'),b=e.target.querySelector('button');
+      if(code.length!==6){err.textContent='Enter the 6-digit code.';return;}
+      btnBusy(b,true,'Opening…');err.textContent='';
+      try{const d=await api('prof_contract',{tok:PO.tok,cid:st.cid,code},{timeout:90000});poContractView(d);}
+      catch(x){btnBusy(b,false);if(x.code==='bad_token')return poExpired();err.textContent=x.message;$('#pkCode').select();if(x.code==='hard_locked'){poSet(null);closeOverlay($('#poScrim'));renderMe();}}
+    };
   };
 }
 function poContractView(d){
@@ -2728,7 +2783,7 @@ function poContractView(d){
     if(!$('#psAgree').checked){err.textContent='Tick the box to agree before signing.';return;}
     btnBusy(b,true,'Signing…');
     try{const r=await api('prof_sign',{tok:PO.tok,grant:poGrant,typedName:typed,agree:true,agent:navigator.userAgent.slice(0,200)});closeOverlay($('#poScrim'));poUpdated(r,'Contract signed. Thank you!');}
-    catch(x){btnBusy(b,false);if(x.code==='bad_grant'){toast(x.message);return poContractPin(PO.me);}poCatch(x,err);}
+    catch(x){btnBusy(b,false);if(x.code==='bad_grant'){toast(x.message);return poContractOpen();}poCatch(x,err);}
   };
   const fi=$('#psFile');
   if(fi)fi.onchange=async e=>{
@@ -2738,7 +2793,7 @@ function poContractView(d){
     if(file.size>12*1024*1024){toast('That file is too large. Keep it under 12 MB.');return;}
     const bar=$('#psProg');bar.hidden=false;
     try{const b64=await fileB64(file);const r=await apiUpload('prof_signed_copy',{tok:PO.tok,grant:poGrant,mime},b64,p=>{bar.firstChild.style.width=Math.round(p*100)+'%';});closeOverlay($('#poScrim'));poUpdated(r,'Signed copy received. Thank you!');}
-    catch(x){bar.hidden=true;if(x.code==='bad_grant'){toast(x.message);return poContractPin(PO.me);}poCatch(x);}
+    catch(x){bar.hidden=true;if(x.code==='bad_grant'){toast(x.message);return poContractOpen();}poCatch(x);}
   };
 }
 /* Clear the contract from memory as soon as the panel closes. */
@@ -2747,7 +2802,7 @@ new MutationObserver(()=>{if($('#docScrim').hidden)clearDoc();}).observe($('#doc
 /* Refresh the professor's checklist when they come back to the tab, so items the office changed show up. */
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&PO&&view==='me'&&$('#poScrim').hidden&&Date.now()-(poMeAt||0)>120000)poRefresh();});
 let poMeAt=Date.now();
-async function poRefresh(){if(!PO)return;poMeAt=Date.now();try{const d=await api('prof_me',{tok:PO.tok});PO.me=d.me;poSet(PO);renderMe();}catch(x){if(x.code==='bad_token')poExpired('Your checklist locked itself after a few hours. Enter your 4 digits to open it again.');}}
+async function poRefresh(){if(!PO)return;poMeAt=Date.now();try{const d=await api('prof_me',{tok:PO.tok});PO.me=d.me;poSet(PO);renderMe();}catch(x){if(x.code==='bad_token')poExpired('Your checklist locked itself after a few hours. Sign in again with a new code.');}}
 
 /* ===================================================================
    Admin view (Praxis office: Kyle and Nicole)
@@ -2855,11 +2910,11 @@ function admDrawer(name){
     <div><h3 id="admName">${esc(p.name)}</h3><div class="sub">${esc(p.courses||'No course listed')} · ${open.length?open.length+' still to do':'Complete'}</div></div>
     ${p.lock?`<div class="notice">${p.lock==='hard'?'<b>Locked out</b> after '+p.fails+' wrong tries today. If this was them, unlock it.':'<b>Paused for 15 minutes</b> after 5 wrong tries.'} <button class="btn xs" type="button" id="admUnlock" style="margin-left:6px">Unlock</button></div>`:''}
     <div><div class="sec">Sign-in</div><div class="blk"><label class="l" for="admPhone" style="margin-top:0">Phone on file</label><div class="inl"><input class="txt" id="admPhone" type="tel" value="${esc(p.phone)}" placeholder="Add a phone number"><button class="btn sm" type="button" id="admPhoneSave">Save</button></div>
-      <div class="po-hint">${p.phoneOk?'They sign in with the last 4 digits of this number.':'<b style="color:var(--warn)">No number yet, so they cannot open their checklist.</b>'}</div>
+      <div class="po-hint">${p.phoneOk?'They sign in with a code '+(apiSms?'texted to this number':'emailed to '+esc(p.email||'their email'))+'.':p.email?'No mobile yet, so their sign-in code goes by email to '+esc(p.email)+'.':'<b style="color:var(--warn)">No mobile or email yet, so they cannot open their checklist.</b>'}</div>
       ${phoneDiff?`<div class="po-hint warn">They sent a different number: ${esc(c.phone)}. <button class="btn xs" type="button" id="admUsePhone">Use it for sign-in</button></div>`:''}</div></div>
     <div><div class="sec">Checklist</div><div class="blk">${p.items.map(itemRow).join('')}</div></div>
     <div><div class="sec">Contract</div><div class="blk">
-      <div class="krow"><div class="k">${p.contractFile?'Contract on file':'No contract uploaded'}<small>${p.contractFile?'Only this professor (after their 4 digits) and the office can open it.':'Upload a PDF. It stays private in the office’s Drive.'}</small></div>
+      <div class="krow"><div class="k">${p.contractFile?'Contract on file':'No contract uploaded'}<small>${p.contractFile?'Only this professor (after a sign-in code) and the office can open it.':'Upload a PDF. It stays private in the office’s Drive.'}</small></div>
         <div class="r">${p.contractFile?'<button class="btn xs" type="button" data-file="contract">View</button>':''}<span class="btn xs filebtn">${p.contractFile?'Replace':'Upload PDF'}<input type="file" id="admContractFile" accept="application/pdf"></span></div></div>
       ${p.items[0].done?`<div class="krow"><div class="k">Signed ${esc(shortDate(p.items[0].at))}<small>${sigs?'Typed “'+esc(sigs.typedName)+'” · document fingerprint '+esc(String(sigs.sha256||'').slice(0,12))+'…':p.signedAs?esc(p.signedAs):'Marked done by the office'}</small></div><div class="r">${p.signedCopy?'<button class="btn xs" type="button" data-file="signed">Signed copy</button>':''}</div></div>`:''}
       <div class="po-prog" id="admCProg" hidden><i></i></div>
@@ -2882,7 +2937,7 @@ function nudgeText(p){
   const first=(p.contact&&p.contact.preferredName||p.name).replace(/^(dr|rev|prof)\.?\s+/i,'').split(/\s+/)[0];
   const L=['Hi '+first+',','','When you have a few minutes, could you finish these on the Praxis Hub?',''];
   profOpenItems(p).forEach(i=>L.push('• '+({contract:'Read and sign your contract',contact:'Update your contact information',photo:'Send a photo for the website',desc:'Describe your course in two sentences'})[i.key]));
-  L.push('','Open '+HUB_URL+'#me, choose your name, and enter the last 4 digits of your phone number.','','Thank you!',ADM&&ADM.who?ADM.who:'The Praxis office');
+  L.push('','Open '+HUB_URL+'#me, choose your name, and sign in with the code we text or email you.','','Thank you!',ADM&&ADM.who?ADM.who:'The Praxis office');
   return L.join('\n');
 }
 $('#admScrim').addEventListener('click',async e=>{

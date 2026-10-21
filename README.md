@@ -20,9 +20,9 @@ Praxis Hub for Praxis Theological Seminary. Professors get their courses, schedu
 
 Asked for by Nicole and Kyle (October 2026). Unlike the rest of the hub, this part is **really private**: it runs through a small Google Apps Script backend (`backend/Code.gs`) that keeps everything in a private spreadsheet and a private Drive folder. None of it is in the public sheet or this public repo.
 
-**For professors (My Praxis → “From the Praxis office”).** A professor picks their name and enters the **last 4 digits of the phone number the office has on file**. That opens their own checklist for a few hours in that browser tab:
+**For professors (My Praxis → “From the Praxis office”).** A professor picks their name, types their **mobile number** (it must match the one the office has on file) and gets a **6-digit code by text**. Professors with no mobile on file, or anyone who prefers it, can have the code **emailed** to the address on file instead. The code opens their own checklist for a few hours in that browser tab:
 
-- **Sign your contract.** Opening the contract asks for the 4 digits **again, every time**. The contract is streamed from the private Drive folder only after that check and shown in the page; it is never sent as a link. They sign by typing their full name and ticking “I agree”, or upload a signed paper copy. If the office prefers DocuSign or similar, paste the professor's signing link in the admin view and the hub shows a *Sign online* button instead. The signature record keeps the typed name, the time and a fingerprint (SHA-256) of the exact file they signed.
+- **Sign your contract.** The contract opens only **within 10 minutes of a code**; after that it sends a fresh code first. The contract is streamed from the private Drive folder only after that check and shown in the page; it is never sent as a link. They sign by typing their full name and ticking “I agree”, or upload a signed paper copy. If the office prefers DocuSign or similar, paste the professor's signing link in the admin view and the hub shows a *Sign online* button instead. The signature record keeps the typed name, the time and a fingerprint (SHA-256) of the exact file they signed.
 - **Update your contact information** (name for the website, email, mobile, mailing address, notes), prefilled from what the office has.
 - **Send a photo for the website.** Phone photos and iPhone HEIC are fine; large photos are scaled to 2400 px.
 - **Describe your course in two sentences**, one box per course, with a live sentence count.
@@ -33,8 +33,9 @@ Each professor's checklist is their own: the office unticks an item it already h
 
 **Security, honestly.**
 
-- 4 digits is a modest secret (10,000 combinations). Five wrong tries pause that professor for 15 minutes; ten in a day lock them until the office unlocks them, and the office is emailed. Guessing is therefore impractical, but someone who already knows a professor's phone number could get in. The stronger next step is a one-time code emailed to the professor; the backend is built so that can be added.
-- **Never put phone numbers in the public sheet.** They are the sign-in secret. Enter them in the admin view or the private sheet's *Phone on file* column.
+- Sign-in is a one-time code sent to the professor's own phone or inbox, so knowing someone's number is not enough. Codes last 10 minutes, work once, and are stored only as a salted hash (texted codes are checked by Twilio). At most 5 codes per professor per 15 minutes. Five wrong tries (wrong number or wrong code) pause that professor for 15 minutes; ten in a day lock them until the office unlocks them, and the office is emailed.
+- **Texting** uses Twilio Verify. Put `TWILIO_SID`, `TWILIO_TOKEN` and `TWILIO_VERIFY_SID` in the script's Project Settings → Script Properties and run `authorize` once in the editor. Without them, or if Twilio refuses a text, codes go by email automatically (the refusal is logged in *Activity*).
+- **Never put phone numbers in the public sheet.** It is readable by anyone with its link. Enter them in the admin view or the private sheet's *Phone on file* column.
 - The admin password lives in the private sheet's *Settings* tab, not in the page. Sessions are server-side and expire after 6 hours. Every sign-in, wrong try, contract view, signature, upload and admin change is written to the private sheet's *Activity* tab.
 - The private sheet, Drive folder and script are owned by the Google account that ran `setup` (Brad's today). Share the private sheet only with the office, never “anyone with the link”. Moving them to a Praxis Google account later is a matter of transferring ownership of the three items.
 
@@ -47,7 +48,7 @@ Each professor's checklist is their own: the office unticks an item it already h
 
 **Changing the backend.** From `backend/`: `clasp push --force`, then `clasp update-deployment AKfycby_4JeNLfjk_CxK8h3AXV68f7cYTjRStkcrqAs0QfX_amz_L-R28ewyxN_yIKfbQn-_` so the same URL serves the new code. (`.clasp.json` is gitignored; the script ID is `1kBsyO6BkkSTYQYV0FkbQ5yDhaN2vQhWIcmVIscC65b9yi1jj2ItWhHJk`.)
 
-**Trying it locally without touching Google.** `node tools/dev-server.js` runs the real backend code against in-memory stand-ins (`tools/gas-mock.js`), seeded with the professor names from the live People tab, made-up phone numbers and sample contracts. It prints the admin password and which 4 digits each professor uses. Open `http://localhost:8787/?api=http://localhost:8787/exec` (the `?api=` override only works on localhost).
+**Trying it locally without touching Google.** `node tools/dev-server.js` runs the real backend code against in-memory stand-ins (`tools/gas-mock.js`), seeded with the professor names from the live People tab, made-up phone numbers and sample contracts. It prints the admin password and each sign-in code as it is "sent". Open `http://localhost:8787/?api=http://localhost:8787/exec` (the `?api=` override only works on localhost).
 
 ## Board sign-in: what it is and what it is not
 

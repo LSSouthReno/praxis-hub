@@ -48,7 +48,8 @@ class Blob {
 
 function makeEnv(opts = {}) {
   const sheets = new Map(), files = new Map(), folders = new Map();
-  const props = new Map(), cache = new Map(), mail = [];
+  const props = new Map(), cache = new Map(), mail = [], fetches = [];
+  let env;
   const now = opts.now || (() => Date.now());
 
   const SpreadsheetApp = {
@@ -76,7 +77,7 @@ function makeEnv(opts = {}) {
     base64Encode: b => Buffer.from(b.map ? b.map(x => x < 0 ? x + 256 : x) : b).toString('base64'),
     base64Decode: s => { if (/[^A-Za-z0-9+/=\s]/.test(s)) throw new Error('Could not decode string.'); return [...Buffer.from(s, 'base64')].map(b => b > 127 ? b - 256 : b); },
     newBlob: (bytes, mime, name) => new Blob(Buffer.from(bytes.map(x => x < 0 ? x + 256 : x)), mime, name),
-    computeDigest: (alg, bytes) => [...crypto.createHash('sha256').update(Buffer.from(bytes.map(x => x < 0 ? x + 256 : x))).digest()].map(b => b > 127 ? b - 256 : b),
+    computeDigest: (alg, bytes) => [...crypto.createHash('sha256').update(typeof bytes === 'string' ? Buffer.from(bytes, 'utf8') : Buffer.from(bytes.map(x => x < 0 ? x + 256 : x))).digest()].map(b => b > 127 ? b - 256 : b),
     DigestAlgorithm: { SHA_256: 'SHA_256' },
     formatDate: (d) => d.toISOString().slice(0, 16).replace('T', ' ').replace(':', '')
   };
@@ -101,6 +102,8 @@ function makeEnv(opts = {}) {
     PropertiesService: { getScriptProperties: () => scriptProps },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
     MailApp: { sendEmail: m => mail.push(m) },
+    /* Outside requests (Twilio). Tests set env.twilio to answer them. */
+    UrlFetchApp: { fetch: (url, o) => { fetches.push({ url, o }); const r = (env.twilio || (() => ({ code: 500, body: {} })))(url, (o && o.payload) || {}); return { getResponseCode: () => r.code, getContentText: () => JSON.stringify(r.body || {}) }; } },
     ContentService: { createTextOutput: s => ({ s, setMimeType() { return this; }, getContent() { return this.s; } }), MimeType: { JSON: 'json' } },
     Logger: { log: (...a) => opts.quiet ? 0 : console.log(...a) },
     Date: class extends Date { constructor(...a) { if (a.length) super(...a); else super(now()); } static now() { return now(); } },
@@ -124,7 +127,8 @@ function makeEnv(opts = {}) {
     return JSON.parse(out.getContent());
   }
   function priv() { return sheets.get(props.get('PRIVATE_SS_ID')); }
-  return { ctx, call, seedPublic, priv, files, mail, props, cache };
+  env = { ctx, call, seedPublic, priv, files, mail, props, cache, fetches, twilio: null };
+  return env;
 }
 
 module.exports = { makeEnv };

@@ -13,14 +13,19 @@
    The web app is already deployed; it starts answering after step 2.
 
    Who can do what
-   - A professor picks their name in the hub and enters the last 4 digits
-     of the phone number the office has on file. That unlocks their own
+   - A professor picks their name in the hub, types the mobile number the
+     office has on file, and gets a 6-digit code by text (Twilio Verify).
+     Until texting is set up, or when they have no mobile on file, the code
+     goes to their email on file instead. The code unlocks their own
      checklist for this browser session (6 hours).
-   - Viewing or signing the contract asks for those 4 digits again, every
-     time, and the contract is streamed from Drive only after that check.
+   - The contract opens only within 10 minutes of a code; after that it
+     asks for a fresh one. It is streamed from Drive only after that check.
      The file itself is never shared or linked.
    - 5 wrong tries lock that professor for 15 minutes; 10 in a day lock
      them until the office unlocks them in the admin view.
+
+   Texting (optional): Project Settings → Script Properties → add
+   TWILIO_SID, TWILIO_TOKEN and TWILIO_VERIFY_SID, then run authorize once.
    - The admin view (Kyle and Nicole) uses the password in the Settings
      tab of the private sheet. Change it there any time.
    ===================================================================== */
@@ -33,7 +38,11 @@ var PH = {
   HARD_FAILS: 10,               // within 24 h → locked until the office unlocks
   ADMIN_FAILS: 5, ADMIN_LOCK_MIN: 15,
   MAX_FILE_BYTES: 12 * 1024 * 1024,
-  CHUNK_SECONDS: 20 * 60
+  CHUNK_SECONDS: 20 * 60,
+  CODE_SECONDS: 10 * 60,        // a sign-in code lasts 10 minutes
+  CODE_TRIES: 5,                // wrong entries before a code is thrown away
+  CODE_SENDS: 5,                // codes per professor per 15 minutes
+  CONTRACT_FRESH_MIN: 10        // the contract opens this long after a code, then asks again
 };
 
 var ITEMS = [
@@ -136,8 +145,8 @@ function ensureTabs_(ss) {
     rm.getRange(1, 1, 10, 1).setValues([
       ['Praxis Hub · private professor records'],
       ['This sheet is private. Do not share it with "anyone with the link". Share it only with the people who run the Praxis office.'],
-      ['Professors tab: one row per professor. "Phone on file" is what they sign in with (last 4 digits). Untick a "Needs …" box when the office already has that item, and it disappears from that professor\'s checklist.'],
-      ['Contract file: upload a contract from the hub admin view, or paste a Google Drive link to a PDF or Google Doc here. The file stays private; professors see it only through the hub after re-entering their 4 digits.'],
+      [README_SIGNIN],
+      [README_CONTRACT],
       ['Signing link: optional. If you use DocuSign, Adobe Sign or similar, paste the professor\'s signing link here and the hub shows a Sign button that opens it.'],
       ['Contract signed: filled in when a professor signs in the hub or uploads a signed copy. You can also type a date here yourself to mark it done.'],
       ['Columns from "Contact updated" onward are filled by the hub. You can edit them, but the next submission overwrites them.'],
@@ -147,6 +156,17 @@ function ensureTabs_(ss) {
     ]);
     cosmetic_(function () { rm.setColumnWidth(1, 900); rm.getRange(1, 1).setFontWeight('bold').setFontSize(14); rm.getRange(2, 1, 9, 1).setWrap(true); });
   }
+}
+
+var README_SIGNIN = 'Professors tab: one row per professor. Professors sign in with a 6-digit code texted to "Phone on file" (or emailed to "Email on file" when there is no mobile or texting is off), so keep both current. Untick a "Needs …" box when the office already has that item, and it disappears from that professor\'s checklist.';
+var README_CONTRACT = 'Contract file: upload a contract from the hub admin view, or paste a Google Drive link to a PDF or Google Doc here. The file stays private; professors see it only through the hub, within 10 minutes of a sign-in code.';
+
+/* Older sheets described the retired last-4-digits sign-in; bring the Read me up to date. */
+function refreshReadme_() {
+  var rm = privateSS_(false).getSheetByName(README_TAB);
+  if (!rm || rm.getLastRow() < 4) return;
+  var v = rm.getRange(3, 1, 2, 1).getValues();
+  if (/last 4|4 digits/.test(String(v[0][0]) + String(v[1][0]))) rm.getRange(3, 1, 2, 1).setValues([[README_SIGNIN], [README_CONTRACT]]);
 }
 
 function cosmetic_(fn) { try { fn(); } catch (e) {} }
@@ -186,6 +206,7 @@ function checkboxes_(sh, hdr, startRow, count) {
 /* Adds a row for every professor on the public People tab who is not here yet. */
 function syncRoster_() {
   compactProfs_();
+  cosmetic_(refreshReadme_);
   var pub = SpreadsheetApp.openById(PH.PUBLIC_SHEET_ID).getSheetByName('People');
   if (!pub) return [];
   var v = pub.getDataRange().getValues();
@@ -248,13 +269,14 @@ function out_(action, obj) {
 }
 
 var ROUTES = {
-  ping: function () { return { ok: true, ready: isReady_() }; },
+  ping: function () { return { ok: true, ready: isReady_(), sms: !!twilio_() }; },
   chunk: apiChunk_,
-  prof_verify: apiProfVerify_, prof_me: apiProfMe_, prof_contact: apiProfContact_,
+  prof_code: apiProfCode_, prof_verify: apiProfVerify_, prof_me: apiProfMe_, prof_contact: apiProfContact_,
   prof_photo: apiProfPhoto_, prof_desc: apiProfDesc_, prof_contract: apiProfContract_,
   prof_sign: apiProfSign_, prof_signed_copy: apiProfSignedCopy_, prof_signout: apiSignout_,
   adm_login: apiAdmLogin_, adm_list: apiAdmList_, adm_update: apiAdmUpdate_, adm_file: apiAdmFile_,
   adm_contract: apiAdmContract_, adm_unlock: apiAdmUnlock_, adm_log: apiAdmLog_, adm_sync: apiAdmSync_,
+  adm_people: apiAdmPeople_,
   adm_signout: apiSignout_
 };
 
@@ -276,8 +298,13 @@ var MESSAGES = {
   bad_token: 'Your session ended. Confirm it is you again.',
   bad_admin: 'Your admin session ended. Sign in again.',
   no_match: 'We could not find that name in the professor records.',
-  no_phone: 'The Praxis office has not added a phone number for you yet, so the hub cannot check it is you.',
-  wrong_pin: 'Those digits do not match the phone number on file.',
+  no_phone: 'The Praxis office does not have a mobile number for you yet.',
+  no_email: 'The Praxis office does not have an email address for you yet.',
+  wrong_phone: 'That number does not match the one the Praxis office has for you.',
+  wrong_code: 'That code is not right. Check the newest text or email and try again.',
+  code_expired: 'That code has expired. Send yourself a new one.',
+  too_many_codes: 'Too many codes sent. Wait 15 minutes and try again.',
+  need_code: 'Your contract is protected separately. Confirm it is you with a new code.',
   locked: 'Too many tries. Wait 15 minutes and try again.',
   hard_locked: 'This checklist is locked after too many tries. Ask the Praxis office to unlock it.',
   admin_locked: 'Too many tries. Wait 15 minutes and try again.',
@@ -384,7 +411,12 @@ function norm_(s) {
     .replace(/\(sample\)/g, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
 function digits_(s) { return String(s || '').replace(/\D+/g, ''); }
-function last4_(s) { var d = digits_(s); return d.length >= 4 ? d.slice(-4) : ''; }
+function phoneOk_(s) { return digits_(s).length >= 10; }
+function samePhone_(a, b) { var x = digits_(a), y = digits_(b); return x.length >= 10 && y.length >= 10 && x.slice(-10) === y.slice(-10); }
+function e164_(s) { var d = digits_(s); return d.length === 10 ? '+1' + d : d.length === 11 && d.charAt(0) === '1' ? '+' + d : '+' + d; }
+function maskPhone_(s) { var d = digits_(s); return '(•••) •••-' + d.slice(-4); }
+function maskEmail_(s) { var m = String(s || '').match(/^([^@])[^@]*(@.+)$/); return m ? m[1] + '•••' + m[2] : ''; }
+function sha_(s) { return hex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(s))); }
 function truthy_(v) { return v === true || /^(true|yes|y|1|x|✓)$/i.test(String(v || '').trim()); }
 function iso_(v) {
   if (!v) return '';
@@ -440,7 +472,7 @@ function checkLock_(name) {
   if (s.hard) throw new Error('hard_locked');
   if (s.until && Date.now() < s.until) throw new Error('locked');
 }
-function recordFail_(row, what) {
+function recordFail_(row, what, code) {
   var name = row.Name;
   var s = failState_(name);
   s.n++; if (!s.first) s.first = Date.now();
@@ -448,20 +480,122 @@ function recordFail_(row, what) {
   if (s.n >= PH.HARD_FAILS) { s.hard = true; notice = 'hard'; }
   else if (s.n % PH.SOFT_FAILS === 0) { s.until = Date.now() + PH.SOFT_LOCK_MIN * 60000; notice = 'soft'; }
   PropertiesService.getScriptProperties().setProperty(failKey_(name), JSON.stringify(s));
-  log_('Professor', name, 'Wrong digits', what + (notice === 'hard' ? ' · locked until the office unlocks' : notice === 'soft' ? ' · locked 15 min' : ''));
-  if (notice === 'hard') notify_(name + ' is locked out of the Praxis Hub', 'There were ' + s.n + ' wrong tries at ' + name + '’s 4 digits in the last day, so their checklist and contract are locked. If it was them, unlock them in the admin view. If not, someone may be guessing.');
+  log_('Professor', name, code === 'wrong_phone' ? 'Wrong phone number' : 'Wrong code', what + (notice === 'hard' ? ' · locked until the office unlocks' : notice === 'soft' ? ' · locked 15 min' : ''));
+  if (notice === 'hard') notify_(name + ' is locked out of the Praxis Hub', 'There were ' + s.n + ' wrong sign-in tries for ' + name + ' in the last day, so their checklist and contract are locked. If it was them, unlock them in the admin view. If not, someone may be guessing.');
   if (notice) throw new Error(notice === 'hard' ? 'hard_locked' : 'locked');
-  throw new Error('wrong_pin');
+  throw new Error(code || 'wrong_code');
 }
 function clearFails_(name) { PropertiesService.getScriptProperties().deleteProperty(failKey_(name)); }
 
-function verifyPin_(row, pin, what) {
+/* ---------------------------------------------------------------- one-time codes */
+
+function twilio_() {
+  var p = PropertiesService.getScriptProperties();
+  var sid = p.getProperty('TWILIO_SID'), tok = p.getProperty('TWILIO_TOKEN'), vsid = p.getProperty('TWILIO_VERIFY_SID');
+  return sid && tok && vsid ? { sid: sid, tok: tok, vsid: vsid } : null;
+}
+
+function twilioCall_(t, path, form) {
+  var r = UrlFetchApp.fetch('https://verify.twilio.com/v2/Services/' + t.vsid + '/' + path, {
+    method: 'post', payload: form, muteHttpExceptions: true,
+    headers: { Authorization: 'Basic ' + Utilities.base64Encode(t.sid + ':' + t.tok) }
+  });
+  var body = {};
+  try { body = JSON.parse(r.getContentText()) || {}; } catch (e) {}
+  return { code: r.getResponseCode(), body: body };
+}
+
+/* Run once from the editor after adding the Twilio keys: approves outside requests and checks the keys. */
+function authorize() {
+  var t = twilio_();
+  if (!t) return Logger.log('No Twilio keys yet. Codes will go by email.');
+  var r = UrlFetchApp.fetch('https://verify.twilio.com/v2/Services/' + t.vsid, { muteHttpExceptions: true, headers: { Authorization: 'Basic ' + Utilities.base64Encode(t.sid + ':' + t.tok) } });
+  Logger.log(r.getResponseCode() === 200 ? 'Twilio is connected. Professors will get their codes by text.' : 'Twilio said ' + r.getResponseCode() + ': ' + r.getContentText());
+}
+
+function emailOf_(row) { return String(row['Email on file'] || row['Email (submitted)'] || '').trim(); }
+
+function sendEmailCode_(row, to, code) {
+  MailApp.sendEmail({
+    to: to, name: 'Praxis Hub', subject: code + ' is your Praxis Hub code',
+    body: 'Hi ' + String(row.Name).split(' ')[0] + ',\n\nYour Praxis Hub code is ' + code + '\n\nIt works for 10 minutes. If you did not ask for it, you can ignore this email.\n\n' + (setting_('Hub address') || '')
+  });
+}
+
+/* Sends a 6-digit code. Sign-in: {name, phone} or {name, via:'email'}. Contract: {tok} (already signed in). */
+function apiProfCode_(b) {
+  var sess = b.tok ? session_(b.tok, 'prof') : null;
+  if (b.tok && !sess) throw new Error('bad_token');
+  var row = findProf_(sess ? sess.name : b.name);
+  if (!row) throw new Error(sess ? 'bad_token' : 'no_match');
   checkLock_(row.Name);
-  var want = last4_(row['Phone on file']);
-  if (!want) throw new Error('no_phone');
-  var got = digits_(pin);
-  if (got.length !== 4 || got !== want) recordFail_(row, what);
+  var phone = String(row['Phone on file'] || ''), email = emailOf_(row), t = twilio_();
+  var via = b.via === 'email' ? 'email' : b.via === 'sms' ? 'sms' : (sess ? (sess.ch || 'sms') : 'sms');
+  if (via === 'sms' && !phoneOk_(phone)) {
+    if (sess && email) via = 'email';
+    else return { ok: false, error: 'no_phone', message: MESSAGES.no_phone, email: maskEmail_(email), office: setting_('Office contact') || 'the Praxis office' };
+  }
+  if (via === 'sms' && !sess && !samePhone_(b.phone, phone)) recordFail_(row, 'sign-in', 'wrong_phone');
+  if (via === 'email' && !email) return { ok: false, error: 'no_email', message: MESSAGES.no_email, office: setting_('Office contact') || 'the Praxis office' };
+
+  var nk = 'n:' + norm_(row.Name).slice(0, 80), sent = Number(cache_().get(nk) || 0);
+  if (sent >= PH.CODE_SENDS) throw new Error('too_many_codes');
+  cache_().put(nk, String(sent + 1), 15 * 60);
+
+  var o = { name: row.Name, purpose: sess ? 'contract' : 'signin', tries: 0, exp: Date.now() + PH.CODE_SECONDS * 1000 }, fallback = false;
+  if (via === 'sms' && t) {
+    var r = twilioCall_(t, 'Verifications', { To: e164_(phone), Channel: 'sms' });
+    if (r.code < 300) { o.ch = 'sms'; o.to = e164_(phone); }
+    else {
+      log_('System', row.Name, 'Text failed', 'Twilio ' + r.code + ' ' + clip_(r.body.code || '', 20) + ' ' + clip_(r.body.message || '', 200));
+      if (!email) throw new Error('server');
+      fallback = true;
+    }
+  } else if (via === 'sms') fallback = true;
+  if (!o.ch) {
+    var code = String(100000 + Math.floor(Math.random() * 900000));
+    o.ch = 'email'; o.salt = token_().slice(0, 16); o.h = sha_(o.salt + code);
+    sendEmailCode_(row, email, code);
+  }
+  var cid = token_();
+  cache_().put('o:' + cid, JSON.stringify(o), PH.CODE_SECONDS);
+  log_('Professor', row.Name, 'Code sent', (o.ch === 'sms' ? 'by text' : 'by email') + (o.purpose === 'contract' ? ' · to open contract' : ''));
+  return { ok: true, cid: cid, ch: o.ch, to: o.ch === 'sms' ? maskPhone_(phone) : maskEmail_(email), fallback: fallback };
+}
+
+/* Checks a code and throws it away once used, expired or guessed at too often. */
+function useCode_(cid, code) {
+  var key = 'o:' + String(cid || '');
+  var raw = cid && cache_().get(key);
+  if (!raw) throw new Error('code_expired');
+  var o = JSON.parse(raw);
+  var row = findProf_(o.name);
+  if (!row) throw new Error('no_match');
+  checkLock_(row.Name);
+  var got = digits_(code), good = false;
+  if (got.length === 6) {
+    if (o.ch === 'email') good = sha_(o.salt + got) === o.h;
+    else {
+      var t = twilio_();
+      var r = t ? twilioCall_(t, 'VerificationCheck', { To: o.to, Code: got }) : { code: 0, body: {} };
+      if (r.code === 404) { cache_().remove(key); throw new Error('code_expired'); }
+      good = r.code < 300 && r.body.status === 'approved';
+    }
+  }
+  if (!good) {
+    o.tries++;
+    var left = Math.floor((o.exp - Date.now()) / 1000);
+    if (o.tries >= PH.CODE_TRIES || left < 1) cache_().remove(key); else cache_().put(key, JSON.stringify(o), left);
+    recordFail_(row, o.purpose === 'contract' ? 'contract code' : 'sign-in code', 'wrong_code');
+  }
+  cache_().remove(key);
   clearFails_(row.Name);
+  return { row: row, o: o };
+}
+
+function putSession_(tok, s) {
+  var left = Math.floor((s.at + PH.TOKEN_SECONDS * 1000 - Date.now()) / 1000);
+  if (left > 0) cache_().put('t:' + tok, JSON.stringify(s), left);
 }
 
 function notify_(subject, text) {
@@ -563,17 +697,12 @@ function meFor_(row) {
 }
 
 function apiProfVerify_(b) {
-  var row = findProf_(b.name);
-  if (!row) throw new Error('no_match');
-  if (!last4_(row['Phone on file'])) {
-    log_('Professor', row.Name, 'Could not sign in', 'No phone on file');
-    return { ok: false, error: 'no_phone', message: MESSAGES.no_phone, office: setting_('Office contact') || 'the Praxis office' };
-  }
-  verifyPin_(row, b.pin, 'sign-in');
+  var u = useCode_(b.cid, b.code), row = u.row;
+  if (u.o.purpose !== 'signin') throw new Error('code_expired');
   var tok = token_();
-  cache_().put('t:' + tok, JSON.stringify({ kind: 'prof', name: row.Name, at: Date.now() }), PH.TOKEN_SECONDS);
+  cache_().put('t:' + tok, JSON.stringify({ kind: 'prof', name: row.Name, at: Date.now(), codeAt: Date.now(), ch: u.o.ch }), PH.TOKEN_SECONDS);
   writeProf_(row, { 'Last activity': new Date() });
-  log_('Professor', row.Name, 'Signed in', '');
+  log_('Professor', row.Name, 'Signed in', u.o.ch === 'sms' ? 'code by text' : 'code by email');
   return { ok: true, tok: tok, me: meFor_(row) };
 }
 
@@ -663,7 +792,13 @@ function contractBlob_(row) {
 
 function apiProfContract_(b) {
   var row = profFromToken_(b);
-  verifyPin_(row, b.pin, 'contract');
+  var s = session_(b.tok, 'prof');
+  if (!(s.codeAt && Date.now() - s.codeAt < PH.CONTRACT_FRESH_MIN * 60000)) {
+    if (!b.cid) throw new Error('need_code');
+    var u = useCode_(b.cid, b.code);
+    if (u.o.purpose !== 'contract' || norm_(u.row.Name) !== norm_(row.Name)) throw new Error('code_expired');
+    s.codeAt = Date.now(); putSession_(b.tok, s);
+  }
   var c = contractBlob_(row);
   var bytes = c.blob.getBytes();
   var sha = hex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, bytes));
@@ -749,7 +884,7 @@ function profSummary_(row) {
   var phone = String(row['Phone on file'] || '');
   return {
     name: row.Name,
-    phone: phone, phoneOk: !!last4_(phone),
+    phone: phone, phoneOk: phoneOk_(phone),
     email: String(row['Email on file'] || ''),
     courses: String(row.Courses || ''),
     items: itemsFor_(row),
@@ -789,6 +924,7 @@ function apiAdmUpdate_(b) {
     if ('phone' in p) { f['Phone on file'] = clip_(p.phone, 40); what.push('phone on file'); }
     if ('email' in p) { f['Email on file'] = clip_(p.email, 160); what.push('email on file'); }
     if ('courses' in p) { f.Courses = clip_(p.courses, 400); what.push('courses'); }
+    if ('address' in p) { f['Mailing address'] = clip_(p.address, 400); what.push('mailing address'); }
     if ('signingUrl' in p) {
       var u = clip_(p.signingUrl, 500);
       if (u && !/^https:\/\//i.test(u)) return { ok: false, error: 'missing', message: 'The signing link must start with https://' };
@@ -866,6 +1002,56 @@ function apiAdmLog_(b) {
   var rows = v.filter(function (r) { return !k || norm_(r[2]) === k; }).reverse().slice(0, Number(b.limit) || 60)
     .map(function (r) { return { at: iso_(r[0]), who: String(r[1]), prof: String(r[2]), what: String(r[3]), detail: String(r[4]) }; });
   return { ok: true, rows: rows };
+}
+
+/* Edits or adds rows on the public People tab (the directory). That sheet is
+   readable by anyone with its link, so the Phone column is never written here:
+   phone numbers stay in the private sheet. */
+var PEOPLE_COLS = ['group', 'title', 'status', 'church or institution', 'courses', 'email', 'notes', 'sort order'];
+
+function apiAdmPeople_(b) {
+  var s = requireAdmin_(b);
+  return withLock_(function () {
+    var sh = SpreadsheetApp.openById(PH.PUBLIC_SHEET_ID).getSheetByName('People');
+    if (!sh) throw new Error('missing');
+    var v = sh.getDataRange().getValues();
+    var h = v[0].map(function (x) { return String(x).trim().toLowerCase(); });
+    var iN = h.indexOf('name'), iG = h.indexOf('group');
+    if (iN < 0) throw new Error('missing');
+    var clean = function (set) {
+      var out = {};
+      Object.keys(set || {}).forEach(function (k) {
+        var c = String(k).trim().toLowerCase(), val = clip_(set[k], 2000);
+        if (PEOPLE_COLS.indexOf(c) < 0 || h.indexOf(c) < 0) return;
+        if (c === 'email' && val && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val)) return;
+        out[c] = val;
+      });
+      return out;
+    };
+    var updated = [], added = [], missed = [];
+    (b.edits || []).slice(0, 200).forEach(function (e) {
+      var k = norm_(e.name), set = clean(e.set), cols = Object.keys(set);
+      if (!k || !cols.length) return;
+      var hit = 0;
+      for (var i = 1; i < v.length; i++) {
+        if (norm_(v[i][iN]) !== k) continue;
+        if (e.group && iG >= 0 && norm_(v[i][iG]) !== norm_(e.group)) continue;
+        cols.forEach(function (c) { sh.getRange(i + 1, h.indexOf(c) + 1).setValue(set[c]); v[i][h.indexOf(c)] = set[c]; });
+        hit++;
+      }
+      (hit ? updated : missed).push(String(e.name) + (e.group ? ' (' + e.group + ')' : ''));
+    });
+    (b.add || []).slice(0, 50).forEach(function (a) {
+      var name = clip_(a.name, 120), set = clean(a.set);
+      if (!name || !set.group) return;
+      for (var i = 1; i < v.length; i++) if (norm_(v[i][iN]) === norm_(name) && iG >= 0 && norm_(v[i][iG]) === norm_(set.group)) return;
+      var row = h.map(function (c, j) { return j === iN ? name : (set[c] === undefined ? '' : set[c]); });
+      sh.appendRow(row); v.push(row);
+      added.push(name + ' (' + set.group + ')');
+    });
+    if (updated.length || added.length) log_('Admin', '', 'Edited the directory', s.who + ': ' + updated.concat(added.map(function (x) { return 'added ' + x; })).join(', '));
+    return { ok: true, updated: updated, added: added, missed: missed };
+  });
 }
 
 function apiAdmSync_(b) {

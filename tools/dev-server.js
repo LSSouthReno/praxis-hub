@@ -1,7 +1,7 @@
 /* Local preview with a working backend: node tools/dev-server.js [port]
    Serves index.html and runs backend/Code.gs in memory (tools/gas-mock.js),
    seeded with the professor names from the live People tab and made-up
-   phone numbers (775-555-01NN, so sign in with 01NN). Nothing leaves this
+   phone numbers (775-555-01NN). Sign-in codes are printed here. Nothing leaves this
    machine and nothing is written to Google.
    Open http://localhost:8787/?api=http://localhost:8787/exec */
 'use strict';
@@ -10,6 +10,7 @@ const { makeEnv } = require('./gas-mock');
 const port = Number(process.argv[2]) || 8787;
 const root = path.join(__dirname, '..');
 const env = makeEnv({ quiet: true });
+let shown = 0;   // emailed codes already printed
 
 function samplePdf(title, lines) {
   const esc = s => s.replace(/[\\()]/g, m => '\\' + m);
@@ -36,6 +37,11 @@ async function seed() {
     rows = [['Name', 'Group', 'Title', 'Status'], ['Sample Professor A', 'Professor', 'Professor', 'Confirmed'], ['Sample Professor B', 'Professor', 'Professor', 'Confirmed']];
   }
   env.seedPublic(rows);
+  if (process.env.FAKE_SMS) {   // FAKE_SMS=1 node tools/dev-server.js → texting "on"; every texted code is 123456
+    ['TWILIO_SID', 'TWILIO_TOKEN', 'TWILIO_VERIFY_SID'].forEach(k => env.props.set(k, 'dev'));
+    env.twilio = (url, f) => /VerificationCheck$/.test(url) ? { code: 200, body: { status: f.Code === '123456' ? 'approved' : 'pending' } }
+      : (console.log('  text to ' + f.To + ': 123456'), { code: 201, body: { status: 'pending' } });
+  }
   env.ctx.setup();
   const pw = env.priv().getSheetByName('Settings').toObjects()[0].Value;
   const adm = env.call('adm_login', { password: pw, who: 'Dev' }).adm;
@@ -51,7 +57,7 @@ async function seed() {
   if (profs[1]) env.call('adm_update', { adm, name: profs[1].name, patch: { needs: { photo: false, desc: false } } });
   console.log('Dev backend ready with ' + profs.length + ' professors.');
   console.log('  Admin password: ' + pw);
-  profs.slice(0, 4).forEach((p, i) => console.log('  ' + p.name + ' signs in with ' + String(100 + i).padStart(4, '0')));
+  profs.slice(0, 4).forEach((p, i) => console.log('  ' + p.name + ' signs in with 775-555-' + String(100 + i).padStart(4, '0')));
   console.log('  ' + (profs[profs.length - 1] || {}).name + ' has no phone on file.');
 }
 
@@ -63,6 +69,7 @@ http.createServer((req, res) => {
     if (req.method === 'POST') {
       let b = ''; req.on('data', c => b += c); req.on('end', () => send(env.ctx.doPost({ postData: { contents: b } })));
     } else send(env.ctx.doGet({ parameter: Object.fromEntries(u.searchParams) }));
+    while (env.mail.length > shown) { const m = env.mail[shown++]; if (/Praxis Hub code$/.test(m.subject)) console.log('  code for ' + m.to + ': ' + m.subject.slice(0, 6)); }
     return;
   }
   const f = path.join(root, u.pathname === '/' ? 'index.html' : path.normalize(u.pathname).replace(/^(\.\.[/\\])+/, ''));
