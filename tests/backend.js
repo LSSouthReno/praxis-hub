@@ -43,8 +43,14 @@ eq(L.profs[0].phoneOk, false, 'no phone on file yet');
 
 /* professor without a phone */
 const np = call('prof_code', { name: 'Ana Nunez', phone: '7755550142' });
-eq([np.error, np.email], ['no_phone', 'a•••@example.org'], 'no phone on file → explained, email offered');
-eq(call('prof_code', { name: 'Dee Lane', via: 'email' }).error, 'no_email', 'no email on file → explained');
+eq(np.error, 'no_phone', 'typed a phone but none on file → explained');
+ok(/Enter your email instead/.test(np.message), 'and pointed to email');
+eq(call('prof_code', { name: 'Dee Lane', contact: 'dee@example.org' }).error, 'no_email', 'no email on file → explained');
+eq(call('prof_code', { name: 'Ana Núñez' }).error, 'missing', 'must type a phone or email');
+const ce = call('prof_code', { name: 'Ana Núñez', contact: ' ANA@Example.org ' });
+eq([ce.ch, ce.to], ['email', 'a•••@example.org'], 'signs in by email too (case and spaces ignored)');
+eq(env.mail.slice(-1)[0].to, 'ana@example.org', 'code goes to the email on file');
+eq(call('prof_code', { name: 'Ana Núñez', contact: 'ana@evil.org' }).error, 'wrong_email', 'email must match the one on file');
 
 /* admin sets phones, needs and a contract */
 eq(call('adm_update', { adm, name: 'Ana Núñez', patch: { phone: '(775) 555-0142' } }).prof.phoneOk, true, 'admin sets phone');
@@ -63,12 +69,11 @@ eq(call('prof_code', { name: 'Nobody', phone: '7755550142' }).error, 'no_match',
 eq(call('prof_code', { name: 'Ana Núñez', phone: '775-555-9999' }).error, 'wrong_phone', 'number must match the one on file');
 eq(call('prof_code', { name: 'Ana Núñez', phone: '0142' }).error, 'wrong_phone', 'last 4 digits alone no longer work');
 const c1 = call('prof_code', { name: 'Ana Núñez', phone: '+1 (775) 555-0142' });
-eq([c1.ch, c1.to, c1.fallback], ['email', 'a•••@example.org', true], 'no Twilio yet → code emailed');
+eq([c1.ch, c1.to, c1.fallback], ['email', 'a•••@example.org', false], 'phone typed, no Twilio → code emailed');
 const code1 = lastCode();
 ok(/^\d{6}$/.test(code1) && codeMails().slice(-1)[0].to === 'ana@example.org', 'code emailed to the address on file');
 eq(call('prof_verify', { cid: c1.cid, code: wrong(code1) }).error, 'wrong_code', 'wrong code');
-eq(call('prof_verify', { cid: c1.cid, code: wrong(code1) }).error, 'wrong_code', 'wrong code again');
-eq(call('prof_verify', { cid: c1.cid, code: wrong(code1) }).error, 'locked', '5th wrong try (phone + codes) locks');
+eq(call('prof_verify', { cid: c1.cid, code: wrong(code1) }).error, 'locked', '5th wrong try (email + phone + codes) locks');
 eq(call('prof_verify', { cid: c1.cid, code: code1 }).error, 'locked', 'even the right code waits while locked');
 clock += 16 * 60000;
 eq(call('prof_verify', { cid: c1.cid, code: code1 }).error, 'code_expired', 'codes expire after 10 minutes');
@@ -82,6 +87,8 @@ eq(V.me.courses, ['Hermeneutics', 'Greek I'], 'courses parsed');
 eq(V.me.contact.email, 'ana@example.org', 'contact prefilled from file');
 eq(V.me.contract.ready, true, 'contract ready');
 
+eq(call('prof_code', { name: 'Ben Ortiz', contact: '(775) 555-9876' }).error, 'no_email', 'phone matches but no email and no texting → explained');
+call('adm_update', { adm, name: 'Ben Ortiz', patch: { email: 'ben@example.org' } });
 const B = signIn('Ben Ortiz', '(775) 555-9876');
 eq(B.me.items.filter(i => i.needed).map(i => i.key), ['contract', 'contact'], 'custom checklist per professor');
 eq(B.me.contract.ready, false, 'Ben has no contract yet');

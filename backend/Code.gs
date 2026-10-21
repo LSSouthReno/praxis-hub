@@ -13,10 +13,9 @@
    The web app is already deployed; it starts answering after step 2.
 
    Who can do what
-   - A professor picks their name in the hub, types the mobile number the
-     office has on file, and gets a 6-digit code by text (Twilio Verify).
-     Until texting is set up, or when they have no mobile on file, the code
-     goes to their email on file instead. The code unlocks their own
+   - A professor picks their name in the hub, types the mobile number or the
+     email the office has on file (it must match), and gets a 6-digit code by
+     email. If Twilio is set up and they typed their phone, it is texted. The code unlocks their own
      checklist for this browser session (6 hours).
    - The contract opens only within 10 minutes of a code; after that it
      asks for a fresh one. It is streamed from Drive only after that check.
@@ -301,6 +300,7 @@ var MESSAGES = {
   no_phone: 'The Praxis office does not have a mobile number for you yet.',
   no_email: 'The Praxis office does not have an email address for you yet.',
   wrong_phone: 'That number does not match the one the Praxis office has for you.',
+  wrong_email: 'That email does not match the one the Praxis office has for you.',
   wrong_code: 'That code is not right. Check the newest text or email and try again.',
   code_expired: 'That code has expired. Send yourself a new one.',
   too_many_codes: 'Too many codes sent. Wait 15 minutes and try again.',
@@ -315,7 +315,7 @@ var MESSAGES = {
   too_big: 'That file is too large. Keep it under 12 MB.',
   bad_type: 'That kind of file is not accepted here.',
   chunks_missing: 'The upload was interrupted. Try again.',
-  missing: 'Some required information is missing.',
+  missing: 'Some required information is missing. If you are signing in, enter your mobile number or email.',
   not_needed: 'That item is not on your checklist.'
 };
 
@@ -480,7 +480,7 @@ function recordFail_(row, what, code) {
   if (s.n >= PH.HARD_FAILS) { s.hard = true; notice = 'hard'; }
   else if (s.n % PH.SOFT_FAILS === 0) { s.until = Date.now() + PH.SOFT_LOCK_MIN * 60000; notice = 'soft'; }
   PropertiesService.getScriptProperties().setProperty(failKey_(name), JSON.stringify(s));
-  log_('Professor', name, code === 'wrong_phone' ? 'Wrong phone number' : 'Wrong code', what + (notice === 'hard' ? ' · locked until the office unlocks' : notice === 'soft' ? ' · locked 15 min' : ''));
+  log_('Professor', name, code === 'wrong_phone' ? 'Wrong phone number' : code === 'wrong_email' ? 'Wrong email' : 'Wrong code', what + (notice === 'hard' ? ' · locked until the office unlocks' : notice === 'soft' ? ' · locked 15 min' : ''));
   if (notice === 'hard') notify_(name + ' is locked out of the Praxis Hub', 'There were ' + s.n + ' wrong sign-in tries for ' + name + ' in the last day, so their checklist and contract are locked. If it was them, unlock them in the admin view. If not, someone may be guessing.');
   if (notice) throw new Error(notice === 'hard' ? 'hard_locked' : 'locked');
   throw new Error(code || 'wrong_code');
@@ -530,13 +530,24 @@ function apiProfCode_(b) {
   if (!row) throw new Error(sess ? 'bad_token' : 'no_match');
   checkLock_(row.Name);
   var phone = String(row['Phone on file'] || ''), email = emailOf_(row), t = twilio_();
-  var via = b.via === 'email' ? 'email' : b.via === 'sms' ? 'sms' : (sess ? (sess.ch || 'sms') : 'sms');
-  if (via === 'sms' && !phoneOk_(phone)) {
-    if (sess && email) via = 'email';
-    else return { ok: false, error: 'no_phone', message: MESSAGES.no_phone, email: maskEmail_(email), office: setting_('Office contact') || 'the Praxis office' };
-  }
-  if (via === 'sms' && !sess && !samePhone_(b.phone, phone)) recordFail_(row, 'sign-in', 'wrong_phone');
-  if (via === 'email' && !email) return { ok: false, error: 'no_email', message: MESSAGES.no_email, office: setting_('Office contact') || 'the Praxis office' };
+  var office = setting_('Office contact') || 'the Praxis office';
+  /* Sign-in: the professor types their mobile number or their email, and it must match the office's record.
+     The code is texted only when Twilio is set up and they typed their phone; otherwise it is emailed. */
+  var typed = String(b.contact || b.phone || '').trim(), byEmail = /@/.test(typed), via = 'email';
+  if (!sess) {
+    if (!typed) throw new Error('missing');
+    if (byEmail) {
+      if (!email) return { ok: false, error: 'no_email', message: MESSAGES.no_email, office: office };
+      var mine = [row['Email on file'], row['Email (submitted)']].map(function (x) { return String(x || '').trim().toLowerCase(); });
+      if (mine.indexOf(typed.toLowerCase()) < 0) recordFail_(row, 'sign-in', 'wrong_email');
+    } else {
+      if (!phoneOk_(phone)) return { ok: false, error: 'no_phone', message: MESSAGES.no_phone + (email ? ' Enter your email instead.' : ''), office: office };
+      if (!samePhone_(typed, phone)) recordFail_(row, 'sign-in', 'wrong_phone');
+      if (b.via !== 'email') via = 'sms';
+    }
+  } else if (sess.ch === 'sms' && b.via !== 'email' && phoneOk_(phone)) via = 'sms';
+  if (via === 'sms' && !t) via = 'email';
+  if (via === 'email' && !email) return { ok: false, error: 'no_email', message: MESSAGES.no_email, office: office };
 
   var nk = 'n:' + norm_(row.Name).slice(0, 80), sent = Number(cache_().get(nk) || 0);
   if (sent >= PH.CODE_SENDS) throw new Error('too_many_codes');
@@ -551,7 +562,7 @@ function apiProfCode_(b) {
       if (!email) throw new Error('server');
       fallback = true;
     }
-  } else if (via === 'sms') fallback = true;
+  }
   if (!o.ch) {
     var code = String(100000 + Math.floor(Math.random() * 900000));
     o.ch = 'email'; o.salt = token_().slice(0, 16); o.h = sha_(o.salt + code);
