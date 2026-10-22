@@ -50,11 +50,9 @@ Each professor's checklist is their own: the office unticks an item it already h
 
 **Trying it locally without touching Google.** `node tools/dev-server.js` runs the real backend code against in-memory stand-ins (`tools/gas-mock.js`), seeded with the professor names from the live People tab, made-up phone numbers and sample contracts. It prints the admin password and each sign-in code as it is "sent". Open `http://localhost:8787/?api=http://localhost:8787/exec` (the `?api=` override only works on localhost).
 
-## Board sign-in: what it is and what it is not
+## Sign-in
 
-The board passcode hides the board views from professors so the page is tidy. **It is not security.** This is a static site: every visitor's browser downloads the whole page and reads the Google Sheet directly, and the sheet is shared “anyone with the link”. A technical person can open the browser tools and see everything, and the source code in this public repository includes the playbook text. The passcode is stored only as a hash, but a hash of a short passcode can be guessed offline. Do not put anything in the sheet or the page that must stay confidential from professors. (The professor checklists, contracts and admin view below are different: they are server-checked and kept out of the sheet.)
-
-Change the passcode with `node tools/set-passcode.js "new passcode"`, then commit.
+The only way in is a phone number and a texted code. There is no passcode and no view picker. Atlas's Praxis server looks the number up in its People database and sends the page only what that person's role (admin, board, professor, music, staff) may see. Details in `docs/PHONE-LOGIN.md`.
 
 **A real solution** puts the whole site behind a login at the network edge, so unauthorised people never receive the page or the data: Cloudflare Access (free for small teams, email one-time codes, separate policies for professors and board), or a private repo with Cloudflare Pages / Netlify password protection, plus a separate private sheet (or Apps Script endpoint that checks the signed-in Google account) for board-only data. That is the recommended next step before any sensitive material (finances, candidate evaluations) goes into the hub.
 

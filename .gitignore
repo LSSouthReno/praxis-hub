@@ -1,3 +1,4 @@
 .board-passcode.txt
 .claude/
 backend/.clasp.json
+secure-build/
