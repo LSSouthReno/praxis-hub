@@ -1301,11 +1301,11 @@ body:not(.is-admin) [data-adminonly]{display:none!important}
   <div class="gbox">
     <div class="gmark">PRAXIS</div>
     <h1 id="gTitle">Welcome to Praxis Hub</h1>
-    <div id="gStep1"><p>Enter the mobile number Praxis has for you. We will text you a code. No password to remember.</p>
-      <form id="gForm1"><label for="gPhone">Mobile number</label><input id="gPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(775) 555-0123" required><button class="gbtn" id="gSend" type="submit">Text me a code</button></form></div>
-    <div id="gStep2" hidden><p>Type the 6-digit code from the text message.</p>
+    <div id="gStep1"><p>Enter your email address or the mobile number Praxis has for you. We will email you a code. No password to remember.</p>
+      <form id="gForm1"><label for="gPhone">Email or mobile number</label><input id="gPhone" type="text" inputmode="email" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="you@example.com or (775) 555-0123" required><button class="gbtn" id="gSend" type="submit">Email me a code</button></form></div>
+    <div id="gStep2" hidden><p>Type the 6-digit code from the email.</p>
       <form id="gForm2"><label for="gCode">Code</label><input id="gCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456" required><button class="gbtn" id="gGo" type="submit">Sign in</button></form>
-      <button class="glink" id="gBack" type="button">Use a different number</button></div>
+      <button class="glink" id="gBack" type="button">Use a different email or number</button></div>
     <div class="gmsg" id="gMsg" role="status" aria-live="polite"></div>
   </div>
 </div>
@@ -2177,7 +2177,7 @@ document.addEventListener('keydown',e=>{
 const CONFIG={
   /* Where ideas and updates are emailed. Change this one line to move them to the hub's own Gmail address. */
   IDEAS_EMAIL:'brad@lschurches.com',
-  /* Phone-number sign-in is the only way in: the page asks Atlas's Praxis server, which sends each person only what their role may see. */
+  /* Sign-in by email or phone number (the code is emailed) is the only way in: the page asks Atlas's Praxis server, which sends each person only what their role may see. */
   AUTH_URL:'https://praxis-relay.brad-5a1.workers.dev/praxis',
   SIGNIN_DAYS:30,
   /* The private backend (backend/Code.gs) that holds checklists, contracts and the admin view. Blank = those features stay hidden. */
@@ -2274,14 +2274,14 @@ function showGate(){
   const say=(t,bad)=>{msg.textContent=t||'';msg.className='gmsg'+(bad?' bad':'');};
   $('#gForm1').onsubmit=async e=>{e.preventDefault();say('');phone=ph.value.trim();const b=$('#gSend');b.disabled=true;
     try{const j=await authCall({action:'requestCode',phone});
-      if(j.ok){s1.hidden=true;s2.hidden=false;say('If that number is on the Praxis list, a code is on its way by text. If nothing arrives in a minute, your number may not be on the list yet. Ask Brad to add it.');cd.value='';cd.focus();}
-      else say(j.error==='badphone'?'That does not look like a phone number. Please include the area code.':j.error==='toomany'?'That was a few too many tries. Please wait 15 minutes and try again.':'Sign-in is busy right now. Please try again in a little while.',true);
+      if(j.ok){s1.hidden=true;s2.hidden=false;say('We emailed you a code. If nothing arrives in a minute, check your spam folder; your email or number may not be on the Praxis list yet. Ask Brad to add it.');cd.value='';cd.focus();}
+      else say(j.error==='badphone'?'That does not look like an email address or phone number. For a phone, please include the area code.':j.error==='toomany'?'That was a few too many tries. Please wait 15 minutes and try again.':'Sign-in is busy right now. Please try again in a little while.',true);
     }catch(_){say('Could not reach the sign-in service. Check your connection and try again.',true);}
     b.disabled=false;};
   $('#gForm2').onsubmit=async e=>{e.preventDefault();say('');const b=$('#gGo');b.disabled=true;
     try{const j=await authCall({action:'verifyCode',phone,code:cd.value});
       if(j.ok&&j.token){clearPrivate();remember('session',j.token);location.reload();return;}
-      say('That code did not work, or it has expired. Check the text, or go back and ask for a new code.',true);cd.select();
+      say('That code did not work, or it has expired. Check the email, or go back and ask for a new code.',true);cd.select();
     }catch(_){say('Could not reach the sign-in service. Check your connection and try again.',true);}
     b.disabled=false;};
   $('#gBack').onclick=()=>{s2.hidden=true;s1.hidden=false;say('');ph.focus();};
