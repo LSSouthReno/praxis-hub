@@ -69,12 +69,11 @@ function setup() {
   try { DriveApp.getFileById(ss.getId()).moveTo(folder); } catch (e) {}
   ensureTabs_(ss);
   var added = syncRoster_();
-  var pw = setting_('Admin password');
   var msg = [
     'Praxis Hub backend is ready.',
     'Private sheet: ' + ss.getUrl(),
     'Private files folder: ' + folder.getUrl(),
-    'Admin password (change it in the Settings tab): ' + pw,
+    'Office admin sign-in: administrators sign in to the hub with their email or phone code.',
     'Professors added from the public People tab: ' + added.length
   ].join('\n');
   Logger.log(msg);
@@ -129,9 +128,8 @@ function ensureTabs_(ss) {
   var st = ss.getSheetByName(SET_TAB);
   if (!st) {
     st = ss.insertSheet(SET_TAB);
-    st.getRange(1, 1, 5, 3).setValues([
+    st.getRange(1, 1, 4, 3).setValues([
       ['Setting', 'Value', 'What it does'],
-      ['Admin password', randomPassword_(), 'Kyle and Nicole sign in to the hub admin view with this. Change it any time; it takes effect at once.'],
       ['Notify emails', '', 'Comma-separated. Gets an email when a professor finishes an item or is locked out. Leave blank for none.'],
       ['Hub address', 'https://lssouthreno.github.io/praxis-hub/', 'Used in notification emails.'],
       ['Office contact', 'the Praxis office', 'Shown to professors who cannot sign in, e.g. "Nicole Cox (nicole@…)".']
@@ -868,25 +866,37 @@ function apiProfSignedCopy_(b) {
 
 /* ---------------------------------------------------------------- admin API */
 
+/* Office admin sign-in: only a short-lived proof issued by Atlas's Praxis sign-in to a signed-in administrator. There is no shared password. */
+var ATLAS_KEY = '__ATLAS_KEY__';   /* filled in only when pushing to Apps Script; never committed */
+
 function apiAdmLogin_(b) {
-  var props = PropertiesService.getScriptProperties();
-  var st = JSON.parse(props.getProperty('adm_fail') || '{"n":0,"until":0}');
-  if (st.until && Date.now() < st.until) throw new Error('admin_locked');
-  var want = setting_('Admin password');
-  var got = String(b.password || '').trim();
-  if (!want || got !== want) {
-    st.n++;
-    if (st.n >= PH.ADMIN_FAILS) { st.until = Date.now() + PH.ADMIN_LOCK_MIN * 60000; st.n = 0; }
-    props.setProperty('adm_fail', JSON.stringify(st));
-    log_('Admin', '', 'Wrong admin password', clip_(b.who, 60));
-    throw new Error(st.until > Date.now() ? 'admin_locked' : 'wrong_password');
+  var parts = String(b.proof || '').split('.');
+  var ok = false, who = 'Admin';
+  if (parts.length === 2 && ATLAS_KEY.length > 20) {
+    var sig = Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(parts[0], ATLAS_KEY)).replace(/=+$/, '');
+    if (sig === parts[1]) {
+      try {
+        var p = JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[0])).getDataAsString());
+        if (p.e > Date.now() && p.e < Date.now() + 6 * 60000) { ok = true; who = clip_(p.n, 60) || 'Admin'; }
+      } catch (e) {}
+    }
   }
-  props.deleteProperty('adm_fail');
+  if (!ok) { log_('Admin', '', 'Admin sign-in refused', ''); throw new Error('bad_admin'); }
+  retirePassword_();
   var tok = token_();
-  var who = clip_(b.who, 60) || 'Admin';
   cache_().put('t:' + tok, JSON.stringify({ kind: 'admin', who: who, at: Date.now() }), PH.TOKEN_SECONDS);
   log_('Admin', '', 'Admin signed in', who);
   return { ok: true, adm: tok, who: who };
+}
+
+/* The old shared password is blanked out of the private sheet the first time anyone signs in the new way. */
+function retirePassword_() {
+  try {
+    var sh = privateSS_(false).getSheetByName(SET_TAB);
+    if (!sh) return;
+    var v = sh.getDataRange().getValues();
+    for (var i = 1; i < v.length; i++) if (String(v[i][0]).trim().toLowerCase() === 'admin password') sh.deleteRow(i + 1), i = v.length;
+  } catch (e) {}
 }
 
 function profSummary_(row) {

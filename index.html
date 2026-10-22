@@ -2303,6 +2303,7 @@ function renderRoleUI(){
   $('#roleLbl').textContent=AUTHNAME?AUTHNAME.split(' ')[0]+' · '+ROLE_WORDS[AUTHROLE]:'Sign in';
   $('#roleBtn').setAttribute('aria-label','Signed in as '+(AUTHNAME||'you')+'. Open account options');
   $('#roleBtn').classList.toggle('on',b);
+  $('#adminBtn').hidden=AUTHROLE!=='admin';
   $('#demoBar').hidden=!demo;
   $('#demoBtn span').textContent=demo?'Hide sample data':'Show sample data';
 }
@@ -2892,17 +2893,10 @@ function renderAdmin(){
   const host=$('#adminBody');if(!host)return;
   if(apiState==='off'){host.innerHTML=`<div class="card"><div class="eyebrow">Praxis office</div><h3 style="font-family:var(--display);font-size:22px;margin:2px 0 6px">The admin view is not connected yet</h3><p class="muted" style="font-size:14px">It needs the hub’s private records (an Apps Script web app). See the README.</p></div>`;return;}
   if(apiState==='checking'){host.innerHTML=loadingBox();checkApi();return;}
-  if(apiState==='notready'){host.innerHTML=`<div class="card"><div class="eyebrow">Praxis office</div><h3 style="font-family:var(--display);font-size:22px;margin:2px 0 6px">Almost ready</h3><p class="muted" style="font-size:14px;max-width:62ch">The private records need a one-time switch-on by the hub’s owner (open the Apps Script project, run <b>setup</b>, approve). After that, sign in here with the admin password from the private sheet’s Settings tab.</p><div class="po-acts"><button class="btn sm" id="admRetry" type="button">Check again</button></div></div>`;return;}
+  if(apiState==='notready'){host.innerHTML=`<div class="card"><div class="eyebrow">Praxis office</div><h3 style="font-family:var(--display);font-size:22px;margin:2px 0 6px">Almost ready</h3><p class="muted" style="font-size:14px;max-width:62ch">The private records need a one-time switch-on by the hub’s owner (open the Apps Script project, run <b>setup</b>, approve). After that, administrators open it with their normal hub sign-in.</p><div class="po-acts"><button class="btn sm" id="admRetry" type="button">Check again</button></div></div>`;return;}
   if(!isAdmin()){
-    const who=recall('admWho')||'';
-    host.innerHTML=`<div class="card" style="max-width:520px"><div class="eyebrow">Praxis office</div><h3 style="font-family:var(--display);font-size:22px;margin:2px 0 6px">Admin sign-in</h3>
-      <p class="muted" style="font-size:14px;line-height:1.55">See each professor’s checklist, what they have sent, and their contracts. For the Praxis office only.</p>
-      <form class="po-form" id="admLoginF" autocomplete="on" style="margin-top:12px"><label for="admWho">Your name</label><input class="txt" id="admWho" value="${esc(who)}" autocomplete="name" placeholder="e.g. Nicole">
-      <label for="admPw">Admin password</label><input class="txt" id="admPw" type="password" autocomplete="current-password" required>
-      <div class="role-err" id="admErr" role="alert"></div>
-      <div class="acts"><button class="btn primary" type="submit">Sign in</button></div></form>
-      <p class="po-fine">The password is in the Settings tab of the private professor-records sheet. Your session lasts a few hours in this browser tab.</p></div>`;
-    setTimeout(()=>{const f=who?$('#admPw'):$('#admWho');if(f&&view==='admin')f.focus();},30);
+    if(AUTHROLE!=='admin'){host.innerHTML=`<div class="card" style="max-width:520px"><div class="eyebrow">Praxis office</div><h3 style="font-family:var(--display);font-size:22px;margin:2px 0 6px">Administrators only</h3><p class="muted" style="font-size:14px">The office admin view opens for administrators who are signed in to the hub.</p></div>`;return;}
+    host.innerHTML=loadingBox();admAuto();
     return;
   }
   if(!admData){host.innerHTML=loadingBox();admLoad();return;}
@@ -2935,13 +2929,16 @@ document.addEventListener('click',async e=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest&&e.target.closest('[data-adm-open]');if(r)admDrawer(r.dataset.admOpen);}});
 document.addEventListener('input',e=>{if(e.target.id==='admQ'){admQ=e.target.value;const pos=e.target.selectionStart;renderAdmin();const q=$('#admQ');q.focus();try{q.setSelectionRange(pos,pos);}catch(_){}}});
-document.addEventListener('submit',async e=>{
-  if(e.target.id!=='admLoginF')return;
-  e.preventDefault();const b=e.target.querySelector('button'),err=$('#admErr'),who=$('#admWho').value.trim();
-  btnBusy(b,true,'Signing in…');err.textContent='';remember('admWho',who);
-  try{const d=await api('adm_login',{password:$('#admPw').value,who});admSet({tok:d.adm,who:d.who});admData=null;renderAdmin();toast('Signed in');}
-  catch(x){btnBusy(b,false);err.textContent=x.message;$('#admPw').select();}
-});
+let admSigning=false;
+async function admAuto(){
+  if(admSigning)return;admSigning=true;
+  try{
+    const j=await authCall({action:'adminProof',token:authToken()});
+    if(!j.ok)throw new Error(j.error==='session'?'Your sign-in ended. Sign in again.':'Only administrators can open this.');
+    const d=await api('adm_login',{proof:j.proof});admSet({tok:d.adm,who:d.who});admData=null;
+  }catch(x){admSigning=false;$('#adminBody').innerHTML=`<div class="card" style="max-width:520px"><div class="eyebrow">Praxis office</div><h3 style="font-family:var(--display);font-size:22px;margin:2px 0 6px">Could not open the office view</h3><p class="muted" style="font-size:14px">${esc(x.message)}</p><div class="po-acts"><button class="btn sm" id="admRetry" type="button">Try again</button></div></div>`;return;}
+  admSigning=false;renderAdmin();
+}
 
 function admReplace(prof){if(!admData)return;const i=admData.profs.findIndex(p=>p.name===prof.name);if(i>=0)admData.profs[i]=prof;renderAdmin();admDrawer(prof.name);}
 async function admPatch(name,patch,btn,msg){btnBusy(btn,true,'Saving…');try{const d=await api('adm_update',{adm:ADM.tok,name,patch},{post:JSON.stringify(patch).length>1500});admReplace(d.prof);toast(msg||'Saved');}catch(x){btnBusy(btn,false);admCatch(x);}}
