@@ -1365,6 +1365,9 @@ const BOARD_ONLY=['overview','status','tasks','playbook'];
 const allowed=v=>!!VIEWS[v]&&(isBoard()||BOARD_ONLY.indexOf(v)<0);
 const landing=()=>isBoard()?'overview':'me';
 const navKeys=()=>Object.keys(VIEWS).filter(v=>allowed(v)&&(v!=='admin'||isAdmin()));
+let EMAILED=[];
+const canEmail=()=>{try{return AUTHROLE==='admin';}catch(_){return false;}};
+const emailedFor=t=>EMAILED.find(e=>(e.title||'').trim().toLowerCase()===(t||'').trim().toLowerCase());
 const S={people:[],ann:[],tasks:[],events:[],resources:[],metrics:[]};
 const RAW={};
 const loaded={people:false,ann:false,tasks:false,events:false,resources:false,metrics:false};
@@ -1552,7 +1555,8 @@ function annHTML(a,compact){
       <div class="body${!compact&&long?' clamp':''}">${esc(a.body)}</div>
       ${!compact&&long?'<button class="more" data-more type="button">Read more</button>':''}
       ${!compact&&a.respond?`<div class="respond"><b>Response needed${a.respondBy?' by '+esc(fmtDate(a.respondBy)):''}</b>${a.respondBy&&daysUntil(a.respondBy)!==null?`<span class="muted">${esc(relDays(daysUntil(a.respondBy)))}</span>`:''}${p&&p.email?`<a class="btn sm" href="mailto:${esc(p.email)}?subject=${encodeURIComponent('Re: '+a.title)}">Reply to ${esc(p.name.split(' ')[0])}</a>`:''}</div>`:''}
-      ${compact?'':`<div class="acts">${a.link?`<a class="btn sm" href="${esc(a.link)}" target="_blank" rel="noopener">Open link</a>`:''}<button class="btn ghost xs" type="button" data-permalink="${esc(a.id)}">Copy link</button></div>`}
+      ${compact||!canEmail()?'':emailNoteHTML(a)}
+      ${compact?'':`<div class="acts">${a.link?`<a class="btn sm" href="${esc(a.link)}" target="_blank" rel="noopener">Open link</a>`:''}<button class="btn ghost xs" type="button" data-permalink="${esc(a.id)}">Copy link</button>${canEmail()?`<button class="btn xs" type="button" data-emailann="${esc(a.id)}">Email this</button>`:''}</div>`}
     </div></article>`;
 }
 const sortAnn=l=>[...l].sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||(b.createdAt||0)-(a.createdAt||0)||b.row-a.row);
@@ -2249,6 +2253,68 @@ function setRows(key,rows){REAL[key]=rows;rescope();}
 const ROLE_WORDS={admin:'Admin',board:'Board',professor:'Professor',music:'Professor',staff:'Staff'};
 let AUTHTABS={},AUTHERR=null,AUTHROLE='',AUTHNAME='',pbLoaded=false;
 const authToken=()=>recall('session')||'';
+
+/* ---------- email an announcement (admins only; nothing is sent without the confirm click) ---------- */
+const EM_GROUPS=[['board','Board'],['professor','Professors'],['music','Music'],['staff','Staff']];
+const emGroupWords=g=>g&&g.length?g.map(x=>(EM_GROUPS.find(y=>y[0]===x)||[0,x])[1]).join(', '):'Everyone';
+function emailNoteHTML(a){const e=emailedFor(a.title);return e?`<div class="muted" style="font-size:12.5px;margin-top:6px">✉ Emailed on ${esc(new Date(e.at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}))} to ${esc(emGroupWords(e.groups))} (${e.count} ${e.count===1?'person':'people'})</div>`:'';}
+let emScrim=null;
+function emClose(){if(emScrim){emScrim.remove();emScrim=null;}}
+function emOpen(a){
+  emClose();
+  const sc=document.createElement('div');sc.className='scrim';sc.id='emailScrim';emScrim=sc;
+  sc.innerHTML=`<div class="panel mail" role="dialog" aria-modal="true" aria-label="Email this announcement" style="max-width:680px;width:100%"><header><h3 style="font-size:19px">Email this announcement</h3><button class="x" type="button" data-emx aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header><div class="body" id="emBody"></div></div>`;
+  document.body.appendChild(sc);
+  sc.addEventListener('click',e=>{if(e.target===sc||e.target.closest('[data-emx]'))emClose();});
+  const body=sc.querySelector('#emBody');
+  const render=(html)=>{body.innerHTML=html;};
+  const groups=()=>[...body.querySelectorAll('[data-emg]:checked')].map(c=>c.dataset.emg);
+  const pickStep=()=>{
+    render(`<p style="margin:0 0 4px"><b>${esc(a.title)}</b></p><p class="muted" style="font-size:13.5px;margin:0 0 12px">Choose who gets it. Leave every box empty to email everyone. You will see a preview first; nothing is sent until you confirm.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px">${EM_GROUPS.map(g=>`<label style="display:flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;font-weight:400;font-size:15px"><input type="checkbox" data-emg="${g[0]}"> ${g[1]}</label>`).join('')}<span class="muted" id="emAll" style="font-size:14px;align-self:center">→ Everyone</span></div>
+    <div class="acts"><button class="btn primary" type="button" id="emPrev">Preview</button></div><div id="emErr" class="muted" style="margin-top:8px"></div>`);
+    const upd=()=>{$('#emAll').textContent='→ '+emGroupWords(groups());};
+    body.querySelectorAll('[data-emg]').forEach(c=>c.addEventListener('change',upd));
+    $('#emPrev').onclick=async()=>{const g=groups();$('#emPrev').disabled=true;$('#emErr').textContent='Building the preview…';
+      try{const j=await authCall({action:'emailPreview',token:authToken(),title:a.title,date:a.date||'',groups:g});
+        if(!j.ok){$('#emErr').textContent=j.error==='forbidden'?'Only administrators can email announcements.':j.error==='session'?'Please sign in again.':'Couldn’t build the preview.';$('#emPrev').disabled=false;return;}
+        previewStep(j,g);}catch(_){$('#emErr').textContent='Couldn’t reach the server.';$('#emPrev').disabled=false;}};
+  };
+  const previewStep=(j,g)=>{
+    const warn=[];
+    if(j.missingEmail)warn.push(`${j.missingEmail} ${j.missingEmail===1?'person has':'people have'} no email on file and will be skipped (${esc((j.missingNames||[]).slice(0,6).join(', '))}${(j.missingNames||[]).length>6?'…':''}).`);
+    if(j.phonesRemoved)warn.push('Phone numbers in the text were left out of the email.');
+    if(j.alreadyEmailed)warn.push(`<b>Already emailed</b> on ${esc(new Date(j.alreadyEmailed.at).toLocaleDateString('en-US',{month:'long',day:'numeric'}))} to ${esc(j.alreadyEmailed.groups.join(', ')||'Everyone')}. Sending again will email them twice.`);
+    if(j.tooMany)warn.push('That is more recipients than one send allows. Pick fewer groups.');
+    render(`<div class="muted" style="font-size:13.5px;margin-bottom:8px">Subject: <b>${esc(j.subject)}</b> · To: <b>${esc(j.groupLabel)}</b> · <b>${j.recipientCount}</b> ${j.recipientCount===1?'person':'people'}</div>
+    ${warn.length?`<div style="font-size:13.5px;margin-bottom:10px;padding:8px 10px;border:1px solid var(--border);border-radius:6px">${warn.map(w=>'<div>'+w+'</div>').join('')}</div>`:''}
+    <iframe id="emFrame" sandbox="" style="width:100%;height:380px;border:1px solid var(--border);border-radius:6px;background:#fff"></iframe>
+    <div class="acts" style="margin-top:12px"><button class="btn ghost" type="button" id="emBack">Back</button><button class="btn" type="button" id="emTest">Send a test to me only</button><button class="btn primary" type="button" id="emNext" ${j.recipientCount&&!j.tooMany?'':'disabled'}>Continue…</button></div><div id="emErr" class="muted" style="margin-top:8px"></div>`);
+    $('#emFrame').srcdoc=j.html;
+    $('#emBack').onclick=pickStep;
+    $('#emTest').onclick=()=>doSend(g,{test:true});
+    $('#emNext').onclick=()=>confirmStep(j,g);
+  };
+  const confirmStep=(j,g)=>{
+    render(`<p style="font-size:16px;margin:0 0 10px">Send <b>“${esc(a.title)}”</b> by email to <b>${j.recipientCount} ${j.recipientCount===1?'person':'people'}</b> in <b>${esc(j.groupLabel)}</b>?</p>
+    ${j.missingEmail?`<p class="muted" style="font-size:13.5px">${j.missingEmail} more ${j.missingEmail===1?'person has':'people have'} no email and won’t get it.</p>`:''}
+    ${j.alreadyEmailed?`<p style="font-size:13.5px"><b>This was already emailed.</b> This will send it again.</p>`:''}
+    <div class="acts"><button class="btn ghost" type="button" id="emBack2">Back to preview</button><button class="btn primary" type="button" id="emGo">Yes, send it now</button></div><div id="emErr" class="muted" style="margin-top:8px"></div>`);
+    $('#emBack2').onclick=()=>previewStep(j,g);
+    $('#emGo').onclick=()=>doSend(g,{again:!!j.alreadyEmailed});
+  };
+  const doSend=async(g,opt)=>{
+    body.querySelectorAll('button').forEach(b=>b.disabled=true);const er=$('#emErr');if(er)er.textContent=opt.test?'Sending a test to you…':'Sending…';
+    try{const r=await authCall({action:'emailSend',token:authToken(),title:a.title,date:a.date||'',groups:g,confirm:true,test:!!opt.test,again:!!opt.again});
+      if(r.ok){if(!opt.test){EMAILED=EMAILED.filter(e=>e.title!==a.title).concat([{title:a.title,at:Date.now(),groups:g,count:r.sent}]);renderAnn();}
+        render(`<p style="font-size:16px;margin:0 0 10px">${opt.test?'Test sent to you.':`Sent to ${r.sent} ${r.sent===1?'person':'people'}${r.failed?` (${r.failed} didn’t go through)`:''}.`}</p><div class="acts"><button class="btn primary" type="button" data-emx>Done</button></div>`);}
+      else{render(`<p style="font-size:15px;margin:0 0 10px">${r.error==='already'?'That was already emailed. Nothing was sent.':'Nothing was sent. Something went wrong.'}</p><div class="acts"><button class="btn" type="button" data-emx>Close</button></div>`);}
+    }catch(_){render('<p>Couldn’t reach the server. Nothing was sent.</p><div class="acts"><button class="btn" type="button" data-emx>Close</button></div>');}
+  };
+  pickStep();
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-emailann]');if(!b)return;const a=S.ann.find(x=>x.id===b.dataset.emailann);if(a&&canEmail())emOpen(a);});
+
 async function authCall(body){const r=await fetch(CONFIG.AUTH_URL,{method:'POST',headers:{'content-type':'text/plain;charset=utf-8'},body:JSON.stringify(body),credentials:'omit'});return r.json();}
 /* Everything this device kept about the signed-in person goes when they sign out or the session ends. */
 function clearPrivate(){try{Object.keys(localStorage).filter(k=>/^praxis\.(csv\.|session|role|me$|meName|snapshot|view)/.test(k)).forEach(k=>localStorage.removeItem(k));}catch(_){}}
@@ -2256,7 +2322,7 @@ function signOutAuth(){clearPrivate();location.reload();}
 async function authFetch(){
   const j=await authCall({action:'data',token:authToken()});
   if(!j.ok){if(j.error==='session'){clearPrivate();location.reload();}throw new Error(j.error||'auth');}
-  AUTHTABS=j.tabs||{};AUTHROLE=j.role;AUTHNAME=j.name;
+  AUTHTABS=j.tabs||{};AUTHROLE=j.role;AUTHNAME=j.name;EMAILED=j.emailed||[];
   role=(j.role==='board'||j.role==='admin')?'board':'faculty';
   document.body.classList.toggle('is-board',isBoard());TOUR=isBoard()?TOUR_B:TOUR_F;
   if(recall('meName')!==j.name){remember('meName',j.name);remember('me','');}
